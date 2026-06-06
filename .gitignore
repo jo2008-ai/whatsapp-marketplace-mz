@@ -1,0 +1,13 @@
+.env
+/vendor
+/node_modules
+/public/storage
+/storage/*.key
+python/.env
+python/__pycache__/
+python/venv/
+app-mobile/.expo/
+app-mobile/node_modules/
+app-mobile/.env
+.DS_Store
+*.log
