@@ -2,7 +2,8 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "php/Dockerfile"
+    "dockerfilePath": "php/Dockerfile",
+    "dockerfileBuildContext": "php"
   },
   "deploy": {
     "startCommand": "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT",
