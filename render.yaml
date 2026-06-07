@@ -1,0 +1,84 @@
+services:
+  - type: web
+    name: marketplace-php
+    env: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./php/Dockerfile
+    dockerContext: ./php
+    healthCheckPath: /health
+    envVars:
+      - key: APP_NAME
+        value: MarketplaceMZ
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        value: base64:VmYu3902V5FCCJx/k1oyTOxm3rak5YCIHTQxoeHsTjU=
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://marketplace-php.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        value: postgresql://marketplace_db_yu8z_user:cNtSq99Kjf1NgdDDC6R3UOSYWHYCXCTy@dpg-d8i7v28jo6nc73d0qhe0-a/marketplace_db_yu8z
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: PYTHON_URL
+        value: https://marketplace-python.onrender.com
+      - key: EVOLUTION_URL
+        value: https://marketplace-evolution.onrender.com
+      - key: EVOLUTION_API_KEY
+        value: marketplace_secret_key_2026
+      - key: SUPER_ADMIN_EMAIL
+        value: admin@marketplace.co.mz
+
+  - type: web
+    name: marketplace-python
+    env: docker
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./python/Dockerfile
+    dockerContext: ./python
+    healthCheckPath: /health
+    envVars:
+      - key: LARAVEL_URL
+        value: https://marketplace-php.onrender.com
+      - key: EVOLUTION_URL
+        value: https://marketplace-evolution.onrender.com
+      - key: EVOLUTION_API_KEY
+        value: marketplace_secret_key_2026
+      - key: PORT
+        value: "5000"
+      - key: DEBUG
+        value: "false"
+
+  - type: web
+    name: marketplace-evolution
+    env: docker
+    region: frankfurt
+    plan: free
+    image:
+      url: docker.io/atendai/evolution-api:latest
+    disk:
+      name: evolution-data
+      mountPath: /evolution/instances
+      sizeGB: 1
+    healthCheckPath: /
+    envVars:
+      - key: SERVER_URL
+        value: https://marketplace-evolution.onrender.com
+      - key: AUTHENTICATION_API_KEY
+        value: marketplace_secret_key_2026
+      - key: DATABASE_ENABLED
+        value: "true"
+      - key: DATABASE_CONNECTION_URI
+        value: postgresql://marketplace_db_yu8z_user:cNtSq99Kjf1NgdDDC6R3UOSYWHYCXCTy@dpg-d8i7v28jo6nc73d0qhe0-a/marketplace_db_yu8z
+      - key: CACHE_REDIS_ENABLED
+        value: "false"
+      - key: LANGUAGE
+        value: pt-BR
