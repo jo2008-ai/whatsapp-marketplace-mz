@@ -7,6 +7,16 @@ use App\Models\User;
 
 class CategoriaPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->tenant_id !== null;
+    }
+
+    public function view(User $user, Categoria $categoria): bool
+    {
+        return $user->tenant_id === $categoria->tenant_id;
+    }
+
     public function create(User $user): bool
     {
         return $user->isAdmin() && $user->tenant_id !== null;

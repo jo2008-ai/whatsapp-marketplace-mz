@@ -21,4 +21,14 @@ class EncomendaPolicy
     {
         return $user->isAdmin() && $user->tenant_id === $encomenda->tenant_id;
     }
+
+    public function create(User $user): bool
+    {
+        return $user->tenant_id !== null;
+    }
+
+    public function delete(User $user, Encomenda $encomenda): bool
+    {
+        return $user->isAdmin() && $user->tenant_id === $encomenda->tenant_id;
+    }
 }
