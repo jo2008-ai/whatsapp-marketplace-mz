@@ -1,10 +1,11 @@
 FROM php:8.3-cli
 
-RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev libzip-dev libicu-dev \
-    && docker-php-ext-install pdo pdo_pgsql zip mbstring bcmath intl \
-    && rm -rf /var/lib/apt/lists/*
+# Instalar extensões usando ferramenta sem conflitos
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions pdo_pgsql zip mbstring bcmath intl
 
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
@@ -15,8 +16,7 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platfo
 COPY . .
 
 RUN mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache || true
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE ${PORT:-8000}
 
