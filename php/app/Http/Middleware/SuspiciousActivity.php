@@ -45,15 +45,19 @@ class SuspiciousActivity
 
         foreach (self::SUSPICIOUS_PATTERNS as $type => $pattern) {
             if (preg_match($pattern, $inputString)) {
-                Log::channel('security')->warning('Atividade suspeita detectada', [
-                    'tipo' => $type,
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                    'metodo' => $request->method(),
-                    'path' => $request->path(),
-                    'input' => substr($inputString, 0, 500),
-                    'timestamp' => now()->toIso8601String(),
-                ]);
+                try {
+                    Log::channel('security')->warning('Atividade suspeita detectada', [
+                        'tipo' => $type,
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                        'metodo' => $request->method(),
+                        'path' => $request->path(),
+                        'input' => substr($inputString, 0, 500),
+                        'timestamp' => now()->toIso8601String(),
+                    ]);
+                } catch (\Exception $e) {
+                    // Silently fail if security log channel is unavailable
+                }
                 break;
             }
         }
@@ -64,25 +68,33 @@ class SuspiciousActivity
         $userAgent = strtolower($request->userAgent() ?? '');
 
         if (empty($userAgent)) {
-            Log::channel('security')->warning('Request sem User-Agent', [
-                'ip' => $request->ip(),
-                'metodo' => $request->method(),
-                'path' => $request->path(),
-                'timestamp' => now()->toIso8601String(),
-            ]);
+            try {
+                Log::channel('security')->warning('Request sem User-Agent', [
+                    'ip' => $request->ip(),
+                    'metodo' => $request->method(),
+                    'path' => $request->path(),
+                    'timestamp' => now()->toIso8601String(),
+                ]);
+            } catch (\Exception $e) {
+                // Silently fail if security log channel is unavailable
+            }
             return;
         }
 
         foreach (self::SUSPICIOUS_UA_PATTERNS as $pattern) {
             if (str_contains($userAgent, $pattern)) {
-                Log::channel('security')->warning('User-Agent suspeito', [
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                    'pattern' => $pattern,
-                    'metodo' => $request->method(),
-                    'path' => $request->path(),
-                    'timestamp' => now()->toIso8601String(),
-                ]);
+                try {
+                    Log::channel('security')->warning('User-Agent suspeito', [
+                        'ip' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                        'pattern' => $pattern,
+                        'metodo' => $request->method(),
+                        'path' => $request->path(),
+                        'timestamp' => now()->toIso8601String(),
+                    ]);
+                } catch (\Exception $e) {
+                    // Silently fail if security log channel is unavailable
+                }
                 break;
             }
         }
@@ -91,15 +103,18 @@ class SuspiciousActivity
     private function detectSuspiciousResponse(Request $request, Response $response): void
     {
         if ($response->getStatusCode() >= 400) {
-            $logLevel = $response->getStatusCode() >= 500 ? 'error' : 'info';
-
-            Log::channel('security')->$logLevel('Resposta de erro', [
-                'status' => $response->getStatusCode(),
-                'ip' => $request->ip(),
-                'metodo' => $request->method(),
-                'path' => $request->path(),
-                'timestamp' => now()->toIso8601String(),
-            ]);
+            try {
+                $logLevel = $response->getStatusCode() >= 500 ? 'error' : 'info';
+                Log::channel('security')->$logLevel('Resposta de erro', [
+                    'status' => $response->getStatusCode(),
+                    'ip' => $request->ip(),
+                    'metodo' => $request->method(),
+                    'path' => $request->path(),
+                    'timestamp' => now()->toIso8601String(),
+                ]);
+            } catch (\Exception $e) {
+                // Silently fail if security log channel is unavailable
+            }
         }
     }
 }

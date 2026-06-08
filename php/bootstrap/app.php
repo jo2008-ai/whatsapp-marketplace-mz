@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: ['*']);
         $middleware->alias([
             'tenant.activo'    => \App\Http\Middleware\TenantActivo::class,
             'super.admin'      => \App\Http\Middleware\SuperAdmin::class,

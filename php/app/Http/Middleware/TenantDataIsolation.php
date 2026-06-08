@@ -17,25 +17,33 @@ class TenantDataIsolation
             $user = $request->user();
             if ($user && $user->tenant_id) {
                 if ($request->isMethod('delete') || $request->isMethod('put')) {
-                    Log::channel('audit')->info('Tenant action', [
-                        'user_id' => $user->id,
-                        'tenant_id' => $user->tenant_id,
-                        'method' => $request->method(),
-                        'path' => $request->path(),
-                        'ip' => $request->ip(),
-                        'user_agent' => $request->userAgent(),
-                        'timestamp' => now()->toIso8601String(),
-                    ]);
+                    try {
+                        Log::channel('audit')->info('Tenant action', [
+                            'user_id' => $user->id,
+                            'tenant_id' => $user->tenant_id,
+                            'method' => $request->method(),
+                            'path' => $request->path(),
+                            'ip' => $request->ip(),
+                            'user_agent' => $request->userAgent(),
+                            'timestamp' => now()->toIso8601String(),
+                        ]);
+                    } catch (\Exception $e) {
+                        // Silently fail if audit log channel is unavailable
+                    }
                 }
 
                 if ($request->isMethod('delete')) {
-                    Log::channel('security')->info('Delete action', [
-                        'user_id' => $user->id,
-                        'tenant_id' => $user->tenant_id,
-                        'path' => $request->path(),
-                        'ip' => $request->ip(),
-                        'timestamp' => now()->toIso8601String(),
-                    ]);
+                    try {
+                        Log::channel('security')->info('Delete action', [
+                            'user_id' => $user->id,
+                            'tenant_id' => $user->tenant_id,
+                            'path' => $request->path(),
+                            'ip' => $request->ip(),
+                            'timestamp' => now()->toIso8601String(),
+                        ]);
+                    } catch (\Exception $e) {
+                        // Silently fail if security log channel is unavailable
+                    }
                 }
             }
         }

@@ -8,6 +8,7 @@ return [
     'allowed_origins' => array_filter([
         env('FRONTEND_URL', 'http://localhost:3000'),
         env('MOBILE_URL', 'http://localhost:19006'),
+        env('APP_URL'),
     ]),
 
     'allowed_origins_patterns' => array_filter([
