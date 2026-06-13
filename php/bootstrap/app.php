@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.isolation' => \App\Http\Middleware\TenantDataIsolation::class,
             'force.https'      => \App\Http\Middleware\ForceHttps::class,
             'suspicious'       => \App\Http\Middleware\SuspiciousActivity::class,
+            'admin.key'        => \App\Http\Middleware\AdminApiKey::class,
         ]);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->append(\App\Http\Middleware\SuspiciousActivity::class);

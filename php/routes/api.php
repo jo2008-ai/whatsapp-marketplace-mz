@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ApiEncomendaController;
 use App\Http\Controllers\Api\ApiVendedorController;
 use App\Http\Controllers\Api\ApiDefinicoesController;
 use App\Http\Controllers\Api\ApiUploadController;
+use App\Http\Controllers\Api\AdminLojaController;
 use Illuminate\Support\Facades\Route;
 
 // Webhook do bot (vindo do Python, protegido com HMAC + rate limit)
@@ -65,4 +66,10 @@ Route::middleware(['auth:sanctum', 'tenant.activo'])->prefix('loja')->group(func
 
     // Upload
     Route::post('/upload/imagem', [ApiUploadController::class, 'imagem']);
+});
+
+// Rotas admin — protegidas por chave secreta
+Route::middleware('admin.key')->prefix('admin')->group(function () {
+    Route::post('/lojas', [AdminLojaController::class, 'criar']);
+    Route::get('/lojas', [AdminLojaController::class, 'listar']);
 });
