@@ -87,8 +87,8 @@ class DatabaseSeeder extends Seeder
 
         InstanciaWhatsApp::create([
             'tenant_id' => $mercearia->id,
-            'nome_instancia' => 'mercearia_principal',
-            'evolution_instance_name' => 'loja_mercearia_1',
+            'nome_instancia' => 'default',
+            'waha_session' => 'default',
             'estado' => 'desconectada',
         ]);
 
@@ -151,15 +151,8 @@ class DatabaseSeeder extends Seeder
 
         InstanciaWhatsApp::create([
             'tenant_id' => $boutique->id,
-            'nome_instancia' => 'boutique_principal',
-            'evolution_instance_name' => 'loja_boutique_1',
-            'estado' => 'desconectada',
-        ]);
-
-        InstanciaWhatsApp::create([
-            'tenant_id' => $boutique->id,
-            'nome_instancia' => 'boutique_secundario',
-            'evolution_instance_name' => 'loja_boutique_2',
+            'nome_instancia' => 'default',
+            'waha_session' => 'default',
             'estado' => 'desconectada',
         ]);
     }

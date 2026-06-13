@@ -11,7 +11,7 @@ class InstanciaWhatsApp extends Model
 
     protected $fillable = [
         'tenant_id', 'numero_whatsapp', 'nome_instancia',
-        'evolution_instance_name', 'estado', 'qr_code_url', 'conectada_em',
+        'waha_session', 'estado', 'qr_code_url', 'conectada_em',
     ];
 
     protected function casts(): array

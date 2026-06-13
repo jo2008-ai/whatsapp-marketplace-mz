@@ -32,8 +32,8 @@ class BotWebhookTest extends TestCase
 
         $this->instancia = InstanciaWhatsApp::create([
             'tenant_id' => $this->tenant->id,
-            'nome_instancia' => 'loja_' . $this->tenant->id . '_test123',
-            'evolution_instance_name' => 'loja_' . $this->tenant->id . '_test123',
+            'nome_instancia' => 'default',
+            'waha_session' => 'default',
             'estado' => 'conectada',
         ]);
 
@@ -62,7 +62,7 @@ class BotWebhookTest extends TestCase
     public function test_webhook_retorna_resposta(): void
     {
         $response = $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => 'olá',
             'nome' => 'Cliente Teste',
@@ -88,7 +88,7 @@ class BotWebhookTest extends TestCase
     public function test_webhook_grupo_nao_responde(): void
     {
         $response = $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '120363001234567@g.us',
             'mensagem' => 'olá',
             'is_grupo' => true,
@@ -101,7 +101,7 @@ class BotWebhookTest extends TestCase
     public function test_webhook_regista_log(): void
     {
         $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => 'olá',
         ]);
@@ -116,7 +116,7 @@ class BotWebhookTest extends TestCase
     public function test_webhook_mensagem_obrigatoria(): void
     {
         $response = $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
         ]);
 
@@ -128,7 +128,7 @@ class BotWebhookTest extends TestCase
         $this->tenant->update(['estado' => 'suspenso']);
 
         $response = $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => 'olá',
         ]);
@@ -141,7 +141,7 @@ class BotWebhookTest extends TestCase
     public function test_webhook_fluxo_completo_pedido(): void
     {
         $response = $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => '1',
             'nome' => 'Maria',
@@ -151,7 +151,7 @@ class BotWebhookTest extends TestCase
             ->assertJson(['enviar' => true]);
 
         $response2 = $this->postJson('/api/mensagem', [
-            'instance_name' => $this->instancia->evolution_instance_name,
+            'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => '1',
         ]);

@@ -28,31 +28,27 @@ services:
       timeout: 5s
       retries: 5
 
-  evolution-api:
-    image: atendai/evolution-api:latest
+  waha:
+    image: ghcr.io/devlikeapro/waha-core:latest
     ports:
-      - "8080:8080"
+      - "3000:3000"
     environment:
-      SERVER_URL: ${EVOLUTION_SERVER_URL}
-      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
-      DATABASE_ENABLED: "true"
-      DATABASE_CONNECTION_URI: postgresql://marketplace:${DB_PASSWORD}@postgres:5432/marketplace_saas
+      WAHA_CORE_LOG_LEVEL: info
     volumes:
-      - evolution_data:/evolution/instances
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - waha_data:/app/.media
 
   python:
     build: ./python
     ports:
       - "5000:5000"
     environment:
-      EVOLUTION_API_URL: http://evolution-api:8080
-      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+      WAHA_URL: http://waha:3000
+      WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
+      WAHA_SESSION: default
       PHP_API_URL: http://php:8000/api/mensagem
+      TENANT_ID_DEFAULT: "1"
     depends_on:
-      - evolution-api
+      - waha
 
   php:
     build: ./php
@@ -69,6 +65,8 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secret_change_me}
       PYTHON_SERVICE_URL: http://python:5000
+      WAHA_URL: http://waha:3000
+      WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
       APP_KEY: ${APP_KEY}
       APP_ENV: production
       APP_DEBUG: "false"
@@ -86,4 +84,4 @@ services:
 
 volumes:
   pgdata:
-  evolution_data:
+  waha_data:

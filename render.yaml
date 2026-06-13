@@ -30,9 +30,9 @@ services:
         value: database
       - key: PYTHON_URL
         value: https://marketplace-python.onrender.com
-      - key: EVOLUTION_URL
-        value: https://marketplace-evolution.onrender.com
-      - key: EVOLUTION_API_KEY
+      - key: WAHA_URL
+        value: https://marketplace-waha.onrender.com
+      - key: WAHA_API_KEY
         value: marketplace_secret_key_2026
       - key: SUPER_ADMIN_EMAIL
         value: admin@marketplace.co.mz
@@ -48,37 +48,31 @@ services:
     envVars:
       - key: LARAVEL_URL
         value: https://whatsapp-marketplace-mz.onrender.com
-      - key: EVOLUTION_URL
-        value: https://marketplace-evolution.onrender.com
-      - key: EVOLUTION_API_KEY
+      - key: WAHA_URL
+        value: https://marketplace-waha.onrender.com
+      - key: WAHA_API_KEY
         value: marketplace_secret_key_2026
+      - key: WAHA_SESSION
+        value: default
+      - key: TENANT_ID_DEFAULT
+        value: "1"
       - key: PORT
         value: "5000"
       - key: DEBUG
         value: "false"
 
   - type: web
-    name: marketplace-evolution
+    name: marketplace-waha
     env: docker
     region: frankfurt
     plan: free
     image:
-      url: docker.io/atendai/evolution-api:latest
+      url: ghcr.io/devlikeapro/waha-core:latest
     disk:
-      name: evolution-data
-      mountPath: /evolution/instances
+      name: waha-data
+      mountPath: /app/.media
       sizeGB: 1
     healthCheckPath: /
     envVars:
-      - key: SERVER_URL
-        value: https://marketplace-evolution.onrender.com
-      - key: AUTHENTICATION_API_KEY
-        value: marketplace_secret_key_2026
-      - key: DATABASE_ENABLED
-        value: "true"
-      - key: DATABASE_CONNECTION_URI
-        value: postgresql://marketplace_db_yu8z_user:cNtSq99Kjf1NgdDDC6R3UOSYWHYCXCTy@dpg-d8i7v28jo6nc73d0qhe0-a/marketplace_db_yu8z
-      - key: CACHE_REDIS_ENABLED
-        value: "false"
-      - key: LANGUAGE
-        value: pt-BR
+      - key: WAHA_CORE_LOG_LEVEL
+        value: info

@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\BotController;
-use App\Http\Controllers\EvolutionWebhookController;
+use App\Http\Controllers\WahaWebhookController;
 use App\Http\Controllers\Api\ApiAuthController;
 use App\Http\Controllers\Api\ApiLojaController;
 use App\Http\Controllers\Api\ApiProdutoController;
@@ -17,7 +17,7 @@ Route::post('/mensagem', [BotController::class, 'processar'])
     ->middleware(['webhook.verify', 'webhook.rate']);
 
 // Webhook Evolution API (eventos de estado de conexão)
-Route::post('/evolution/webhook', [EvolutionWebhookController::class, 'processar']);
+Route::post('/waha/webhook', [WahaWebhookController::class, 'processar']);
 
 // Auth API
 Route::post('/auth/login', [ApiAuthController::class, 'login']);

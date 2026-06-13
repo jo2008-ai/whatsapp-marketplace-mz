@@ -18,7 +18,7 @@
                 @forelse($instancias as $inst)
                 <tr class="hover:bg-gray-50">
                     <td class="p-3">
-                        <div class="font-mono text-xs text-gray-600">{{ $inst->evolution_instance_name }}</div>
+                        <div class="font-mono text-xs text-gray-600">{{ $inst->waha_session }}</div>
                     </td>
                     <td class="p-3">
                         <a href="/super/lojas/{{ $inst->tenant_id }}" class="text-blue-600 hover:underline">

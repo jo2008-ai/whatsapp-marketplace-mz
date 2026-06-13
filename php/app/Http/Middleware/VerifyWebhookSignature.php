@@ -11,7 +11,7 @@ class VerifyWebhookSignature
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = config('services.evolution.webhook_secret');
+        $secret = config('services.waha.webhook_secret');
 
         // Se não há secret configurado, passa (desenvolvimento)
         if (!$secret) {

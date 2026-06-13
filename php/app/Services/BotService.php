@@ -676,7 +676,7 @@ class BotService
                 [
                     'numero' => $dono->telefone ?? $encomenda->vendedor?->numero_whatsapp,
                     'mensagem' => $mensagem,
-                    'instance_name' => $instancia->evolution_instance_name,
+                    'instance_name' => 'default',
                 ]
             );
         } catch (\Exception $e) {

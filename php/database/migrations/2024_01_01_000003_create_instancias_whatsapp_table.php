@@ -14,7 +14,7 @@ return new class extends Migration
                 $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
                 $table->string('numero_whatsapp')->nullable();
                 $table->string('nome_instancia');
-                $table->string('evolution_instance_name')->unique();
+                $table->string('waha_session')->default('default')->unique();
                 $table->enum('estado', ['conectada', 'desconectada', 'aguarda_qr'])->default('desconectada');
                 $table->text('qr_code_url')->nullable();
                 $table->timestamp('conectada_em')->nullable();

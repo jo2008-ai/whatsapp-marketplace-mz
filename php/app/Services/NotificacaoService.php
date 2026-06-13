@@ -49,7 +49,7 @@ class NotificacaoService
                 [
                     'numero' => $vendedor->numero_whatsapp,
                     'mensagem' => $mensagem,
-                    'instance_name' => $instancia->evolution_instance_name,
+                    'instance_name' => 'default',
                 ]
             );
 

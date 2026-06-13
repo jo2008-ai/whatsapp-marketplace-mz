@@ -54,7 +54,7 @@ class NotificarClienteWhatsApp implements ShouldQueue
                 [
                     'numero' => $encomenda->numero_cliente,
                     'mensagem' => $mensagem,
-                    'instance_name' => $instancia->evolution_instance_name,
+                    'instance_name' => 'default',
                 ]
             );
 

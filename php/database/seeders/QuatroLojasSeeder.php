@@ -158,8 +158,8 @@ class QuatroLojasSeeder extends Seeder
 
             InstanciaWhatsApp::create([
                 'tenant_id' => $tenant->id,
-                'nome_instancia' => $dados['instancia_whatsapp'],
-                'evolution_instance_name' => $dados['instancia_whatsapp'],
+                'nome_instancia' => 'default',
+                'waha_session' => 'default',
                 'estado' => 'desconectada',
             ]);
         }

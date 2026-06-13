@@ -24,7 +24,7 @@
                     <strong>Número:</strong> {{ $instancia->numero_whatsapp ?? 'N/A' }}
                 </p>
                 <p style="margin:8px 0 0;color:#991b1b;">
-                    <strong>Instância:</strong> {{ $instancia->evolution_instance_name }}
+                    <strong>Instância:</strong> {{ $instancia->waha_session }}
                 </p>
             </div>
 
