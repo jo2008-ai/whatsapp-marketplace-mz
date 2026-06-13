@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BotWebhookRequest;
-use App\Models\InstanciaWhatsApp;
 use App\Models\LogBot;
+use App\Models\Tenant;
 use App\Services\BotService;
 use Illuminate\Http\JsonResponse;
 
@@ -17,21 +17,10 @@ class BotController extends Controller
     public function processar(BotWebhookRequest $request): JsonResponse
     {
         $instanceName = $request->input('instance_name');
-        $instancia = InstanciaWhatsApp::where(
-            'evolution_instance_name',
-            $instanceName
-        )->first();
 
-        if (!$instancia) {
-            return response()->json([
-                'resposta' => 'Serviço temporariamente indisponível.',
-                'enviar' => true,
-            ]);
-        }
+        $tenant = Tenant::where('instancia_whatsapp', $instanceName)->first();
 
-        $tenant = $instancia->tenant;
-
-        if (!$tenant || !$tenant->ativo()) {
+        if (!$tenant || !$tenant->activo) {
             return response()->json([
                 'resposta' => 'Serviço temporariamente indisponível.',
                 'enviar' => true,

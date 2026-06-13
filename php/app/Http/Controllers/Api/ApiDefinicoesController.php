@@ -21,11 +21,7 @@ class ApiDefinicoesController extends Controller
             'logo_url' => $tenant->logo_url,
             'cor_primaria' => $tenant->cor_primaria,
             'mensagem_boas_vindas' => $tenant->mensagem_boas_vindas,
-            'plano' => $tenant->plano,
-            'estado' => $tenant->estado,
-            'trial_termina_em' => $tenant->trial_termina_em,
-            'max_produtos' => $tenant->max_produtos,
-            'max_numeros' => $tenant->max_numeros,
+            'activo' => $tenant->activo,
         ]);
     }
 

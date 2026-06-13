@@ -16,8 +16,8 @@ class TenantActivo
             return redirect('/login')->with('error', 'Acesso não autorizado.');
         }
 
-        if (!$user->tenant->ativo()) {
-            return redirect('/login')->with('error', 'A subscrição expirou. Renova para continuar.');
+        if (!$user->tenant->activo) {
+            return redirect('/login')->with('error', 'Loja temporariamente indisponível.');
         }
 
         return $next($request);

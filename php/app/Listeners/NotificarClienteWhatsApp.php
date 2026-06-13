@@ -31,7 +31,7 @@ class NotificarClienteWhatsApp implements ShouldQueue
 
         $tenant = $encomenda->tenant;
 
-        if (!$tenant || !$tenant->ativo()) {
+        if (!$tenant || !$tenant->activo) {
             return;
         }
 

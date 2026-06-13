@@ -32,10 +32,6 @@ class ProdutoController extends Controller
     {
         $tenant = $request->user()->tenant;
 
-        if (!$tenant->podeAdicionarProduto()) {
-            return redirect('/painel/produtos')->with('error', 'Limite de produtos atingido para o teu plano.');
-        }
-
         $categorias = $tenant->categorias()->where('ativo', true)->orderBy('nome')->get();
         $vendedores = $tenant->vendedores()->where('ativo', true)->orderBy('nome')->get();
 
@@ -45,10 +41,6 @@ class ProdutoController extends Controller
     public function store(Request $request)
     {
         $tenant = $request->user()->tenant;
-
-        if (!$tenant->podeAdicionarProduto()) {
-            return redirect('/painel/produtos')->with('error', 'Limite de produtos atingido.');
-        }
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',

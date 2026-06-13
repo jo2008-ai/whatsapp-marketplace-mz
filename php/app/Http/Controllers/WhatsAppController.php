@@ -21,10 +21,6 @@ class WhatsAppController extends Controller
     {
         $tenant = $request->user()->tenant;
 
-        if (!$tenant->podeAdicionarNumero()) {
-            return back()->with('error', 'Limite de números atingido para o teu plano.');
-        }
-
         $nomeInstancia = 'loja_' . $tenant->id . '_' . Str::random(6);
 
         try {

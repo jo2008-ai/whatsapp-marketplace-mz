@@ -57,8 +57,7 @@ class ApiAuthController extends Controller
             'tenant' => $user->tenant ? [
                 'id' => $user->tenant->id,
                 'nome_loja' => $user->tenant->nome_loja,
-                'plano' => $user->tenant->plano,
-                'estado' => $user->tenant->estado,
+                'activo' => $user->tenant->activo,
                 'cor_primaria' => $user->tenant->cor_primaria,
             ] : null,
         ]);

@@ -7,35 +7,26 @@ use App\Http\Controllers\EncomendaController;
 use App\Http\Controllers\PainelController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProdutoController;
-use App\Http\Controllers\RegistoController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 
-// Público
 Route::get('/', function () {
     return auth()->check()
         ? (auth()->user()->isSuperAdmin() ? redirect('/super') : redirect('/painel'))
-        : view('publico.landing');
+        : redirect('/login');
 });
 
-// Autenticação
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Password reset
 Route::get('/esqueci-password', [PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/esqueci-password', [PasswordResetController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1');
 Route::get('/repor-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 Route::post('/repor-password/{token}', [PasswordResetController::class, 'reset']);
 
-// Registo de nova loja
-Route::get('/registar', [RegistoController::class, 'show']);
-Route::post('/registar', [RegistoController::class, 'criar'])->middleware('throttle:3,1');
-
-// Painel da loja (requer login + tenant activo)
 Route::prefix('painel')->middleware(['auth', 'tenant.activo'])->group(function () {
     Route::get('/', [PainelController::class, 'dashboard'])->name('painel.dashboard');
 
@@ -60,20 +51,17 @@ Route::prefix('painel')->middleware(['auth', 'tenant.activo'])->group(function (
 
     Route::get('/definicoes', [DefinicoesController::class, 'index'])->name('definicoes.index');
     Route::post('/definicoes', [DefinicoesController::class, 'guardar'])->name('definicoes.guardar');
-
-    Route::get('/plano', [\App\Http\Controllers\PlanoController::class, 'index'])->name('plano.index');
-    Route::post('/plano/upgrade', [\App\Http\Controllers\PlanoController::class, 'upgrade'])->name('plano.upgrade');
 });
 
-// Super Admin
 Route::prefix('super')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/', [SuperAdminController::class, 'dashboard'])->name('super.dashboard');
     Route::get('/lojas', [SuperAdminController::class, 'lojas'])->name('super.lojas');
-    Route::get('/lojas/criar', [SuperAdminController::class, 'criar'])->name('super.lojas.criar');
-    Route::post('/lojas/guardar', [SuperAdminController::class, 'guardar'])->name('super.lojas.guardar');
-    Route::get('/lojas/{tenant}', [SuperAdminController::class, 'detalhe'])->name('super.lojas.detalhe');
-    Route::patch('/lojas/{tenant}/estado', [SuperAdminController::class, 'alterarEstado'])->name('super.lojas.estado');
-    Route::post('/lojas/{tenant}/subscricao', [SuperAdminController::class, 'renovarSubscricao'])->name('super.lojas.subscricao');
-    Route::get('/receita', [SuperAdminController::class, 'receita'])->name('super.receita');
-    Route::get('/instancias', [SuperAdminController::class, 'instancias'])->name('super.instancias');
+    Route::get('/lojas/{tenant}', [SuperAdminController::class, 'show'])->name('super.lojas.show');
+    Route::patch('/lojas/{tenant}/toggle', [SuperAdminController::class, 'toggleActivo'])->name('super.lojas.toggle');
+    Route::get('/instancias', function () {
+        $instancias = \App\Models\InstanciaWhatsApp::with('tenant')
+            ->orderByDesc('updated_at')
+            ->paginate(20);
+        return view('super.instancias', compact('instancias'));
+    })->name('super.instancias');
 });

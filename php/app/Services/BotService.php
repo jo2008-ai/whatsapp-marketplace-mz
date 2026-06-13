@@ -22,7 +22,7 @@ class BotService
 
     public function responder(Tenant $tenant, string $numero, string $mensagem, string $nome = ''): array|string
     {
-        if (!$tenant->ativo()) {
+        if (!$tenant->activo) {
             return 'Serviço temporariamente indisponível. Contacta o suporte.';
         }
 

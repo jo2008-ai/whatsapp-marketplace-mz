@@ -57,10 +57,6 @@ class ApiProdutoController extends Controller
     {
         $tenant = $request->user()->tenant;
 
-        if (!$tenant->podeAdicionarProduto()) {
-            return $this->error('Limite de produtos atingido para o teu plano.', 403);
-        }
-
         $validated = $request->validate([
             'nome' => 'required|string|max:100',
             'descricao' => 'nullable|string',
