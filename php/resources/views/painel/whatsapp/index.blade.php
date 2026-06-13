@@ -63,6 +63,9 @@
 
 @push('scripts')
 <script>
+    const WAHA_KEY = '{{ config("services.waha.key") }}';
+    const tenantId = {{ $tenantId ?? 1 }};
+
     let pollingInterval = null;
     let instanciaAtual = null;
 
@@ -73,7 +76,6 @@
         document.getElementById('qr-image').style.display = 'none';
         document.getElementById('qr-conectado').style.display = 'none';
 
-        // Começar polling
         if (pollingInterval) clearInterval(pollingInterval);
         buscarQR();
         pollingInterval = setInterval(buscarQR, 3000);
@@ -103,7 +105,6 @@
                 document.getElementById('qr-loading').style.display = 'none';
                 document.getElementById('qr-image').style.display = 'block';
 
-                // QR pode vir em vários formatos
                 const qrData = data.qr;
                 if (typeof qrData === 'string') {
                     document.getElementById('qr-img').src = qrData;

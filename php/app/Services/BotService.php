@@ -674,6 +674,7 @@ class BotService
             \Illuminate\Support\Facades\Http::timeout(10)->post(
                 config('services.python.url') . '/enviar',
                 [
+                    'tenant_id' => $tenant->id,
                     'numero' => $dono->telefone ?? $encomenda->vendedor?->numero_whatsapp,
                     'mensagem' => $mensagem,
                     'instance_name' => 'default',

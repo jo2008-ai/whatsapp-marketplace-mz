@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import requests
 
-from waha import enviar_texto, enviar_imagem, obter_qr_code
+from waha import enviar_texto, enviar_imagem, obter_qr_code, obter_estado
 
 load_dotenv()
 
@@ -65,9 +65,9 @@ def health():
     return jsonify({'status': 'ok', 'service': 'whatsapp-python'})
 
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    """Recebe eventos da WAHA com rate limiting por numero."""
+@app.route('/webhook/<int:tenant_id>', methods=['POST'])
+def webhook(tenant_id: int):
+    """Recebe eventos WAHA com routing por tenant_id."""
     try:
         data = request.json
         if not data:
@@ -76,12 +76,12 @@ def webhook():
         event = data.get('event')
         session = data.get('session', 'default')
 
-        logger.info(f"Evento: {event} | Session: {session}")
+        logger.info(f"Tenant {tenant_id} | Evento: {event} | Session: {session}")
 
         if event == 'session.status':
             session_data = data.get('payload', {})
             state = session_data.get('status', 'unknown')
-            logger.info(f"Sessao {session}: {state}")
+            logger.info(f"Tenant {tenant_id} | Sessao {session}: {state}")
             return jsonify({'status': 'ignored', 'event': event})
 
         if event != 'message':
@@ -95,11 +95,11 @@ def webhook():
         sender_full = payload.get('from', '')
         sender = sender_full.replace('@c.us', '').replace('@lid', '')
 
-        rate_key = f"webhook:{session}:{sender}"
+        rate_key = f"webhook:{tenant_id}:{sender}"
         if not webhook_limiter.is_allowed(rate_key):
             remaining = webhook_limiter.remaining(rate_key)
             logger.warning(
-                f"Rate limit excedido para {sender}. "
+                f"Rate limit excedido para {sender} (tenant {tenant_id}). "
                 f"Restam {remaining} requests."
             )
             return jsonify({
@@ -108,7 +108,6 @@ def webhook():
             }), 429
 
         push_name = payload.get('_data', {}).get('notifyName', '')
-
         corpo = payload.get('body', '')
 
         if not corpo:
@@ -117,12 +116,14 @@ def webhook():
         is_grupo = '@g.us' in sender_full
         grupo_id = sender_full if is_grupo else None
 
-        logger.info(f"Mensagem de {sender} ({push_name}): {corpo}")
+        logger.info(
+            f"Tenant {tenant_id} | Mensagem de {sender} ({push_name}): {corpo}"
+        )
 
         php_response = requests.post(
             PHP_API_URL,
             json={
-                'tenant_id': TENANT_ID_DEFAULT,
+                'tenant_id': tenant_id,
                 'instance_name': 'default',
                 'numero': sender,
                 'mensagem': corpo,
@@ -142,11 +143,11 @@ def webhook():
                 imagens = resultado.get('imagens', [])
 
                 if imagens:
-                    enviar_detalhe_produto(sender, imagens, resposta)
+                    enviar_detalhe_produto(tenant_id, sender, imagens, resposta)
                 elif resposta:
-                    enviar_texto(sender, resposta)
+                    enviar_texto(tenant_id, sender, resposta)
 
-                logger.info(f"Resposta enviada a {sender}")
+                logger.info(f"Resposta enviada a {sender} (tenant {tenant_id})")
         else:
             logger.error(
                 f"PHP retornou erro: {php_response.status_code} - "
@@ -163,21 +164,21 @@ def webhook():
         return jsonify({'error': str(e)}), 500
 
 
-def enviar_detalhe_produto(numero: str, imagens: list, texto: str):
+def enviar_detalhe_produto(tenant_id: int, numero: str, imagens: list, texto: str):
     """Envia fotos do produto (frente e tras) seguidas do texto com detalhes."""
     for imagem_url in imagens:
         if not imagem_url:
             continue
         if not imagem_url.startswith('http'):
             imagem_url = f"{APP_URL}{imagem_url}"
-        resultado = enviar_imagem(numero, imagem_url)
+        resultado = enviar_imagem(tenant_id, numero, imagem_url)
         if 'error' in resultado:
             logger.error(f"Erro ao enviar imagem {imagem_url}: {resultado}")
         else:
             logger.info(f"Imagem enviada a {numero}: {imagem_url}")
         time.sleep(0.5)
     if texto:
-        enviar_texto(numero, texto)
+        enviar_texto(tenant_id, numero, texto)
 
 
 @app.route('/enviar', methods=['POST'])
@@ -187,20 +188,21 @@ def enviar():
         return jsonify({'error': 'forbidden'}), 403
 
     data = request.json
+    tenant_id = data.get('tenant_id', TENANT_ID_DEFAULT)
     numero = data.get('numero')
     mensagem = data.get('mensagem')
 
     if not all([numero, mensagem]):
         return jsonify({'error': 'missing parameters'}), 400
 
-    rate_key = f"enviar:{numero}"
+    rate_key = f"enviar:{tenant_id}:{numero}"
     if not api_limiter.is_allowed(rate_key):
         return jsonify({
             'error': 'rate_limited',
             'retry_after': api_limiter.retry_after(rate_key),
         }), 429
 
-    resultado = enviar_texto(numero, mensagem)
+    resultado = enviar_texto(tenant_id, numero, mensagem)
 
     if 'error' in resultado:
         return jsonify(resultado), 500
@@ -208,18 +210,17 @@ def enviar():
     return jsonify({'status': 'sent', 'result': resultado})
 
 
-@app.route('/qr', methods=['GET'])
-def qr():
-    """Retorna o QR code da sessao WAHA."""
-    resultado = obter_qr_code()
+@app.route('/qr/<int:tenant_id>', methods=['GET'])
+def qr(tenant_id: int):
+    """Retorna o QR code da sessao WAHA para um tenant."""
+    resultado = obter_qr_code(tenant_id)
     return jsonify(resultado)
 
 
-@app.route('/estado', methods=['GET'])
-def estado():
-    """Retorna o estado da sessao WAHA."""
-    from waha import obter_estado
-    resultado = obter_estado()
+@app.route('/estado/<int:tenant_id>', methods=['GET'])
+def estado(tenant_id: int):
+    """Retorna o estado da sessao WAHA para um tenant."""
+    resultado = obter_estado(tenant_id)
     return jsonify(resultado)
 
 

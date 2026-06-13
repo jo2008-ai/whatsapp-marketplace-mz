@@ -16,9 +16,7 @@ class BotController extends Controller
 
     public function processar(BotWebhookRequest $request): JsonResponse
     {
-        $instanceName = $request->input('instance_name');
-
-        $tenant = Tenant::where('instancia_whatsapp', $instanceName)->first();
+        $tenant = Tenant::find($request->input('tenant_id'));
 
         if (!$tenant || !$tenant->activo) {
             return response()->json([

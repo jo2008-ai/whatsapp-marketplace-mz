@@ -42,9 +42,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      WAHA_URL: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
-      WAHA_SESSION: default
+      WAHA_URL_1: http://waha:3000
+      WAHA_URL_2: http://waha:3000
+      WAHA_URL_3: http://waha:3000
+      WAHA_URL_4: http://waha:3000
       PHP_API_URL: http://php:8000/api/mensagem
       TENANT_ID_DEFAULT: "1"
     depends_on:
@@ -65,7 +67,10 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secret_change_me}
       PYTHON_SERVICE_URL: http://python:5000
-      WAHA_URL: http://waha:3000
+      WAHA_URL_1: http://waha:3000
+      WAHA_URL_2: http://waha:3000
+      WAHA_URL_3: http://waha:3000
+      WAHA_URL_4: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
       APP_KEY: ${APP_KEY}
       APP_ENV: production

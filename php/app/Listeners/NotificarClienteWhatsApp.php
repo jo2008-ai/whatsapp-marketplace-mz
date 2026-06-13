@@ -52,6 +52,7 @@ class NotificarClienteWhatsApp implements ShouldQueue
             $response = Http::timeout(10)->post(
                 config('services.python.url') . '/enviar',
                 [
+                    'tenant_id' => $tenant->id,
                     'numero' => $encomenda->numero_cliente,
                     'mensagem' => $mensagem,
                     'instance_name' => 'default',

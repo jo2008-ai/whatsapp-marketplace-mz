@@ -48,6 +48,7 @@ Route::prefix('painel')->middleware(['auth', 'tenant.activo'])->group(function (
     Route::get('/whatsapp', [WhatsAppController::class, 'index'])->name('whatsapp.index');
     Route::post('/whatsapp/conectar', [WhatsAppController::class, 'conectar'])->name('whatsapp.conectar');
     Route::get('/whatsapp/qr', [WhatsAppController::class, 'qr'])->name('whatsapp.qr');
+    Route::get('/whatsapp/estado', [WhatsAppController::class, 'estado'])->name('whatsapp.estado');
 
     Route::get('/definicoes', [DefinicoesController::class, 'index'])->name('definicoes.index');
     Route::post('/definicoes', [DefinicoesController::class, 'guardar'])->name('definicoes.guardar');

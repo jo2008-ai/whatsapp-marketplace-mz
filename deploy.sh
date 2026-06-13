@@ -114,15 +114,16 @@ QUEUE_CONNECTION=redis
 
 PYTHON_SERVICE_URL=http://127.0.0.1:5000
 
+WAHA_URL_1=http://127.0.0.1:3001
+WAHA_URL_2=http://127.0.0.1:3002
+WAHA_URL_3=http://127.0.0.1:3003
+WAHA_URL_4=http://127.0.0.1:3004
+WAHA_API_KEY=$(openssl rand -hex 32)
+
 LOG_CHANNEL=daily
 LOG_LEVEL=error
 
 SUPER_ADMIN_EMAIL=admin@$DOMAIN
-
-EVOLUTION_API_URL=http://127.0.0.1:8080
-EVOLUTION_API_KEY=$(openssl rand -hex 32)
-EVOLUTION_SERVER_URL=https://$DOMAIN
-EVOLUTION_WEBHOOK_SECRET=$(openssl rand -hex 32)
 EOF
 
 cd $PROJECT_DIR/php
@@ -143,9 +144,13 @@ source venv/bin/activate
 pip install -q flask requests python-dotenv gunicorn
 
 cat > $PROJECT_DIR/python/.env <<EOF
-EVOLUTION_API_URL=http://127.0.0.1:8080
-EVOLUTION_API_KEY=$(grep EVOLUTION_API_KEY $PROJECT_DIR/php/.env | cut -d= -f2)
 PHP_API_URL=http://127.0.0.1:8000/api/mensagem
+WAHA_API_KEY=$(grep WAHA_API_KEY $PROJECT_DIR/php/.env | cut -d= -f2)
+WAHA_URL_1=http://127.0.0.1:3001
+WAHA_URL_2=http://127.0.0.1:3002
+WAHA_URL_3=http://127.0.0.1:3003
+WAHA_URL_4=http://127.0.0.1:3004
+APP_URL=https://$DOMAIN
 FLASK_ENV=production
 EOF
 
