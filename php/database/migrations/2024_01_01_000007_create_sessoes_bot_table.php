@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sessoes_bot', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('numero_whatsapp');
-            $table->string('estado')->default('inicio');
-            $table->json('dados')->nullable();
-            $table->timestamp('updated_at')->nullable();
+        if (!Schema::hasTable('sessoes_bot')) {
+            Schema::create('sessoes_bot', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+                $table->string('numero_whatsapp');
+                $table->string('estado')->default('inicio');
+                $table->json('dados')->nullable();
+                $table->timestamp('updated_at')->nullable();
 
-            $table->unique(['tenant_id', 'numero_whatsapp']);
-        });
+                $table->unique(['tenant_id', 'numero_whatsapp']);
+            });
+        }
     }
 
     public function down(): void

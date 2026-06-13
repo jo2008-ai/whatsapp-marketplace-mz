@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('vendedores', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('nome');
-            $table->string('numero_whatsapp');
-            $table->string('descricao')->nullable();
-            $table->boolean('ativo')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('vendedores')) {
+            Schema::create('vendedores', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
+                $table->string('nome');
+                $table->string('numero_whatsapp');
+                $table->string('descricao')->nullable();
+                $table->boolean('ativo')->default(true);
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

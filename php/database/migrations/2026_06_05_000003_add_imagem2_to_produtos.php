@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('produtos', function (Blueprint $table) {
-            $table->string('imagem2_url')->nullable()->after('imagem_url');
-        });
+        if (Schema::hasTable('produtos') && !Schema::hasColumn('produtos', 'imagem2_url')) {
+            Schema::table('produtos', function (Blueprint $table) {
+                $table->string('imagem2_url')->nullable()->after('imagem_url');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('produtos', function (Blueprint $table) {
-            $table->dropColumn('imagem2_url');
-        });
+        if (Schema::hasTable('produtos') && Schema::hasColumn('produtos', 'imagem2_url')) {
+            Schema::table('produtos', function (Blueprint $table) {
+                $table->dropColumn('imagem2_url');
+            });
+        }
     }
 };

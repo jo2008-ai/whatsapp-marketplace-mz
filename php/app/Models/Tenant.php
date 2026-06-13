@@ -11,6 +11,9 @@ class Tenant extends Model
 {
     protected $fillable = [
         'nome_loja', 'email_dono', 'telefone_dono',
+        'plano', 'estado', 'trial_termina_em',
+        'max_produtos', 'max_numeros',
+        'trial_aviso_3d', 'trial_aviso_1d',
         'instancia_whatsapp', 'activo',
         'logo_url', 'cor_primaria', 'mensagem_boas_vindas',
     ];

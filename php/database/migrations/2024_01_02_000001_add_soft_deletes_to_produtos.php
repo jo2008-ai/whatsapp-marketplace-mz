@@ -8,28 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('produtos', function (Blueprint $table) {
-            $table->softDeletes();
-        });
-
-        Schema::table('encomendas', function (Blueprint $table) {
-            $table->softDeletes();
-        });
-
-        Schema::table('categorias', function (Blueprint $table) {
-            $table->softDeletes();
-        });
-
-        Schema::table('vendedores', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        foreach (['produtos', 'encomendas', 'categorias', 'vendedores'] as $table) {
+            if (Schema::hasTable($table) && !Schema::hasColumn($table, 'deleted_at')) {
+                Schema::table($table, function (Blueprint $table) {
+                    $table->softDeletes();
+                });
+            }
+        }
     }
 
     public function down(): void
     {
-        Schema::table('produtos', fn(Blueprint $table) => $table->dropSoftDeletes());
-        Schema::table('encomendas', fn(Blueprint $table) => $table->dropSoftDeletes());
-        Schema::table('categorias', fn(Blueprint $table) => $table->dropSoftDeletes());
-        Schema::table('vendedores', fn(Blueprint $table) => $table->dropSoftDeletes());
+        foreach (['produtos', 'encomendas', 'categorias', 'vendedores'] as $table) {
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'deleted_at')) {
+                Schema::table($table, fn(Blueprint $table) => $table->dropSoftDeletes());
+            }
+        }
     }
 };
