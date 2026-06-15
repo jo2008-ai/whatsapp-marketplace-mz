@@ -6,8 +6,8 @@ set -euo pipefail
 
 BASE_URL="https://whatsapp-marketplace-mz.onrender.com"
 PYTHON_URL="https://marketplace-python.onrender.com"
-EMAIL="${TEST_EMAIL:-loja1@exemplo.com}"
-PASSWORD="${TEST_PASSWORD:-anSBzrpzw52Ptafz}"
+EMAIL="${TEST_EMAIL:-mercearia@teste.com}"
+PASSWORD="${TEST_PASSWORD:-123456}"
 ADMIN_KEY="${ADMIN_API_KEY:-}"
 
 PASS=0
@@ -109,7 +109,7 @@ if [ "$LOGIN_STATUS" = "True" ] || [ "$LOGIN_STATUS" = "true" ]; then
     TOKEN=$(echo "$LOGIN_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])" 2>/dev/null || echo "")
     test_route "API login POST /api/auth/login" "200" "200" "$LOGIN_RESP"
 else
-    test_route "API login POST /api/auth/login" "200" "401" "$LOGIN_RESP"
+    test_route "API login POST /api/auth/login" "200" "429" "$LOGIN_RESP"
     echo -e "${RED}ERRO: Nao foi possivel obter token. Todos os testes autenticados irao falhar.${NC}"
 fi
 
@@ -149,56 +149,6 @@ fi
 
 echo ""
 
-# ─── API PRODUTOS ───────────────────────────────────────
-
-echo -e "${YELLOW}--- API Produtos ---${NC}"
-
-if [ -n "$TOKEN" ]; then
-    # GET produtos
-    PROD_LIST=$(curl -s -w "\n%{http_code}" "${BASE_URL}/api/loja/produtos" \
-        -H "Authorization: Bearer ${TOKEN}" 2>/dev/null)
-    PROD_STATUS=$(echo "$PROD_LIST" | tail -1)
-    PROD_BODY=$(echo "$PROD_LIST" | head -n -1)
-    test_route "Produtos GET /api/loja/produtos" "200" "$PROD_STATUS" "$PROD_BODY"
-
-    # POST criar produto
-    PROD_CREATE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/loja/produtos" \
-        -H "Authorization: Bearer ${TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d '{"nome":"Produto Teste","preco":100,"stock":10}' 2>/dev/null)
-    PROD_CREATE_STATUS=$(echo "$PROD_CREATE" | tail -1)
-    PROD_CREATE_BODY=$(echo "$PROD_CREATE" | head -n -1)
-    test_route "Produtos POST /api/loja/produtos" "201" "$PROD_CREATE_STATUS" "$PROD_CREATE_BODY"
-
-    PRODUTO_ID=$(echo "$PROD_CREATE_BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('id',''))" 2>/dev/null || echo "")
-
-    if [ -n "$PRODUTO_ID" ]; then
-        # GET produto por ID
-        PROD_SHOW=$(curl -s -w "\n%{http_code}" "${BASE_URL}/api/loja/produtos/${PRODUTO_ID}" \
-            -H "Authorization: Bearer ${TOKEN}" 2>/dev/null)
-        PROD_SHOW_STATUS=$(echo "$PROD_SHOW" | tail -1)
-        PROD_SHOW_BODY=$(echo "$PROD_SHOW" | head -n -1)
-        test_route "Produtos GET /api/loja/produtos/${PRODUTO_ID}" "200" "$PROD_SHOW_STATUS" "$PROD_SHOW_BODY"
-
-        # PUT atualizar produto
-        PROD_UPDATE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "${BASE_URL}/api/loja/produtos/${PRODUTO_ID}" \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"nome":"Produto Teste Atualizado","preco":150,"stock":20}' 2>/dev/null)
-        test_route "Produtos PUT /api/loja/produtos/${PRODUTO_ID}" "200" "$PROD_UPDATE" ""
-
-        # PATCH toggle
-        TOGGLE_RESP=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH "${BASE_URL}/api/loja/produtos/${PRODUTO_ID}/toggle" \
-            -H "Authorization: Bearer ${TOKEN}" 2>/dev/null)
-        test_route "Produtos PATCH toggle /api/loja/produtos/${PRODUTO_ID}/toggle" "200" "$TOGGLE_RESP" ""
-    fi
-else
-    test_route "Produtos GET" "200" "401" "sem token"
-    test_route "Produtos POST" "201" "401" "sem token"
-fi
-
-echo ""
-
 # ─── API CATEGORIAS ─────────────────────────────────────
 
 echo -e "${YELLOW}--- API Categorias ---${NC}"
@@ -213,6 +163,7 @@ if [ -n "$TOKEN" ]; then
     CAT_CREATE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/loja/categorias" \
         -H "Authorization: Bearer ${TOKEN}" \
         -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
         -d '{"nome":"Electronica","icone":"📱"}' 2>/dev/null)
     CAT_CREATE_STATUS=$(echo "$CAT_CREATE" | tail -1)
     CAT_CREATE_BODY=$(echo "$CAT_CREATE" | head -n -1)
@@ -228,6 +179,7 @@ if [ -n "$TOKEN" ]; then
         CAT_UPDATE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "${BASE_URL}/api/loja/categorias/${CATEGORIA_ID}" \
             -H "Authorization: Bearer ${TOKEN}" \
             -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
             -d '{"nome":"Electronica Atualizada","icone":"💻"}' 2>/dev/null)
         test_route "Categorias PUT /api/loja/categorias/${CATEGORIA_ID}" "200" "$CAT_UPDATE" ""
     fi
@@ -252,6 +204,7 @@ if [ -n "$TOKEN" ]; then
     VEND_CREATE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/loja/vendedores" \
         -H "Authorization: Bearer ${TOKEN}" \
         -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
         -d '{"nome":"Joao Silva","numero_whatsapp":"258841234567"}' 2>/dev/null)
     VEND_CREATE_STATUS=$(echo "$VEND_CREATE" | tail -1)
     VEND_CREATE_BODY=$(echo "$VEND_CREATE" | head -n -1)
@@ -271,6 +224,67 @@ if [ -n "$TOKEN" ]; then
 else
     test_route "Vendedores GET" "200" "401" "sem token"
     test_route "Vendedores POST" "201" "401" "sem token"
+fi
+
+echo ""
+
+# ─── API PRODUTOS ───────────────────────────────────────
+
+echo -e "${YELLOW}--- API Produtos ---${NC}"
+
+if [ -n "$TOKEN" ]; then
+    # GET produtos
+    PROD_LIST=$(curl -s -w "\n%{http_code}" "${BASE_URL}/api/loja/produtos" \
+        -H "Authorization: Bearer ${TOKEN}" 2>/dev/null)
+    PROD_STATUS=$(echo "$PROD_LIST" | tail -1)
+    PROD_BODY=$(echo "$PROD_LIST" | head -n -1)
+    test_route "Produtos GET /api/loja/produtos" "200" "$PROD_STATUS" "$PROD_BODY"
+
+    # POST criar produto (requer categoria_id e vendedor_id)
+    PROD_PAYLOAD="{\"nome\":\"Produto Teste\",\"preco\":100,\"stock\":10"
+    if [ -n "$CATEGORIA_ID" ]; then
+        PROD_PAYLOAD="${PROD_PAYLOAD},\"categoria_id\":${CATEGORIA_ID}"
+    fi
+    if [ -n "$VENDEDOR_ID" ]; then
+        PROD_PAYLOAD="${PROD_PAYLOAD},\"vendedor_id\":${VENDEDOR_ID}"
+    fi
+    PROD_PAYLOAD="${PROD_PAYLOAD}}"
+
+    PROD_CREATE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/loja/produtos" \
+        -H "Authorization: Bearer ${TOKEN}" \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/json" \
+        -d "$PROD_PAYLOAD" 2>/dev/null)
+    PROD_CREATE_STATUS=$(echo "$PROD_CREATE" | tail -1)
+    PROD_CREATE_BODY=$(echo "$PROD_CREATE" | head -n -1)
+    test_route "Produtos POST /api/loja/produtos" "201" "$PROD_CREATE_STATUS" "$PROD_CREATE_BODY"
+
+    PRODUTO_ID=$(echo "$PROD_CREATE_BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('id',''))" 2>/dev/null || echo "")
+
+    if [ -n "$PRODUTO_ID" ]; then
+        # GET produto por ID
+        PROD_SHOW=$(curl -s -w "\n%{http_code}" "${BASE_URL}/api/loja/produtos/${PRODUTO_ID}" \
+            -H "Authorization: Bearer ${TOKEN}" 2>/dev/null)
+        PROD_SHOW_STATUS=$(echo "$PROD_SHOW" | tail -1)
+        PROD_SHOW_BODY=$(echo "$PROD_SHOW" | head -n -1)
+        test_route "Produtos GET /api/loja/produtos/${PRODUTO_ID}" "200" "$PROD_SHOW_STATUS" "$PROD_SHOW_BODY"
+
+        # PUT atualizar produto
+        PROD_UPDATE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "${BASE_URL}/api/loja/produtos/${PRODUTO_ID}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d "{\"nome\":\"Produto Teste Atualizado\",\"preco\":150,\"stock\":20,\"categoria_id\":${CATEGORIA_ID},\"vendedor_id\":${VENDEDOR_ID}}" 2>/dev/null)
+        test_route "Produtos PUT /api/loja/produtos/${PRODUTO_ID}" "200" "$PROD_UPDATE" ""
+
+        # PATCH toggle
+        TOGGLE_RESP=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH "${BASE_URL}/api/loja/produtos/${PRODUTO_ID}/toggle" \
+            -H "Authorization: Bearer ${TOKEN}" 2>/dev/null)
+        test_route "Produtos PATCH toggle /api/loja/produtos/${PRODUTO_ID}/toggle" "200" "$TOGGLE_RESP" ""
+    fi
+else
+    test_route "Produtos GET" "200" "401" "sem token"
+    test_route "Produtos POST" "201" "401" "sem token"
 fi
 
 echo ""
@@ -380,7 +394,8 @@ if [ -n "$ADMIN_KEY" ]; then
     ADMIN_CREATE=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/api/admin/lojas" \
         -H "X-Admin-Key: ${ADMIN_KEY}" \
         -H "Content-Type: application/json" \
-        -d "{\"nome_loja\":\"Loja Teste Script\",\"email_dono\":\"${UNIQUE_EMAIL}\",\"password\":\"123456\"}" 2>/dev/null)
+        -H "Accept: application/json" \
+        -d "{\"nome_loja\":\"Loja Teste Script\",\"email\":\"${UNIQUE_EMAIL}\",\"telefone\":\"258841234567\"}" 2>/dev/null)
     ADMIN_CREATE_STATUS=$(echo "$ADMIN_CREATE" | tail -1)
     ADMIN_CREATE_BODY=$(echo "$ADMIN_CREATE" | head -n -1)
     test_route "Admin lojas POST /api/admin/lojas" "201" "$ADMIN_CREATE_STATUS" "$ADMIN_CREATE_BODY"
@@ -437,9 +452,19 @@ echo -e "${YELLOW}--- Web Painel (autenticado via cookie) ---${NC}"
 COOKIE_JAR=$(mktemp /tmp/cookies_XXXXXX.txt)
 
 # Login web para obter sessao
-curl -s -c "$COOKIE_JAR" -o /dev/null -X POST "${BASE_URL}/login" \
+LOGIN_PAGE=$(curl -s -c "$COOKIE_JAR" "${BASE_URL}/login" 2>/dev/null)
+CSRF_TOKEN=$(echo "$LOGIN_PAGE" | python3 -c "
+import sys, re
+html = sys.stdin.read()
+m = re.search(r'name=\"_token\"[^>]*value=\"([^\"]+)\"', html)
+if not m:
+    m = re.search(r'content=\"([^\"]+)\"[^>]*name=\"csrf-token\"', html)
+print(m.group(1) if m else '')
+" 2>/dev/null || echo "")
+
+curl -s -c "$COOKIE_JAR" -b "$COOKIE_JAR" -o /dev/null -X POST "${BASE_URL}/login" \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "email=${EMAIL}&password=${PASSWORD}" \
+    -d "_token=${CSRF_TOKEN}&email=${EMAIL}&password=${PASSWORD}" \
     -L 2>/dev/null
 
 WEB_DASH=$(curl -s -o /dev/null -w "%{http_code}" -b "$COOKIE_JAR" "${BASE_URL}/painel" 2>/dev/null)

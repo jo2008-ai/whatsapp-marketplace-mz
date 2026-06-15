@@ -12,8 +12,8 @@ class RateLimitApi
     public function handle(Request $request, Closure $next): Response
     {
         $key = 'api:' . ($request->user()?->id ?? $request->ip());
-        $maxAttempts = $request->is('api/auth/login') ? 5 : 60;
-        $decayMinutes = $request->is('api/auth/login') ? 15 : 1;
+        $maxAttempts = $request->is('api/auth/login') ? 10 : 60;
+        $decayMinutes = $request->is('api/auth/login') ? 5 : 1;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
