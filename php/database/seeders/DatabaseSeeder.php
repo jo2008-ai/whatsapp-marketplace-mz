@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Categoria;
-use App\Models\Encomenda;
 use App\Models\InstanciaWhatsApp;
 use App\Models\Produto;
 use App\Models\Subscricao;
@@ -12,57 +11,55 @@ use App\Models\User;
 use App\Models\Vendedor;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Super Admin (using firstOrCreate to avoid duplicates on re-seed)
-        User::firstOrCreate(
-            ['email' => 'admin@marketplace.co.mz'],
-            [
-                'name' => 'Super Admin',
-                'password' => Hash::make('Admin@2026!'),
-                'role' => 'super_admin',
-                'tenant_id' => null,
-            ]
-        );
+        // Skip if already seeded (super admin exists)
+        if (User::where('email', 'admin@marketplace.co.mz')->exists()) {
+            $this->command?->info('Database already seeded. Skipping.');
+            return;
+        }
+
+        // Super Admin
+        User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@marketplace.co.mz',
+            'password' => Hash::make('Admin@2026!'),
+            'role' => 'super_admin',
+            'tenant_id' => null,
+        ]);
 
         // === TENANT 1: Mercearia Maputo (basic) ===
-        $mercearia = Tenant::firstOrCreate(
-            ['email_dono' => 'mercearia@teste.com'],
-            [
-                'nome_loja' => 'Mercearia Maputo',
-                'telefone_dono' => '+258841234567',
-                'plano' => 'basic',
-                'estado' => 'activo',
-                'max_produtos' => 50,
-                'max_numeros' => 1,
-                'cor_primaria' => '#16A34A',
-            ]
-        );
+        $mercearia = Tenant::create([
+            'nome_loja' => 'Mercearia Maputo',
+            'email_dono' => 'mercearia@teste.com',
+            'telefone_dono' => '+258841234567',
+            'plano' => 'basic',
+            'estado' => 'activo',
+            'max_produtos' => 50,
+            'max_numeros' => 1,
+            'cor_primaria' => '#16A34A',
+        ]);
 
-        User::firstOrCreate(
-            ['email' => 'mercearia@teste.com'],
-            [
-                'tenant_id' => $mercearia->id,
-                'name' => 'Mercearia Admin',
-                'password' => Hash::make('123456'),
-                'role' => 'admin',
-            ]
-        );
+        User::create([
+            'tenant_id' => $mercearia->id,
+            'name' => 'Mercearia Admin',
+            'email' => 'mercearia@teste.com',
+            'password' => Hash::make('123456'),
+            'role' => 'admin',
+        ]);
 
-        Subscricao::firstOrCreate(
-            ['tenant_id' => $mercearia->id, 'plano' => 'basic'],
-            [
-                'preco_mensal' => 500,
-                'data_inicio' => now()->subMonth(),
-                'data_fim' => now()->addMonth(),
-                'estado' => 'activa',
-                'metodo_pagamento' => 'mpesa',
-            ]
-        );
+        Subscricao::create([
+            'tenant_id' => $mercearia->id,
+            'plano' => 'basic',
+            'preco_mensal' => 500,
+            'data_inicio' => now()->subMonth(),
+            'data_fim' => now()->addMonth(),
+            'estado' => 'activa',
+            'metodo_pagamento' => 'mpesa',
+        ]);
 
         $vendedorM = Vendedor::create([
             'tenant_id' => $mercearia->id,
@@ -99,29 +96,25 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // === TENANT 2: Boutique Luxo (pro, trial) ===
-        $boutique = Tenant::firstOrCreate(
-            ['email_dono' => 'boutique@teste.com'],
-            [
-                'nome_loja' => 'Boutique Luxo',
-                'telefone_dono' => '+258849876543',
-                'plano' => 'pro',
-                'estado' => 'trial',
-                'trial_termina_em' => now()->addDays(7),
-                'max_produtos' => 500,
-                'max_numeros' => 3,
-                'cor_primaria' => '#9333EA',
-            ]
-        );
+        $boutique = Tenant::create([
+            'nome_loja' => 'Boutique Luxo',
+            'email_dono' => 'boutique@teste.com',
+            'telefone_dono' => '+258849876543',
+            'plano' => 'pro',
+            'estado' => 'trial',
+            'trial_termina_em' => now()->addDays(7),
+            'max_produtos' => 500,
+            'max_numeros' => 3,
+            'cor_primaria' => '#9333EA',
+        ]);
 
-        User::firstOrCreate(
-            ['email' => 'boutique@teste.com'],
-            [
-                'tenant_id' => $boutique->id,
-                'name' => 'Boutique Admin',
-                'password' => Hash::make('123456'),
-                'role' => 'admin',
-            ]
-        );
+        User::create([
+            'tenant_id' => $boutique->id,
+            'name' => 'Boutique Admin',
+            'email' => 'boutique@teste.com',
+            'password' => Hash::make('123456'),
+            'role' => 'admin',
+        ]);
 
         Subscricao::create([
             'tenant_id' => $boutique->id,
