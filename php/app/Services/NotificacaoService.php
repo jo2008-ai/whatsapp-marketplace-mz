@@ -59,7 +59,6 @@ class NotificacaoService
             }
         } catch (\Exception $e) {
             Log::error("Erro ao chamar Python para notificação: " . $e->getMessage());
-            throw $e;
         }
     }
 }

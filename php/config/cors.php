@@ -9,6 +9,9 @@ return [
         env('FRONTEND_URL', 'http://localhost:3000'),
         env('MOBILE_URL', 'http://localhost:19006'),
         env('APP_URL'),
+        'https://whatsapp-marketplace-mz.onrender.com',
+        'https://marketplace-python.onrender.com',
+        'http://localhost:8081',
     ]),
 
     'allowed_origins_patterns' => array_filter([

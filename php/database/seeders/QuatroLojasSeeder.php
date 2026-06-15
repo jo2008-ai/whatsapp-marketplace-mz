@@ -15,13 +15,15 @@ class QuatroLojasSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'admin@plataforma.com',
-            'password' => Hash::make('admin123'),
-            'role' => 'super_admin',
-            'tenant_id' => null,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@plataforma.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('admin123'),
+                'role' => 'super_admin',
+                'tenant_id' => null,
+            ]
+        );
 
         $lojas = [
             [
@@ -111,22 +113,26 @@ class QuatroLojasSeeder extends Seeder
         ];
 
         foreach ($lojas as $dados) {
-            $tenant = Tenant::create([
-                'nome_loja' => $dados['nome_loja'],
-                'email_dono' => $dados['email_dono'],
-                'telefone_dono' => $dados['telefone_dono'],
-                'instancia_whatsapp' => $dados['instancia_whatsapp'],
-                'activo' => true,
-                'cor_primaria' => $dados['cor_primaria'],
-            ]);
+            $tenant = Tenant::firstOrCreate(
+                ['email_dono' => $dados['email_dono']],
+                [
+                    'nome_loja' => $dados['nome_loja'],
+                    'telefone_dono' => $dados['telefone_dono'],
+                    'instancia_whatsapp' => $dados['instancia_whatsapp'],
+                    'activo' => true,
+                    'cor_primaria' => $dados['cor_primaria'],
+                ]
+            );
 
-            User::create([
-                'tenant_id' => $tenant->id,
-                'name' => $dados['nome_loja'] . ' Admin',
-                'email' => $dados['email_dono'],
-                'password' => Hash::make('123456'),
-                'role' => 'admin',
-            ]);
+            User::firstOrCreate(
+                ['email' => $dados['email_dono']],
+                [
+                    'tenant_id' => $tenant->id,
+                    'name' => $dados['nome_loja'] . ' Admin',
+                    'password' => Hash::make('123456'),
+                    'role' => 'admin',
+                ]
+            );
 
             $vendedor = Vendedor::create([
                 'tenant_id' => $tenant->id,

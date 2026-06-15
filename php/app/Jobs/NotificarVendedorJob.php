@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class NotificarVendedorJob implements ShouldQueue
 {
@@ -30,14 +29,6 @@ class NotificarVendedorJob implements ShouldQueue
             return;
         }
 
-        try {
-            $notificacao->notificarVendedor($encomenda);
-        } catch (\Exception $e) {
-            Log::error('Job notificação falhou', [
-                'encomenda_id' => $this->encomendaId,
-                'error' => $e->getMessage(),
-            ]);
-            throw $e; // Re-throw para retry
-        }
+        $notificacao->notificarVendedor($encomenda);
     }
 }

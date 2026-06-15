@@ -22,6 +22,7 @@ Route::post('/waha/webhook', [WahaWebhookController::class, 'processar']);
 
 // Auth API
 Route::post('/auth/login', [ApiAuthController::class, 'login']);
+Route::post('/auth/register', [ApiAuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [ApiAuthController::class, 'logout']);

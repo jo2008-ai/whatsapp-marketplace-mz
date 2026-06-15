@@ -14,11 +14,9 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --ignore-platfo
 COPY . .
 
 RUN mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+    && chmod -R 775 storage bootstrap/cache \
+    && chmod +x docker-entrypoint.sh
 
 EXPOSE ${PORT:-10000}
 
-CMD ["docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]

@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Text } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
@@ -45,6 +45,7 @@ function MaisStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MaisMenu" component={MaisMenuScreen} />
+      <Stack.Screen name="Encomendas" component={EncomendasScreen} options={{ headerShown: true, title: 'Encomendas' }} />
       <Stack.Screen name="EncomendaDetalhe" component={EncomendaDetalheScreen} options={{ headerShown: true, title: 'Encomenda' }} />
       <Stack.Screen name="Categorias" component={CategoriasScreen} options={{ headerShown: true, title: 'Categorias' }} />
       <Stack.Screen name="Vendedores" component={VendedoresScreen} options={{ headerShown: true, title: 'Vendedores' }} />
@@ -54,37 +55,51 @@ function MaisStack() {
 
 function MaisMenuScreen({ navigation }) {
   const items = [
+    { label: 'Encomendas', icon: '📋', screen: 'Encomendas' },
     { label: 'Categorias', icon: '🏷️', screen: 'Categorias' },
     { label: 'Vendedores', icon: '👥', screen: 'Vendedores' },
   ];
 
   return (
-    <div style={{ flex: 1, backgroundColor: '#f3f4f6', padding: 16 }}>
+    <View style={menuStyles.container}>
       {items.map((item) => (
-        <button
+        <TouchableOpacity
           key={item.screen}
-          onClick={() => navigation.navigate(item.screen)}
-          style={{
-            backgroundColor: '#fff',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 12,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            border: 'none',
-            cursor: 'pointer',
-            width: '100%',
-            textAlign: 'left',
-          }}
+          onPress={() => navigation.navigate(item.screen)}
+          style={menuStyles.item}
         >
-          <span style={{ fontSize: 24 }}>{item.icon}</span>
-          <span style={{ fontSize: 16, fontWeight: '600', color: '#1f2937' }}>{item.label}</span>
-        </button>
+          <Text style={menuStyles.icon}>{item.icon}</Text>
+          <Text style={menuStyles.label}>{item.label}</Text>
+        </TouchableOpacity>
       ))}
-    </div>
+    </View>
   );
 }
+
+const menuStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    padding: 16,
+  },
+  item: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  icon: {
+    fontSize: 24,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+});
 
 function MainTabs() {
   return (

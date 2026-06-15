@@ -30,9 +30,13 @@ services:
         value: database
       - key: PYTHON_URL
         value: https://marketplace-python.onrender.com
-      - key: WAHA_URL
+      - key: WAHA_URL_1
         value: https://marketplace-waha.onrender.com
       - key: WAHA_API_KEY
+        value: marketplace_secret_key_2026
+      - key: WEBHOOK_SECRET
+        value: marketplace_secret_key_2026
+      - key: ADMIN_API_KEY
         value: marketplace_secret_key_2026
       - key: SUPER_ADMIN_EMAIL
         value: admin@marketplace.co.mz
@@ -48,7 +52,11 @@ services:
     envVars:
       - key: LARAVEL_URL
         value: https://whatsapp-marketplace-mz.onrender.com
-      - key: WAHA_URL
+      - key: PHP_API_URL
+        value: https://whatsapp-marketplace-mz.onrender.com/api/mensagem
+      - key: APP_URL
+        value: https://whatsapp-marketplace-mz.onrender.com
+      - key: WAHA_URL_1
         value: https://marketplace-waha.onrender.com
       - key: WAHA_API_KEY
         value: marketplace_secret_key_2026

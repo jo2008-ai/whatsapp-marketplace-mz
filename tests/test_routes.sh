@@ -91,7 +91,7 @@ RESP=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/login" 2>/dev/null)
 test_route "Pagina de login /login" "200" "$RESP" ""
 
 RESP=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/registar" 2>/dev/null)
-test_route "Rota /registar devolve 404 (removida)" "404" "$RESP" ""
+test_route "Rota /registar devolve 200 (formulario de registo)" "200" "$RESP" ""
 
 echo ""
 

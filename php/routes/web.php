@@ -19,8 +19,11 @@ Route::get('/', function () {
 });
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::get('/registar', [\App\Http\Controllers\RegistoController::class, 'show'])->name('registar');
+Route::post('/registar', [\App\Http\Controllers\RegistoController::class, 'criar'])->middleware('throttle:10,1');
 
 Route::get('/esqueci-password', [PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/esqueci-password', [PasswordResetController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1');

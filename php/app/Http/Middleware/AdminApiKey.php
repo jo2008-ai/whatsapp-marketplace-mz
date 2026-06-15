@@ -11,13 +11,18 @@ class AdminApiKey
     public function handle(Request $request, Closure $next): Response
     {
         $provided = $request->header('X-Admin-Key');
+        $expected = config('services.admin.key', env('ADMIN_API_KEY', ''));
 
-        if (!$provided || !hash_equals(env('ADMIN_API_KEY', ''), $provided)) {
+        if (!$provided || !$expected || !hash_equals($expected, $provided)) {
             return response()->json([
                 'sucesso' => false,
-                'erro' => 'Chave de administração inválida.',
+                'erro' => 'Chave de administracao invalida.',
             ], 401);
         }
+
+        return $next($request);
+    }
+}
 
         return $next($request);
     }
