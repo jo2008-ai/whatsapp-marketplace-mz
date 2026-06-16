@@ -11,8 +11,10 @@ class RateLimitApi
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $key = 'api:' . ($request->user()?->id ?? $request->ip());
-        $maxAttempts = $request->is('api/auth/login') ? 20 : 200;
+        $isLogin = $request->is('api/auth/login');
+        $tipo = $isLogin ? 'login' : 'geral';
+        $key = 'api:' . $tipo . ':' . ($request->user()?->id ?? $request->ip());
+        $maxAttempts = $isLogin ? 20 : 200;
         $decayMinutes = 1;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
@@ -24,12 +26,9 @@ class RateLimitApi
         }
 
         RateLimiter::hit($key, $decayMinutes * 60);
-
         $response = $next($request);
-
         $response->headers->set('X-RateLimit-Limit', $maxAttempts);
         $response->headers->set('X-RateLimit-Remaining', RateLimiter::remaining($key, $maxAttempts));
-
         return $response;
     }
 }
