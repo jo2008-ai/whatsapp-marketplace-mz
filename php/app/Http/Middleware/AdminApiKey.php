@@ -23,7 +23,3 @@ class AdminApiKey
         return $next($request);
     }
 }
-
-        return $next($request);
-    }
-}
