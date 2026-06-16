@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.*
+.env.example
+.env.backup
+.env.railway
+README.md
+tests/
+app-mobile/
+node_modules/
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
