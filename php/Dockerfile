@@ -17,6 +17,6 @@ RUN mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cac
     && chmod -R 775 storage bootstrap/cache \
     && chmod +x docker-entrypoint.sh
 
-EXPOSE ${PORT:-10000}
+EXPOSE 10000
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/app/docker-entrypoint.sh"]
