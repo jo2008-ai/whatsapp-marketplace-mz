@@ -38,6 +38,10 @@ class VendedorController extends Controller
 
     public function update(Request $request, Vendedor $vendedor)
     {
+        if (!$request->user()->isAdmin()) {
+            abort(403);
+        }
+
         if ($vendedor->tenant_id !== $request->user()->tenant_id) {
             abort(403);
         }
@@ -58,6 +62,10 @@ class VendedorController extends Controller
 
     public function destroy(Request $request, Vendedor $vendedor)
     {
+        if (!$request->user()->isAdmin()) {
+            abort(403);
+        }
+
         if ($vendedor->tenant_id !== $request->user()->tenant_id) {
             abort(403);
         }

@@ -18,7 +18,8 @@ Route::post('/mensagem', [BotController::class, 'processar'])
     ->middleware(['webhook.verify', 'webhook.rate']);
 
 // Webhook Evolution API (eventos de estado de conexão)
-Route::post('/waha/webhook', [WahaWebhookController::class, 'processar']);
+Route::post('/waha/webhook', [WahaWebhookController::class, 'processar'])
+    ->middleware(['webhook.verify', 'webhook.rate']);
 
 // Auth API
 Route::post('/auth/login', [ApiAuthController::class, 'login']);
@@ -64,6 +65,7 @@ Route::middleware(['auth:sanctum', 'tenant.activo'])->prefix('loja')->group(func
     // Definições
     Route::get('/definicoes', [ApiDefinicoesController::class, 'index']);
     Route::post('/definicoes', [ApiDefinicoesController::class, 'guardar']);
+    Route::post('/definicoes/banner-promo', [ApiDefinicoesController::class, 'bannerPromo']);
 
     // Upload
     Route::post('/upload/imagem', [ApiUploadController::class, 'imagem']);
@@ -73,4 +75,5 @@ Route::middleware(['auth:sanctum', 'tenant.activo'])->prefix('loja')->group(func
 Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::post('/lojas', [AdminLojaController::class, 'criar']);
     Route::get('/lojas', [AdminLojaController::class, 'listar']);
+    Route::post('/banner-global', [AdminLojaController::class, 'bannerGlobal']);
 });

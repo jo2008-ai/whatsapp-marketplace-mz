@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ApiAuthController extends Controller
@@ -116,7 +117,8 @@ class ApiAuthController extends Controller
         } catch (ValidationException $e) {
             return $this->validationError($e->errors(), $e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('Erro ao criar conta: ' . $e->getMessage(), 500);
+            Log::error('Erro ao criar conta', ['error' => $e->getMessage()]);
+            return $this->error('Erro interno ao criar conta.', 500);
         }
     }
 

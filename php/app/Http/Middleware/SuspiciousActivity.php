@@ -46,7 +46,7 @@ class SuspiciousActivity
         foreach (self::SUSPICIOUS_PATTERNS as $type => $pattern) {
             if (preg_match($pattern, $inputString)) {
                 try {
-                    Log::channel('security')->warning('Atividade suspeita detectada', [
+                    Log::channel('security')->warning('Atividade suspeita bloqueada', [
                         'tipo' => $type,
                         'ip' => $request->ip(),
                         'user_agent' => $request->userAgent(),
@@ -58,7 +58,7 @@ class SuspiciousActivity
                 } catch (\Exception $e) {
                     // Silently fail if security log channel is unavailable
                 }
-                break;
+                abort(403, 'Atividade suspeita detectada.');
             }
         }
     }
@@ -68,23 +68,13 @@ class SuspiciousActivity
         $userAgent = strtolower($request->userAgent() ?? '');
 
         if (empty($userAgent)) {
-            try {
-                Log::channel('security')->warning('Request sem User-Agent', [
-                    'ip' => $request->ip(),
-                    'metodo' => $request->method(),
-                    'path' => $request->path(),
-                    'timestamp' => now()->toIso8601String(),
-                ]);
-            } catch (\Exception $e) {
-                // Silently fail if security log channel is unavailable
-            }
             return;
         }
 
         foreach (self::SUSPICIOUS_UA_PATTERNS as $pattern) {
             if (str_contains($userAgent, $pattern)) {
                 try {
-                    Log::channel('security')->warning('User-Agent suspeito', [
+                    Log::channel('security')->warning('User-Agent suspeito bloqueado', [
                         'ip' => $request->ip(),
                         'user_agent' => $request->userAgent(),
                         'pattern' => $pattern,
@@ -95,7 +85,7 @@ class SuspiciousActivity
                 } catch (\Exception $e) {
                     // Silently fail if security log channel is unavailable
                 }
-                break;
+                abort(403, 'Atividade suspeita detectada.');
             }
         }
     }

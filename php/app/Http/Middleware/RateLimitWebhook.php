@@ -11,20 +11,16 @@ class RateLimitWebhook
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $instanceName = $request->input('instance_name', 'unknown');
-        $numero = $request->input('numero', 'unknown');
-
-        $key = "webhook:{$instanceName}:{$numero}";
-        $maxAttempts = 30;
+        $ip = $request->ip();
+        $key = "webhook:{$ip}";
+        $maxAttempts = 60;
         $decayMinutes = 1;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
 
             logger()->channel('security')->warning('Rate limit webhook excedido', [
-                'instance_name' => $instanceName,
-                'numero' => $numero,
-                'ip' => $request->ip(),
+                'ip' => $ip,
                 'retry_after' => $seconds,
             ]);
 

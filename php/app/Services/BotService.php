@@ -9,6 +9,7 @@ use App\Models\Produto;
 use App\Models\SessaoBot;
 use App\Models\Tenant;
 use App\Models\Vendedor;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BotService
@@ -59,11 +60,45 @@ class BotService
             return $tenant->mensagem_boas_vindas;
         }
 
-        return "{$saudacao} 👋 Bem-vindo(a) à *{$tenant->nome_loja}*!\n\n"
-             . "1️⃣ Ver produtos por categoria\n"
-             . "2️⃣ Pesquisar produto\n"
-             . "3️⃣ As minhas encomendas\n"
-             . "4️⃣ Falar com vendedor";
+        $banners = $this->obterBanners($tenant);
+
+        $menu = "{$saudacao} 👋 Bem-vindo(a) à *{$tenant->nome_loja}*!\n\n";
+
+        if ($banners) {
+            $menu .= $banners . "\n";
+        }
+
+        $menu .= "1️⃣ Ver produtos por categoria\n"
+              . "2️⃣ Pesquisar produto\n"
+              . "3️⃣ As minhas encomendas\n"
+              . "4️⃣ Falar com vendedor";
+
+        return $menu;
+    }
+
+    private function obterBanners(Tenant $tenant): string
+    {
+        $banners = '';
+
+        if ($tenant->bannerGlobalActivo()) {
+            $cor = $tenant->banner_global_cor ?: '#2563EB';
+            $banners .= "📢 *[{$tenant->banner_global_titulo}]*\n";
+            if ($tenant->banner_global_texto) {
+                $banners .= "{$tenant->banner_global_texto}\n";
+            }
+            $banners .= "\n";
+        }
+
+        if ($tenant->bannerPromoActivo()) {
+            $cor = $tenant->banner_promo_cor ?: '#FF6B35';
+            $banners .= "🔥 *[{$tenant->banner_promo_titulo}]*\n";
+            if ($tenant->banner_promo_texto) {
+                $banners .= "{$tenant->banner_promo_texto}\n";
+            }
+            $banners .= "\n";
+        }
+
+        return $banners;
     }
 
     private function processarInicio(Tenant $tenant, SessaoBot $sessao, string $msg, string $nome): string
@@ -85,12 +120,26 @@ class BotService
             '2' => $this->iniciarPesquisa($sessao),
             '3' => $this->mostrarEncomendas($tenant, $sessao, $msg, $nome),
             '4' => $this->mostrarVendedores($tenant),
-            default => "Não entendi 😅 Escreve o número da opção ou *menu* para recomeçar.\n\n"
-                      . "1️⃣ Ver produtos por categoria\n"
-                      . "2️⃣ Pesquisar produto\n"
-                      . "3️⃣ As minhas encomendas\n"
-                      . "4️⃣ Falar com vendedor",
+            default => $this->mensagemErroMenu($tenant, $nome),
         };
+    }
+
+    private function mensagemErroMenu(Tenant $tenant, string $nome): string
+    {
+        $banners = $this->obterBanners($tenant);
+
+        $msg = "Não entendi 😅 Escreve o número da opção ou *menu* para recomeçar.\n\n";
+
+        if ($banners) {
+            $msg .= $banners . "\n";
+        }
+
+        $msg .= "1️⃣ Ver produtos por categoria\n"
+             . "2️⃣ Pesquisar produto\n"
+             . "3️⃣ As minhas encomendas\n"
+             . "4️⃣ Falar com vendedor";
+
+        return $msg;
     }
 
     private function mostrarCategorias(Tenant $tenant, SessaoBot $sessao): string
@@ -326,7 +375,7 @@ class BotService
             return $this->montarMensagemTamanhos($produto);
         }
 
-        return $this->criarEncomenda($tenant, $sessao, $produto, '', '', $novaDados);
+        return $this->criarEncomenda($tenant, $sessao, $produto, $sessao->numero_whatsapp, '', $novaDados);
     }
 
     private function processarEscolherTamanho(Tenant $tenant, SessaoBot $sessao, string $msg): string
@@ -354,7 +403,7 @@ class BotService
 
         $novaDados = array_merge($dados, ['tamanho_escolhido' => $produto->tamanhos[$index]]);
 
-        return $this->criarEncomenda($tenant, $sessao, $produto, '', '', $novaDados);
+        return $this->criarEncomenda($tenant, $sessao, $produto, $sessao->numero_whatsapp, '', $novaDados);
     }
 
     private function criarEncomenda(Tenant $tenant, SessaoBot $sessao, Produto $produto, string $numero, string $nome, array $dadosSessao = []): string
@@ -366,20 +415,38 @@ class BotService
         $cor = $dadosSessao['cor_escolhida'] ?? null;
         $tamanho = $dadosSessao['tamanho_escolhido'] ?? null;
 
-        $encomenda = Encomenda::create([
-            'tenant_id' => $tenant->id,
-            'numero_cliente' => $numero,
-            'nome_cliente' => $nome,
-            'produto_id' => $produto->id,
-            'cor_escolhida' => $cor,
-            'tamanho_escolhido' => $tamanho,
-            'vendedor_id' => $produto->vendedor_id,
-            'quantidade' => 1,
-            'preco_total' => $produto->preco,
-            'estado' => 'pendente',
-        ]);
+        $resultado = DB::transaction(function () use ($tenant, $produto, $numero, $nome, $cor, $tamanho) {
+            $produtoAtualizado = Produto::lockForUpdate()->find($produto->id);
 
-        $produto->decrement('stock');
+            if (!$produtoAtualizado || $produtoAtualizado->stock <= 0) {
+                return null;
+            }
+
+            $encomenda = Encomenda::create([
+                'tenant_id' => $tenant->id,
+                'numero_cliente' => $numero,
+                'nome_cliente' => $nome,
+                'produto_id' => $produtoAtualizado->id,
+                'cor_escolhida' => $cor,
+                'tamanho_escolhido' => $tamanho,
+                'vendedor_id' => $produtoAtualizado->vendedor_id,
+                'quantidade' => 1,
+                'preco_total' => $produtoAtualizado->preco,
+                'estado' => 'pendente',
+            ]);
+
+            $produtoAtualizado->decrement('stock');
+
+            return $encomenda;
+        });
+
+        if ($resultado === null) {
+            $sessao->atualizarEstado('inicio');
+            return "⚠️ Desculpa, o produto esgotou enquanto fazias a encomenda.\n\n"
+                 . $this->menuPrincipal($tenant, $nome);
+        }
+
+        $encomenda = $resultado;
 
         if ($encomenda->vendedor) {
             NotificarVendedorJob::dispatch($encomenda->id);
@@ -601,18 +668,28 @@ class BotService
         }
 
         if ($msg === '1') {
-            $encomenda = $tenant->encomendas()
-                ->with('produto', 'vendedor')
-                ->find($encomendaId);
+            $resultado = DB::transaction(function () use ($tenant, $encomendaId) {
+                $encomenda = $tenant->encomendas()
+                    ->with('produto', 'vendedor')
+                    ->lockForUpdate()
+                    ->find($encomendaId);
 
-            if (!$encomenda || $encomenda->estado !== 'pendente') {
+                if (!$encomenda || $encomenda->estado !== 'pendente') {
+                    return null;
+                }
+
+                $encomenda->update(['estado' => 'cancelada']);
+                $encomenda->produto->increment('stock');
+
+                return $encomenda;
+            });
+
+            if ($resultado === null) {
                 $sessao->atualizarEstado('inicio');
                 return "Esta encomenda já não pode ser cancelada.\n\n" . $this->menuPrincipal($tenant, '');
             }
 
-            $encomenda->update(['estado' => 'cancelada']);
-
-            $encomenda->produto->increment('stock');
+            $encomenda = $resultado;
 
             $this->notificarDonoCancelamento($tenant, $encomenda);
 

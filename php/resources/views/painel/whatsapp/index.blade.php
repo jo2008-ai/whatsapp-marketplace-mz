@@ -63,7 +63,6 @@
 
 @push('scripts')
 <script>
-    const WAHA_KEY = '{{ config("services.waha.key") }}';
     const tenantId = {{ $tenantId ?? 1 }};
 
     let pollingInterval = null;

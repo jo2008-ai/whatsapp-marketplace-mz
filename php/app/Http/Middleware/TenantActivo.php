@@ -21,7 +21,7 @@ class TenantActivo
 
         if (!$user->tenant->activo) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Loja temporariamente indisponível.'], 401);
+                return response()->json(['success' => false, 'message' => 'Loja temporariamente indisponível.'], 403);
             }
             return redirect('/login')->with('error', 'Loja temporariamente indisponível.');
         }

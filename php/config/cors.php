@@ -6,12 +6,9 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_filter([
-        env('FRONTEND_URL', 'http://localhost:3000'),
-        env('MOBILE_URL', 'http://localhost:19006'),
+        env('FRONTEND_URL'),
+        env('MOBILE_URL'),
         env('APP_URL'),
-        'https://whatsapp-marketplace-mz.onrender.com',
-        'https://marketplace-python.onrender.com',
-        'http://localhost:8081',
     ]),
 
     'allowed_origins_patterns' => array_filter([

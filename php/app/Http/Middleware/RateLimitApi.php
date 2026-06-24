@@ -14,7 +14,7 @@ class RateLimitApi
         $isLogin = $request->is('api/auth/login');
         $tipo = $isLogin ? 'login' : 'geral';
         $key = 'api:' . $tipo . ':' . ($request->user()?->id ?? $request->ip());
-        $maxAttempts = $isLogin ? 20 : 200;
+        $maxAttempts = $isLogin ? 5 : 200;
         $decayMinutes = 1;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {

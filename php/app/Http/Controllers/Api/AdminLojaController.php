@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -60,7 +62,7 @@ class AdminLojaController extends Controller
                     'tenant_id' => $tenant->id,
                     'name'      => $validated['nome_loja'],
                     'email'     => $validated['email'],
-                    'password'  => $password,
+                    'password'  => Hash::make($password),
                     'role'      => 'admin',
                 ]);
 
@@ -94,7 +96,7 @@ class AdminLojaController extends Controller
                 'credenciais' => [
                     'email'     => $validated['email'],
                     'password'  => $password,
-                    'login_url' => env('APP_URL') . '/login',
+                    'login_url' => config('app.url') . '/login',
                 ],
                 'whatsapp' => [
                     'tenant_id' => $tenant->id,
@@ -105,13 +107,14 @@ class AdminLojaController extends Controller
         } catch (ValidationException $e) {
             return response()->json([
                 'sucesso' => false,
-                'erro'    => $e->getMessage(),
+                'erro'    => 'Dados inválidos.',
                 'erros'   => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
+            Log::error('Erro ao criar loja', ['error' => $e->getMessage()]);
             return response()->json([
                 'sucesso' => false,
-                'erro'    => 'Erro ao criar loja: ' . $e->getMessage(),
+                'erro'    => 'Erro interno ao criar loja.',
             ], 500);
         }
     }
@@ -135,6 +138,50 @@ class AdminLojaController extends Controller
         return response()->json([
             'sucesso' => true,
             'lojas'   => $lojas,
+        ]);
+    }
+
+    public function bannerGlobal(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'tenant_ids' => 'nullable|array',
+            'tenant_ids.*' => 'integer|exists:tenants,id',
+            'activo' => 'required|boolean',
+            'titulo' => 'required_if:activo,true|nullable|string|max:100',
+            'texto' => 'nullable|string|max:255',
+            'cor' => 'nullable|string|max:7',
+        ]);
+
+        if ($validated['activo'] && empty($validated['titulo'])) {
+            return response()->json([
+                'sucesso' => false,
+                'erro' => 'Título é obrigatório quando o banner está activo.',
+            ], 422);
+        }
+
+        $query = Tenant::query();
+
+        if (!empty($validated['tenant_ids'])) {
+            $query->whereIn('id', $validated['tenant_ids']);
+        }
+
+        $tenants = $query->get();
+
+        $actualizados = 0;
+        foreach ($tenants as $tenant) {
+            $tenant->update([
+                'banner_global_activo' => $validated['activo'],
+                'banner_global_titulo' => $validated['titulo'] ?? null,
+                'banner_global_texto' => $validated['texto'] ?? null,
+                'banner_global_cor' => $validated['cor'] ?? '#2563EB',
+            ]);
+            $actualizados++;
+        }
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => "Banner global actualizado em {$actualizados} loja(s).",
+            'lojas_actualizadas' => $actualizados,
         ]);
     }
 }

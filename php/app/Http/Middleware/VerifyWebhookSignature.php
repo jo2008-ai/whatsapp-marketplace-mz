@@ -13,9 +13,9 @@ class VerifyWebhookSignature
     {
         $secret = config('services.waha.webhook_secret');
 
-        // Se não há secret configurado, passa (desenvolvimento)
-        if (!$secret) {
-            return $next($request);
+        if (empty($secret)) {
+            Log::error('Webhook secret não configurado — pedidos rejeitados');
+            return response()->json(['error' => 'Webhook secret não configurado'], 500);
         }
 
         $signature = $request->header('X-Hub-Signature-256')

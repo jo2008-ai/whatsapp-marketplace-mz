@@ -13,7 +13,7 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_KEY
-        value: base64:VmYu3902V5FCCJx/k1oyTOxm3rak5YCIHTQxoeHsTjU=
+        value: CHANGE_ME_GENERATE_WITH_php_artisan_key_generate
       - key: APP_DEBUG
         value: "false"
       - key: APP_URL
@@ -21,7 +21,7 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_URL
-        value: postgresql://marketplace_db_yu8z_user:cNtSq99Kjf1NgdDDC6R3UOSYWHYCXCTy@dpg-d8i7v28jo6nc73d0qhe0-a/marketplace_db_yu8z
+        value: CHANGE_ME_DATABASE_URL_FROM_SUPABASE
       - key: SESSION_DRIVER
         value: file
       - key: CACHE_STORE
@@ -33,11 +33,11 @@ services:
       - key: WAHA_URL_1
         value: https://marketplace-waha.onrender.com
       - key: WAHA_API_KEY
-        value: marketplace_secret_key_2026
+        value: CHANGE_ME_RANDOM_SECRET
       - key: WEBHOOK_SECRET
-        value: marketplace_secret_key_2026
+        value: CHANGE_ME_RANDOM_SECRET
       - key: ADMIN_API_KEY
-        value: marketplace_secret_key_2026
+        value: CHANGE_ME_RANDOM_SECRET
       - key: SUPER_ADMIN_EMAIL
         value: admin@marketplace.co.mz
 
@@ -59,7 +59,7 @@ services:
       - key: WAHA_URL_1
         value: https://marketplace-waha.onrender.com
       - key: WAHA_API_KEY
-        value: marketplace_secret_key_2026
+        value: CHANGE_ME_RANDOM_SECRET
       - key: WAHA_SESSION
         value: default
       - key: TENANT_ID_DEFAULT
