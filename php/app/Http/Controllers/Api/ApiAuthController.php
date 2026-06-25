@@ -45,6 +45,33 @@ class ApiAuthController extends Controller
         ], 'Login efectuado com sucesso');
     }
 
+    public function loginByCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|size:6',
+        ]);
+
+        $user = User::where('login_code', $validated['code'])->first();
+
+        if (!$user) {
+            return $this->unauthorized('Código inválido.');
+        }
+
+        $token = $user->createToken('mobile-app')->plainTextToken;
+
+        return $this->success([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'tenant_id' => $user->tenant_id,
+                'tenant_nome' => $user->tenant?->nome_loja,
+            ],
+            'token' => $token,
+        ], 'Login efectuado com sucesso');
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();

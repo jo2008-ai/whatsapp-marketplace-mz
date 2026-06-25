@@ -41,6 +41,16 @@ export function AuthProvider({ children }) {
     return { success: false, message: res.data.message };
   }
 
+  async function loginByCode(code) {
+    const res = await authApi.loginByCode(code);
+    if (res.data.success) {
+      await AsyncStorage.setItem('token', res.data.data.token);
+      setUser(res.data.data.user);
+      return { success: true };
+    }
+    return { success: false, message: res.data.message };
+  }
+
   async function logout() {
     try {
       await authApi.logout();
@@ -52,7 +62,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, loginByCode, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -15,24 +15,25 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            'login_code' => 'required|string|size:6',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            $user = Auth::user();
+        $user = \App\Models\User::where('login_code', $credentials['login_code'])->first();
 
-            if ($user->isSuperAdmin()) {
-                return redirect('/super');
-            }
-
-            return redirect('/painel');
+        if (!$user) {
+            return back()->withErrors([
+                'login_code' => 'Código inválido.',
+            ]);
         }
 
-        return back()->withErrors([
-            'email' => 'Credenciais inválidas.',
-        ])->onlyInput('email');
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        if ($user->isSuperAdmin()) {
+            return redirect('/super');
+        }
+
+        return redirect('/painel');
     }
 
     public function logout(Request $request)

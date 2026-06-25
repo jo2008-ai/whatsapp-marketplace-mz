@@ -42,10 +42,10 @@ class AdminLojaController extends Controller
             default     => 9.99,
         };
 
-        $password = Str::random(16);
+        $loginCode = $this->generatePin();
 
         try {
-            $tenant = DB::transaction(function () use ($validated, $plano, $diasTrial, $maxProdutos, $password) {
+            $tenant = DB::transaction(function () use ($validated, $plano, $diasTrial, $maxProdutos, $loginCode) {
                 $tenant = Tenant::create([
                     'nome_loja'         => $validated['nome_loja'],
                     'email_dono'        => $validated['email'],
@@ -59,11 +59,12 @@ class AdminLojaController extends Controller
                 ]);
 
                 User::create([
-                    'tenant_id' => $tenant->id,
-                    'name'      => $validated['nome_loja'],
-                    'email'     => $validated['email'],
-                    'password'  => Hash::make($password),
-                    'role'      => 'admin',
+                    'tenant_id'   => $tenant->id,
+                    'name'        => $validated['nome_loja'],
+                    'email'       => $validated['email'],
+                    'password'    => Hash::make(Str::random(32)),
+                    'role'        => 'admin',
+                    'login_code'  => $loginCode,
                 ]);
 
                 return $tenant;
@@ -94,9 +95,9 @@ class AdminLojaController extends Controller
                     'tenant_id' => $tenant->id,
                 ],
                 'credenciais' => [
-                    'email'     => $validated['email'],
-                    'password'  => $password,
-                    'login_url' => config('app.url') . '/login',
+                    'email'      => $validated['email'],
+                    'login_code' => $loginCode,
+                    'login_url'  => config('app.url') . '/login',
                 ],
                 'whatsapp' => [
                     'tenant_id' => $tenant->id,
@@ -183,5 +184,10 @@ class AdminLojaController extends Controller
             'mensagem' => "Banner global actualizado em {$actualizados} loja(s).",
             'lojas_actualizadas' => $actualizados,
         ]);
+    }
+
+    private function generatePin(): string
+    {
+        return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 }

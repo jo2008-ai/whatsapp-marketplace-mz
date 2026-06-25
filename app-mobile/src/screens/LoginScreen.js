@@ -6,21 +6,20 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { loginByCode } = useAuth();
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
-    if (!email || !password) {
-      Alert.alert('Erro', 'Preenche todos os campos.');
+    if (!code || code.length !== 6) {
+      Alert.alert('Erro', 'Insere o teu código de 6 dígitos.');
       return;
     }
     setLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await loginByCode(code);
       if (!result.success) {
-        Alert.alert('Erro', result.message || 'Credenciais inválidas.');
+        Alert.alert('Erro', result.message || 'Código inválido.');
       }
     } catch (err) {
       Alert.alert('Erro', err.response?.data?.message || 'Falha na conexão.');
@@ -39,18 +38,12 @@ export default function LoginScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          placeholder="000000"
+          value={code}
+          onChangeText={(t) => setCode(t.replace(/[^0-9]/g, ''))}
+          keyboardType="numeric"
+          maxLength={6}
+          inputMode="numeric"
         />
 
         <TouchableOpacity
@@ -60,6 +53,10 @@ export default function LoginScreen() {
         >
           <Text style={styles.btnText}>{loading ? 'A entrar...' : 'Entrar'}</Text>
         </TouchableOpacity>
+
+        <Text style={styles.hint}>
+          Contacta o administrador para obter o teu código.
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -100,8 +97,11 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     borderRadius: 10,
     paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    paddingVertical: 14,
+    fontSize: 24,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    letterSpacing: 8,
+    textAlign: 'center',
     marginBottom: 12,
   },
   btn: {
@@ -118,5 +118,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 16,
+  },
+  hint: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 16,
   },
 });

@@ -2,6 +2,7 @@ import api from './client';
 
 export const authApi = {
   login: (email, password) => api.post('/auth/login', { email, password }),
+  loginByCode: (code) => api.post('/auth/login-by-code', { code }),
   logout: () => api.post('/auth/logout'),
   me: () => api.get('/auth/me'),
 };
