@@ -48,8 +48,15 @@
             <p class="text-sm text-gray-600 mt-2">Envie este código ao cliente para login em <strong>/login</strong></p>
         </div>
         @else
-        <p class="text-sm text-gray-400">Sem código gerado.</p>
+        <p class="text-sm text-gray-400 mb-3">Sem código gerado.</p>
         @endif
+
+        <form method="POST" action="/super/lojas/{{ $tenant->id }}/gerar-codigo" class="mt-3">
+            @csrf
+            <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                🔄 Gerar Novo Código
+            </button>
+        </form>
 
         <hr class="my-4">
 

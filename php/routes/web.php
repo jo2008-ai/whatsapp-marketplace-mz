@@ -63,6 +63,7 @@ Route::prefix('super')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/lojas/criar', [SuperAdminController::class, 'criar'])->name('super.lojas.criar');
     Route::post('/lojas/criar-rapido', [SuperAdminController::class, 'criarRapido'])->name('super.lojas.criarRapido');
     Route::get('/lojas/{tenant}', [SuperAdminController::class, 'show'])->name('super.lojas.show');
+    Route::post('/lojas/{tenant}/gerar-codigo', [SuperAdminController::class, 'gerarCodigo'])->name('super.lojas.gerarCodigo');
     Route::patch('/lojas/{tenant}/toggle', [SuperAdminController::class, 'toggleActivo'])->name('super.lojas.toggle');
     Route::get('/instancias', function () {
         $instancias = \App\Models\InstanciaWhatsApp::with('tenant')

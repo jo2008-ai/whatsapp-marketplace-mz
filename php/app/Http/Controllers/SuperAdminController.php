@@ -107,4 +107,18 @@ class SuperAdminController extends Controller
         $estado = $tenant->activo ? 'activada' : 'desactivada';
         return back()->with('success', "Loja \"{$tenant->nome_loja}\" {$estado}.");
     }
+
+    public function gerarCodigo(Tenant $tenant)
+    {
+        $user = $tenant->users()->first();
+
+        if (!$user) {
+            return back()->with('error', 'Utilizador não encontrado.');
+        }
+
+        $loginCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $user->update(['login_code' => $loginCode]);
+
+        return back()->with('success', "Novo código gerado: {$loginCode}");
+    }
 }
