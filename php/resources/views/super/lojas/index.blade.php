@@ -3,8 +3,11 @@
 
 @section('content')
 <div class="bg-white rounded-xl shadow overflow-hidden">
-    <div class="p-4 border-b">
+    <div class="p-4 border-b flex justify-between items-center">
         <h2 class="font-semibold text-gray-800">Lojas ({{ $lojas->count() }})</h2>
+        <a href="/super/lojas/criar" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+            + Criar Loja
+        </a>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">

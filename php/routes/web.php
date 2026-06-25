@@ -60,6 +60,8 @@ Route::prefix('painel')->middleware(['auth', 'tenant.activo'])->group(function (
 Route::prefix('super')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/', [SuperAdminController::class, 'dashboard'])->name('super.dashboard');
     Route::get('/lojas', [SuperAdminController::class, 'lojas'])->name('super.lojas');
+    Route::get('/lojas/criar', [SuperAdminController::class, 'criar'])->name('super.lojas.criar');
+    Route::post('/lojas/criar-rapido', [SuperAdminController::class, 'criarRapido'])->name('super.lojas.criarRapido');
     Route::get('/lojas/{tenant}', [SuperAdminController::class, 'show'])->name('super.lojas.show');
     Route::patch('/lojas/{tenant}/toggle', [SuperAdminController::class, 'toggleActivo'])->name('super.lojas.toggle');
     Route::get('/instancias', function () {

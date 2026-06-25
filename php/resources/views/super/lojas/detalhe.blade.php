@@ -2,6 +2,12 @@
 @section('title', $tenant->nome_loja)
 
 @section('content')
+@if(session('success'))
+<div class="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded-lg">
+    {{ session('success') }}
+</div>
+@endif
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="bg-white rounded-xl shadow p-5">
         <h3 class="font-semibold text-gray-800 mb-3">Informações</h3>
@@ -34,7 +40,20 @@
     </div>
 
     <div class="bg-white rounded-xl shadow p-5">
-        <h3 class="font-semibold text-gray-800 mb-3">Instâncias WhatsApp</h3>
+        <h3 class="font-semibold text-gray-800 mb-3">Login Code</h3>
+        @php $user = $tenant->users->first(); @endphp
+        @if($user && $user->login_code)
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+            <div class="text-3xl font-mono font-bold text-blue-600 tracking-widest">{{ $user->login_code }}</div>
+            <p class="text-sm text-gray-600 mt-2">Envie este código ao cliente para login em <strong>/login</strong></p>
+        </div>
+        @else
+        <p class="text-sm text-gray-400">Sem código gerado.</p>
+        @endif
+
+        <hr class="my-4">
+
+        <h4 class="font-medium text-gray-700 mb-2">Instâncias WhatsApp</h4>
         @forelse($tenant->instancias as $inst)
         <div class="border rounded-lg p-3 mb-2">
             <div class="flex justify-between">

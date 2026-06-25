@@ -30,6 +30,10 @@ class BotService
         $sessao = SessaoBot::obter($tenant->id, $numero);
         $msg = mb_strtolower(trim($mensagem));
 
+        if ($sessao->estado === 'transferido_vendedor') {
+            return $this->processarTransferidoVendedor($tenant, $sessao, $msg, $numero, $nome);
+        }
+
         if (in_array($msg, ['0', 'menu', 'voltar', 'inicio'])) {
             $sessao->atualizarEstado('inicio');
             return $this->menuPrincipal($tenant, $nome);
@@ -48,6 +52,8 @@ class BotService
             'ver_encomendas' => $this->processarVerEncomendas($tenant, $sessao, $msg, $numero),
             'detalhe_encomenda' => $this->processarDetalheEncomenda($tenant, $sessao, $msg, $numero),
             'confirmar_cancelamento' => $this->processarConfirmarCancelamento($tenant, $sessao, $msg, $numero),
+            'escolher_vendedor' => $this->processarEscolherVendedor($tenant, $sessao, $msg, $numero, $nome),
+            'transferido_vendedor' => $this->processarTransferidoVendedor($tenant, $sessao, $msg, $numero, $nome),
             default => $this->menuPrincipal($tenant, $nome),
         };
     }
@@ -119,13 +125,17 @@ class BotService
             '1' => $this->mostrarCategorias($tenant, $sessao),
             '2' => $this->iniciarPesquisa($sessao),
             '3' => $this->mostrarEncomendas($tenant, $sessao, $msg, $nome),
-            '4' => $this->mostrarVendedores($tenant),
+            '4' => $this->mostrarVendedores($tenant, $sessao),
             default => $this->mensagemErroMenu($tenant, $nome),
         };
     }
 
     private function mensagemErroMenu(Tenant $tenant, string $nome): string
     {
+        if ($tenant->mensagem_erro_menu) {
+            return $tenant->mensagem_erro_menu;
+        }
+
         $banners = $this->obterBanners($tenant);
 
         $msg = "Não entendi 😅 Escreve o número da opção ou *menu* para recomeçar.\n\n";
@@ -152,7 +162,7 @@ class BotService
 
         if ($categorias->isEmpty()) {
             $sessao->atualizarEstado('inicio');
-            return "Ainda não há categorias disponíveis. Volta mais tarde! 🙂";
+            return $tenant->mensagem_categoria_vazia ?: "Ainda não há categorias disponíveis. Volta mais tarde! 🙂";
         }
 
         $sessao->atualizarEstado('categorias');
@@ -207,7 +217,7 @@ class BotService
 
         if ($produtos->isEmpty() && $pagina === 1) {
             $sessao->atualizarEstado('inicio');
-            return "Nenhum produto disponível nesta categoria. 🙁";
+            return $tenant->mensagem_categoria_vazia ?: "Nenhum produto disponível nesta categoria. 🙁";
         }
 
         $temMais = $produtos->count() > $porPagina;
@@ -458,9 +468,11 @@ class BotService
         $linhaVariante = $variante ? " — {$variante}" : '';
         $vendedorInfo = $encomenda->vendedor ? "\n📱 O vendedor *{$encomenda->vendedor->nome}* irá contactar-te." : '';
 
-        return "✅ Encomenda feita com sucesso!\n\n"
+        $mensagemSucesso = $tenant->mensagem_pedido_sucesso ?: "✅ Encomenda feita com sucesso!\n\n"
              . "📋 *{$produto->nome}{$linhaVariante}* — {$produto->preco} MZN{$vendedorInfo}\n\n"
              . "Obrigado pela preferência! 🙏";
+
+        return $mensagemSucesso;
     }
 
     private function formatarVariante(?string $cor, ?string $tamanho): string
@@ -491,7 +503,7 @@ class BotService
             ->get();
 
         if ($produtos->isEmpty()) {
-            return "Nenhum produto encontrado para \"{$msg}\". Tenta outra palavra.\n\n0️⃣ Menu principal";
+            return $tenant->mensagem_pesquisa_vazia ?: "Nenhum produto encontrado para \"{$msg}\". Tenta outra palavra.\n\n0️⃣ Menu principal";
         }
 
         $sessao->atualizarEstado('pesquisa_resultados', [
@@ -701,9 +713,11 @@ class BotService
 
             $sessao->atualizarEstado('inicio');
 
-            return "✅ Encomenda #{$encomenda->id} cancelada com sucesso.\n\n"
+            $mensagemCancelamento = $tenant->mensagem_pedido_cancelado ?: "✅ Encomenda #{$encomenda->id} cancelada com sucesso.\n\n"
                  . "O stock foi reposto. Se precisares de algo, estamos cá!\n\n"
                  . $this->menuPrincipal($tenant, '');
+
+            return $mensagemCancelamento;
         }
 
         if ($msg === '2') {
@@ -762,21 +776,89 @@ class BotService
         }
     }
 
-    private function mostrarVendedores(Tenant $tenant): string
+    private function mostrarVendedores(Tenant $tenant, SessaoBot $sessao): string
     {
         $vendedores = $tenant->vendedores()->where('ativo', true)->get();
 
         if ($vendedores->isEmpty()) {
-            return "Ainda não há vendedores disponíveis.\n\n0️⃣ Menu principal";
+            return $tenant->mensagem_vendedores_indisponivel ?: "Ainda não há vendedores disponíveis.\n\n0️⃣ Menu principal";
         }
 
-        $texto = "🏪 *Vendedores:*\n\n";
-        foreach ($vendedores as $v) {
+        $texto = "🏪 *Escolha um vendedor para falar:*\n\n";
+        foreach ($vendedores as $i => $v) {
+            $num = $i + 1;
             $desc = $v->descricao ? " — {$v->descricao}" : '';
-            $texto .= "• *{$v->nome}*{$desc}\n  📱 {$v->numero_whatsapp}\n\n";
+            $texto .= "{$num}️⃣ *{$v->nome}*{$desc}\n";
+        }
+        $texto .= "\n0️⃣ Menu principal";
+
+        $sessao->atualizarEstado('escolher_vendedor');
+
+        return $texto;
+    }
+
+    private function processarEscolherVendedor(Tenant $tenant, SessaoBot $sessao, string $msg, string $numero, string $nome): string
+    {
+        $vendedores = $tenant->vendedores()->where('ativo', true)->get();
+
+        $index = (int) $msg - 1;
+
+        if ($index < 0 || $index >= $vendedores->count()) {
+            return "Opção inválida. Escolhe um número de 1 a {$vendedores->count()} ou *0* para voltar.";
         }
 
-        $texto .= "0️⃣ Menu principal";
-        return $texto;
+        $vendedor = $vendedores[$index];
+
+        $this->notificarVendedor($tenant, $vendedor, $numero, $nome);
+
+        $sessao->atualizarEstado('transferido_vendedor', [
+            'vendedor_id' => $vendedor->id,
+            'vendedor_nome' => $vendedor->nome,
+            'cliente_numero' => $numero,
+            'cliente_nome' => $nome,
+        ]);
+
+        $mensagemTransferencia = $tenant->mensagem_transferencia ?: "✅ A sua conversa foi encaminhada para *{$vendedor->nome}*.\n\n"
+             . "📱 Ele irá contactar-te no número *{$numero}* em breve.\n\n"
+             . "Escreve *menu* para voltar ao menu principal.";
+
+        return $mensagemTransferencia;
+    }
+
+    private function notificarVendedor(Tenant $tenant, Vendedor $vendedor, string $numeroCliente, string $nomeCliente): void
+    {
+        $mensagem = "📞 *Novo pedido de atendimento*\n\n"
+                  . "👤 Cliente: " . ($nomeCliente ?: 'Não informado') . "\n"
+                  . "📱 Número: {$numeroCliente}\n\n"
+                  . "Por favor, entre em contacto com o cliente.";
+
+        try {
+            \Illuminate\Support\Facades\Http::timeout(10)->post(
+                config('services.python.url') . '/enviar',
+                [
+                    'tenant_id' => $tenant->id,
+                    'numero' => $vendedor->numero_whatsapp,
+                    'mensagem' => $mensagem,
+                    'instance_name' => 'default',
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::error("Erro ao notificar vendedor: " . $e->getMessage());
+        }
+    }
+
+    private function processarTransferidoVendedor(Tenant $tenant, SessaoBot $sessao, string $msg, string $numero, string $nome): string
+    {
+        if ($msg === 'menu' || $msg === '0' || $msg === 'voltar') {
+            $sessao->atualizarEstado('inicio');
+            return $this->menuPrincipal($tenant, $nome);
+        }
+
+        $vendedorNome = $sessao->dados['vendedor_nome'] ?? 'o vendedor';
+        
+        $mensagemTransferencia = $tenant->mensagem_transferencia ?: "⏳ A sua conversa está encaminhada para *{$vendedorNome}*.\n\n"
+             . "Ele irá responder-te em breve. Escreve *menu* para voltar ao menu principal.";
+
+        return $mensagemTransferencia;
     }
 }
