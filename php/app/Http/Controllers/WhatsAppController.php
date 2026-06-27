@@ -24,7 +24,9 @@ class WhatsAppController extends Controller
             return $instancia->waha_url;
         }
 
-        return $this->getWahaUrl($instancia->tenant_id);
+        return $this->getWahaUrl($instancia->tenant_id)
+            ?? config('services.waha.url')
+            ?? env('WAHA_URL_1');
     }
 
     public function index(Request $request)
@@ -43,6 +45,10 @@ class WhatsAppController extends Controller
         $instancia = $tenant->instancias()->first();
 
         if ($instancia) {
+            if (!$instancia->waha_url) {
+                $wahaUrl = $request->input('waha_url') ?: $this->getWahaUrl($tenant->id) ?? config('services.waha.url');
+                $instancia->update(['waha_url' => $wahaUrl]);
+            }
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
                 ->with('success', 'Sessao WhatsApp ja existe.');
         }
