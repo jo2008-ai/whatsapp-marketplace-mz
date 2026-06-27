@@ -18,6 +18,15 @@ class WhatsAppController extends Controller
         return config('services.waha.key', '');
     }
 
+    private function resolveWahaUrl(InstanciaWhatsApp $instancia): ?string
+    {
+        if ($instancia->waha_url) {
+            return $instancia->waha_url;
+        }
+
+        return $this->getWahaUrl($instancia->tenant_id);
+    }
+
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -38,11 +47,14 @@ class WhatsAppController extends Controller
                 ->with('success', 'Sessao WhatsApp ja existe.');
         }
 
+        $wahaUrl = $request->input('waha_url') ?: $this->getWahaUrl($tenant->id);
+
         try {
             $instancia = InstanciaWhatsApp::create([
                 'tenant_id' => $tenant->id,
                 'nome_instancia' => 'default',
                 'waha_session' => 'default',
+                'waha_url' => $wahaUrl,
                 'estado' => 'aguarda_qr',
             ]);
 
@@ -63,15 +75,17 @@ class WhatsAppController extends Controller
             return response()->json(['erro' => 'Instancia nao encontrada'], 404);
         }
 
-        $wahaUrl = $this->getWahaUrl($tenant->id);
+        $wahaUrl = $this->resolveWahaUrl($instancia);
         if (!$wahaUrl) {
             return response()->json(['erro' => 'WAHA nao configurado para este tenant'], 500);
         }
 
+        $session = $instancia->waha_session ?: 'default';
+
         try {
             $response = Http::withHeaders([
                 'X-Api-Key' => $this->getWahaKey(),
-            ])->timeout(10)->get("{$wahaUrl}/api/default/auth/qr");
+            ])->timeout(10)->get("{$wahaUrl}/api/{$session}/auth/qr");
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -98,29 +112,31 @@ class WhatsAppController extends Controller
     public function estado(Request $request)
     {
         $tenant = $request->user()->tenant;
-        $wahaUrl = $this->getWahaUrl($tenant->id);
+        $instancia = $tenant->instancias()->first();
 
+        if (!$instancia) {
+            return response()->json(['estado' => 'erro', 'error' => 'Sem instancia']);
+        }
+
+        $wahaUrl = $this->resolveWahaUrl($instancia);
         if (!$wahaUrl) {
             return response()->json(['estado' => 'erro', 'error' => 'WAHA nao configurado']);
         }
 
+        $session = $instancia->waha_session ?: 'default';
+
         try {
             $response = Http::withHeaders([
                 'X-Api-Key' => $this->getWahaKey(),
-            ])->timeout(10)->get("{$wahaUrl}/api/sessions");
+            ])->timeout(10)->get("{$wahaUrl}/api/{$session}");
 
             if ($response->successful()) {
-                $sessions = $response->json();
-                foreach ($sessions as $session) {
-                    if (($session['name'] ?? '') === 'default') {
-                        $state = $session['status'] ?? 'unknown';
-                        return response()->json([
-                            'estado' => $state === 'WORKING' ? 'conectada' : 'desconectada',
-                            'state' => $state,
-                        ]);
-                    }
-                }
-                return response()->json(['estado' => 'desconectada', 'state' => 'not_found']);
+                $data = $response->json();
+                $state = $data['status'] ?? 'unknown';
+                return response()->json([
+                    'estado' => $state === 'WORKING' ? 'conectada' : 'desconectada',
+                    'state' => $state,
+                ]);
             }
 
             return response()->json(['estado' => 'erro', 'error' => 'HTTP ' . $response->status()]);
