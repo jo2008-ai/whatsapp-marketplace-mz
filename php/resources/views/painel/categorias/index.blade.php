@@ -54,7 +54,7 @@
                             @csrf @method('PUT')
                             <input type="hidden" name="nome" value="{{ $cat->nome }}">
                             <input type="hidden" name="ativo" value="{{ $cat->ativo ? 0 : 1 }}">
-                            <button class="text-sm {{ $cat->ativo ? 'text-yellow-600' : 'text-green-600 }} hover:underline">
+                            <button class="text-sm {{ $cat->ativo ? 'text-yellow-600' : 'text-green-600' }} hover:underline">
                                 {{ $cat->ativo ? 'Desactivar' : 'Activar' }}
                             </button>
                         </form>

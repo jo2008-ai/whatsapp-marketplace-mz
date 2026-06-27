@@ -49,7 +49,7 @@
                             <input type="hidden" name="nome" value="{{ $v->nome }}">
                             <input type="hidden" name="numero_whatsapp" value="{{ $v->numero_whatsapp }}">
                             <input type="hidden" name="ativo" value="{{ $v->ativo ? 0 : 1 }}">
-                            <button class="text-sm {{ $v->ativo ? 'text-yellow-600' : 'text-green-600 }} hover:underline">
+                            <button class="text-sm {{ $v->ativo ? 'text-yellow-600' : 'text-green-600' }} hover:underline">
                                 {{ $v->ativo ? 'Desactivar' : 'Activar' }}
                             </button>
                         </form>

@@ -10,6 +10,7 @@ echo "==> APP_DEBUG=${APP_DEBUG:-false}"
 echo "==> [1/7] A limpar caches..."
 php artisan config:clear 2>&1 || echo "AVISO: config:clear falhou (ignorado)"
 php artisan cache:clear 2>&1  || echo "AVISO: cache:clear falhou (ignorado)"
+php artisan view:clear 2>&1   || echo "AVISO: view:clear falhou (ignorado)"
 
 echo "==> [2/7] A regenerar caches..."
 php artisan config:cache 2>&1 || echo "AVISO: config:cache falhou (ignorado)"
