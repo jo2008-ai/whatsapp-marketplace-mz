@@ -80,10 +80,15 @@ class AdminLojaController extends Controller
                 'metodo_pagamento'  => 'trial',
             ]);
 
+            $wahaUrl = config("services.waha.urls.{$tenant->id}")
+                ?? config('services.waha.url')
+                ?? env('WAHA_URL_1');
+
             InstanciaWhatsApp::create([
                 'tenant_id'     => $tenant->id,
                 'nome_instancia'=> "loja_{$tenant->id}",
                 'waha_session'  => "loja_{$tenant->id}",
+                'waha_url'      => $wahaUrl,
                 'estado'        => 'aguarda_qr',
             ]);
 
