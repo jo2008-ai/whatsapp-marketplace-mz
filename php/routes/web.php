@@ -72,11 +72,3 @@ Route::prefix('super')->middleware(['auth', 'super.admin'])->group(function () {
         return view('super.instancias', compact('instancias'));
     })->name('super.instancias');
 });
-
-Route::get('/fix-db', function () {
-    if (!\Illuminate\Support\Facades\Schema::hasColumn('instancias_whatsapp', 'waha_url')) {
-        \Illuminate\Support\Facades\DB::statement('ALTER TABLE instancias_whatsapp ADD COLUMN waha_url VARCHAR(255) NULL');
-        return 'waha_url column added.';
-    }
-    return 'waha_url column already exists.';
-});
