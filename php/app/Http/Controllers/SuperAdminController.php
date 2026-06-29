@@ -42,6 +42,7 @@ class SuperAdminController extends Controller
             'nome_loja' => 'required|string|max:255',
             'nome_dono' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
+            'waha_server' => 'required|integer|in:1,2,3,4',
         ]);
 
         $telefone = preg_replace('/[^0-9]/', '', $validated['telefone']);
@@ -80,6 +81,16 @@ class SuperAdminController extends Controller
             'data_fim' => now()->addDays(7),
             'estado' => 'activa',
             'metodo_pagamento' => 'trial',
+        ]);
+
+        $wahaUrl = env("WAHA_URL_{$validated['waha_server']}");
+
+        InstanciaWhatsApp::create([
+            'tenant_id'     => $tenant->id,
+            'nome_instancia'=> "loja_{$tenant->id}",
+            'waha_session'  => "loja_{$tenant->id}",
+            'waha_url'      => $wahaUrl,
+            'estado'        => 'aguarda_qr',
         ]);
 
         return redirect('/super/lojas/' . $tenant->id)
