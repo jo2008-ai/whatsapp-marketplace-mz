@@ -77,6 +77,7 @@ Route::middleware(['auth:sanctum', 'tenant.activo'])->prefix('loja')->group(func
 Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::post('/lojas', [AdminLojaController::class, 'criar']);
     Route::get('/lojas', [AdminLojaController::class, 'listar']);
+    Route::delete('/lojas/{id}', [AdminLojaController::class, 'eliminar']);
     Route::post('/banner-global', [AdminLojaController::class, 'bannerGlobal']);
 });
 

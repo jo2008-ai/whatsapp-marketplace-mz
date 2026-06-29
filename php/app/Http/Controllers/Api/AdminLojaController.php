@@ -195,4 +195,26 @@ class AdminLojaController extends Controller
     {
         return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
+
+    public function eliminar(int $id): JsonResponse
+    {
+        $tenant = Tenant::find($id);
+
+        if (!$tenant) {
+            return response()->json([
+                'sucesso' => false,
+                'erro'    => 'Loja nao encontrada.',
+            ], 404);
+        }
+
+        $tenant->instancias()->delete();
+        $tenant->users()->delete();
+        $tenant->subscricoes()->delete();
+        $tenant->delete();
+
+        return response()->json([
+            'sucesso'   => true,
+            'mensagem'  => "Loja \"{$tenant->nome_loja}\" eliminada.",
+        ]);
+    }
 }

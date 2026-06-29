@@ -226,34 +226,63 @@ def estado(tenant_id: int):
 
 @app.route('/painel', methods=['GET'])
 def painel():
-    """Painel de registro de utilizadores."""
-    return render_template('painel.html')
+    """Painel de gestao de lojas."""
+    lojas = []
+    php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+    try:
+        resp = requests.get(f"{php_api}/api/admin/lojas", timeout=10, headers={'Accept': 'application/json'})
+        if resp.ok:
+            lojas = resp.json().get('lojas', [])
+    except Exception as e:
+        logger.error(f"Erro ao buscar lojas: {e}")
+    return render_template('painel.html', lojas=lojas)
 
 
-@app.route('/painel/registrar', methods=['POST'])
-def registrar():
-    """Regista um novo utilizador via PHP API."""
-    nome = request.form.get('nome', '').strip()
+@app.route('/painel/criar', methods=['POST'])
+def criar_loja():
+    """Cria uma nova loja via PHP API."""
+    nome_loja = request.form.get('nome_loja', '').strip()
+    nome_dono = request.form.get('nome_dono', '').strip()
     telefone = request.form.get('telefone', '').strip()
-    tenant_id = request.form.get('tenant_id', '').strip()
+    waha_server = request.form.get('waha_server', '1').strip()
 
-    if not all([nome, telefone, tenant_id]):
+    if not all([nome_loja, nome_dono, telefone]):
         flash('Preencha todos os campos.', 'erro')
         return redirect(url_for('painel'))
 
     try:
         php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
-        resp = requests.post(f"{php_api}/api/registrar", json={
-            'nome': nome,
+        resp = requests.post(f"{php_api}/api/admin/lojas", json={
+            'nome_loja': nome_loja,
+            'email': telefone + '@loja.local',
             'telefone': telefone,
-            'tenant_id': int(tenant_id),
-        }, timeout=10)
+            'waha_server': int(waha_server),
+        }, timeout=15)
 
         if resp.ok:
-            flash('Utilizador registado com sucesso!', 'sucesso')
+            data = resp.json()
+            login_code = data.get('credenciais', {}).get('login_code', '?')
+            flash(f"Loja criada! Login Code: {login_code}", 'sucesso')
         else:
             erro = resp.json().get('erro', 'Erro desconhecido')
             flash(f'Erro: {erro}', 'erro')
+    except Exception as e:
+        flash(f'Erro de conexao: {e}', 'erro')
+
+    return redirect(url_for('painel'))
+
+
+@app.route('/painel/eliminar/<int:tenant_id>', methods=['POST'])
+def eliminar_loja(tenant_id: int):
+    """Elimina uma loja via PHP API."""
+    try:
+        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        resp = requests.delete(f"{php_api}/api/admin/lojas/{tenant_id}", timeout=10)
+
+        if resp.ok:
+            flash(f'Loja #{tenant_id} eliminada.', 'sucesso')
+        else:
+            flash('Erro ao eliminar loja.', 'erro')
     except Exception as e:
         flash(f'Erro de conexao: {e}', 'erro')
 
