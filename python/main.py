@@ -12,6 +12,7 @@ from waha import enviar_texto, enviar_imagem, obter_qr_code, obter_estado
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY', 'marketplace_secret_2026')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
