@@ -224,20 +224,10 @@ def estado(tenant_id: int):
     return jsonify(resultado)
 
 
-PHP_URL = os.getenv('PHP_API_URL', 'http://localhost:8000').replace('/api/mensagem', '')
-
-
 @app.route('/painel', methods=['GET'])
 def painel():
     """Painel de registro de utilizadores."""
-    lojas = []
-    try:
-        resp = requests.get(f"{PHP_URL}/api/lojas", timeout=10)
-        if resp.ok:
-            lojas = resp.json().get('lojas', [])
-    except Exception:
-        pass
-    return render_template('painel.html', lojas=lojas)
+    return render_template('painel.html')
 
 
 @app.route('/painel/registrar', methods=['POST'])
@@ -252,7 +242,8 @@ def registrar():
         return redirect(url_for('painel'))
 
     try:
-        resp = requests.post(f"{PHP_URL}/api/registrar", json={
+        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        resp = requests.post(f"{php_api}/api/registrar", json={
             'nome': nome,
             'telefone': telefone,
             'tenant_id': int(tenant_id),
