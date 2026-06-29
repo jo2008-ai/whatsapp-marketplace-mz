@@ -230,10 +230,12 @@ def painel():
     """Painel de gestao de lojas."""
     lojas = []
     php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+    logger.info(f"Painel: a buscar lojas em {php_api}/api/painel/lojas")
     try:
         resp = requests.get(f"{php_api}/api/painel/lojas", timeout=10, headers={
             'Accept': 'application/json',
         })
+        logger.info(f"Painel: resposta PHP {resp.status_code} - {resp.text[:200]}")
         if resp.ok:
             lojas = resp.json().get('lojas', [])
     except Exception as e:
