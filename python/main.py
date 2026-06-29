@@ -3,7 +3,7 @@ import time
 import logging
 import threading
 from collections import defaultdict
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 from dotenv import load_dotenv
 import requests
 
@@ -222,6 +222,51 @@ def estado(tenant_id: int):
     """Retorna o estado da sessao WAHA para um tenant."""
     resultado = obter_estado(tenant_id)
     return jsonify(resultado)
+
+
+PHP_URL = os.getenv('PHP_API_URL', 'http://localhost:8000').replace('/api/mensagem', '')
+
+
+@app.route('/painel', methods=['GET'])
+def painel():
+    """Painel de registro de utilizadores."""
+    lojas = []
+    try:
+        resp = requests.get(f"{PHP_URL}/api/lojas", timeout=10)
+        if resp.ok:
+            lojas = resp.json().get('lojas', [])
+    except Exception:
+        pass
+    return render_template('painel.html', lojas=lojas)
+
+
+@app.route('/painel/registrar', methods=['POST'])
+def registrar():
+    """Regista um novo utilizador via PHP API."""
+    nome = request.form.get('nome', '').strip()
+    telefone = request.form.get('telefone', '').strip()
+    tenant_id = request.form.get('tenant_id', '').strip()
+
+    if not all([nome, telefone, tenant_id]):
+        flash('Preencha todos os campos.', 'erro')
+        return redirect(url_for('painel'))
+
+    try:
+        resp = requests.post(f"{PHP_URL}/api/registrar", json={
+            'nome': nome,
+            'telefone': telefone,
+            'tenant_id': int(tenant_id),
+        }, timeout=10)
+
+        if resp.ok:
+            flash('Utilizador registado com sucesso!', 'sucesso')
+        else:
+            erro = resp.json().get('erro', 'Erro desconhecido')
+            flash(f'Erro: {erro}', 'erro')
+    except Exception as e:
+        flash(f'Erro de conexao: {e}', 'erro')
+
+    return redirect(url_for('painel'))
 
 
 if __name__ == '__main__':

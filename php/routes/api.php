@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ApiVendedorController;
 use App\Http\Controllers\Api\ApiDefinicoesController;
 use App\Http\Controllers\Api\ApiUploadController;
 use App\Http\Controllers\Api\AdminLojaController;
+use App\Http\Controllers\Api\ApiPainelController;
 use Illuminate\Support\Facades\Route;
 
 // Webhook do bot (vindo do Python, protegido com HMAC + rate limit)
@@ -78,3 +79,7 @@ Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::get('/lojas', [AdminLojaController::class, 'listar']);
     Route::post('/banner-global', [AdminLojaController::class, 'bannerGlobal']);
 });
+
+// Rotas do painel Python
+Route::get('/lojas', [ApiPainelController::class, 'listarLojas']);
+Route::post('/registrar', [ApiPainelController::class, 'registrar']);
