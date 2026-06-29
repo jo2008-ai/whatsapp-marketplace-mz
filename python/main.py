@@ -17,7 +17,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'marketplace_secret_2026')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-PHP_API_URL = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem')
+PHP_API_URL = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem')
 APP_URL = os.getenv('APP_URL', 'http://localhost:8000')
 TENANT_ID_DEFAULT = int(os.getenv('TENANT_ID_DEFAULT', '1'))
 
@@ -229,7 +229,7 @@ def estado(tenant_id: int):
 def painel():
     """Painel de gestao de lojas."""
     lojas = []
-    php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+    php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
     logger.info(f"Painel: a buscar lojas em {php_api}/api/painel/lojas")
     try:
         resp = requests.get(f"{php_api}/api/painel/lojas", timeout=10, headers={
@@ -256,7 +256,7 @@ def criar_loja():
         return redirect(url_for('painel'))
 
     try:
-        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.post(f"{php_api}/api/admin/lojas", json={
             'nome_loja': nome_loja,
             'email': telefone + '@loja.local',
@@ -283,7 +283,7 @@ def criar_loja():
 def eliminar_loja(tenant_id: int):
     """Elimina uma loja via PHP API."""
     try:
-        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.delete(f"{php_api}/api/admin/lojas/{tenant_id}", timeout=10, headers={
             'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
         })
@@ -302,7 +302,7 @@ def eliminar_loja(tenant_id: int):
 def eliminar_todas():
     """Elimina todas as lojas excepto mozdv."""
     try:
-        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.delete(f"{php_api}/api/admin/lojas", timeout=15, headers={
             'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
         })
@@ -322,7 +322,7 @@ def eliminar_todas():
 def criar_instancia(tenant_id: int):
     """Cria instancia WAHA para uma loja."""
     try:
-        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.post(f"{php_api}/api/admin/lojas/{tenant_id}/instancia", timeout=15, headers={
             'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
         })
