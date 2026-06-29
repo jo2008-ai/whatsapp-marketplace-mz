@@ -86,11 +86,34 @@ class WhatsAppController extends Controller
         }
 
         $session = $instancia->waha_session ?: 'default';
+        $wahaKey = $this->getWahaKey();
+        $headers = ['X-Api-Key' => $wahaKey];
 
         try {
-            $response = Http::withHeaders([
-                'X-Api-Key' => $this->getWahaKey(),
-            ])->timeout(10)->get("{$wahaUrl}/api/{$session}/auth/qr");
+            $statusResp = Http::withHeaders($headers)
+                ->timeout(10)
+                ->get("{$wahaUrl}/api/{$session}");
+
+            if ($statusResp->successful()) {
+                $statusData = $statusResp->json();
+                $currentState = $statusData['status'] ?? 'unknown';
+
+                if ($currentState !== 'STARTING' && $currentState !== 'SCAN_QR_CODE') {
+                    Http::withHeaders($headers)
+                        ->timeout(10)
+                        ->post("{$wahaUrl}/api/{$session}/start");
+
+                    return response()->json([
+                        'estado' => 'aguarda_qr',
+                        'qr' => null,
+                        'mensagem' => 'Sessao a iniciar...',
+                    ]);
+                }
+            }
+
+            $response = Http::withHeaders($headers)
+                ->timeout(10)
+                ->get("{$wahaUrl}/api/{$session}/auth/qr");
 
             if ($response->successful()) {
                 $data = $response->json();

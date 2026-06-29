@@ -97,7 +97,7 @@
 
                 const qrData = data.qr;
                 if (typeof qrData === 'string') {
-                    document.getElementById('qr-img').src = qrData;
+                    document.getElementById('qr-img').src = qrData.startsWith('data:') ? qrData : 'data:image/png;base64,' + qrData;
                 } else if (qrData.base64) {
                     document.getElementById('qr-img').src = 'data:image/png;base64,' + qrData.base64;
                 } else if (qrData.qrcode) {
