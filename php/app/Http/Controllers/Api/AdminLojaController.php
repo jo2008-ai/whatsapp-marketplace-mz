@@ -217,4 +217,23 @@ class AdminLojaController extends Controller
             'mensagem'  => "Loja \"{$tenant->nome_loja}\" eliminada.",
         ]);
     }
+
+    public function eliminarTodas(): JsonResponse
+    {
+        $tenants = Tenant::where('nome_loja', '!=', 'mozdv')->get();
+
+        $eliminadas = 0;
+        foreach ($tenants as $tenant) {
+            $tenant->instancias()->delete();
+            $tenant->users()->delete();
+            $tenant->subscricoes()->delete();
+            $tenant->delete();
+            $eliminadas++;
+        }
+
+        return response()->json([
+            'sucesso'   => true,
+            'mensagem'  => "{$eliminadas} loja(s) eliminada(s).",
+        ]);
+    }
 }

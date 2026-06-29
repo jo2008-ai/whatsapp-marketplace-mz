@@ -296,6 +296,26 @@ def eliminar_loja(tenant_id: int):
     return redirect(url_for('painel'))
 
 
+@app.route('/painel/eliminar-todas', methods=['POST'])
+def eliminar_todas():
+    """Elimina todas as lojas excepto mozdv."""
+    try:
+        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        resp = requests.delete(f"{php_api}/api/admin/lojas", timeout=15, headers={
+            'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
+        })
+
+        if resp.ok:
+            msg = resp.json().get('mensagem', 'Feito.')
+            flash(msg, 'sucesso')
+        else:
+            flash('Erro ao eliminar lojas.', 'erro')
+    except Exception as e:
+        flash(f'Erro de conexao: {e}', 'erro')
+
+    return redirect(url_for('painel'))
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(
