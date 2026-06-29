@@ -229,8 +229,12 @@ def painel():
     """Painel de gestao de lojas."""
     lojas = []
     php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+    admin_key = os.getenv('ADMIN_API_KEY', '')
     try:
-        resp = requests.get(f"{php_api}/api/admin/lojas", timeout=10, headers={'Accept': 'application/json'})
+        resp = requests.get(f"{php_api}/api/admin/lojas", timeout=10, headers={
+            'Accept': 'application/json',
+            'X-Admin-Key': admin_key,
+        })
         if resp.ok:
             lojas = resp.json().get('lojas', [])
     except Exception as e:
@@ -252,12 +256,15 @@ def criar_loja():
 
     try:
         php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        admin_key = os.getenv('ADMIN_API_KEY', '')
         resp = requests.post(f"{php_api}/api/admin/lojas", json={
             'nome_loja': nome_loja,
             'email': telefone + '@loja.local',
             'telefone': telefone,
             'waha_server': int(waha_server),
-        }, timeout=15)
+        }, timeout=15, headers={
+            'X-Admin-Key': admin_key,
+        })
 
         if resp.ok:
             data = resp.json()
@@ -277,7 +284,10 @@ def eliminar_loja(tenant_id: int):
     """Elimina uma loja via PHP API."""
     try:
         php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
-        resp = requests.delete(f"{php_api}/api/admin/lojas/{tenant_id}", timeout=10)
+        admin_key = os.getenv('ADMIN_API_KEY', '')
+        resp = requests.delete(f"{php_api}/api/admin/lojas/{tenant_id}", timeout=10, headers={
+            'X-Admin-Key': admin_key,
+        })
 
         if resp.ok:
             flash(f'Loja #{tenant_id} eliminada.', 'sucesso')
