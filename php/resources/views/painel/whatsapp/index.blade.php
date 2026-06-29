@@ -31,13 +31,6 @@
         @empty
         <p class="text-gray-400 text-sm">Nenhuma instância configurada.</p>
         @endforelse
-
-        <form method="POST" action="/painel/whatsapp/conectar" class="mt-4 space-y-3">
-            @csrf
-            <button class="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-600 text-sm">
-                + Adicionar novo número
-            </button>
-        </form>
     </div>
 
     <!-- QR Code -->
