@@ -90,18 +90,33 @@ class WhatsAppController extends Controller
         $headers = ['X-Api-Key' => $wahaKey];
 
         try {
+            \Log::info("QR: a contactar WAHA", [
+                'wahaUrl' => $wahaUrl,
+                'session' => $session,
+                'instancia_id' => $instancia->id,
+            ]);
+
             $statusResp = Http::withHeaders($headers)
                 ->timeout(10)
                 ->get("{$wahaUrl}/api/{$session}");
+
+            \Log::info("QR: status response", [
+                'status' => $statusResp->status(),
+                'body' => $statusResp->body(),
+            ]);
 
             if ($statusResp->successful()) {
                 $statusData = $statusResp->json();
                 $currentState = $statusData['status'] ?? 'unknown';
 
                 if ($currentState !== 'STARTING' && $currentState !== 'SCAN_QR_CODE') {
-                    Http::withHeaders($headers)
+                    \Log::info("QR: sessao nao esta pronta, a iniciar", ['currentState' => $currentState]);
+
+                    $startResp = Http::withHeaders($headers)
                         ->timeout(10)
                         ->post("{$wahaUrl}/api/{$session}/start");
+
+                    \Log::info("QR: start response", ['status' => $startResp->status()]);
 
                     return response()->json([
                         'estado' => 'aguarda_qr',
@@ -114,6 +129,11 @@ class WhatsAppController extends Controller
             $response = Http::withHeaders($headers)
                 ->timeout(10)
                 ->get("{$wahaUrl}/api/{$session}/auth/qr");
+
+            \Log::info("QR: qr response", [
+                'status' => $response->status(),
+                'has_base64' => isset($response->json()['base64']),
+            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -131,9 +151,18 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            return response()->json(['erro' => 'Falha ao obter QR'], 500);
+            return response()->json(['erro' => 'Falha ao obter QR', 'waha_url' => $wahaUrl], 500);
         } catch (\Exception $e) {
-            return response()->json(['erro' => 'Servico indisponivel'], 503);
+            \Log::error("QR: erro ao contactar WAHA", [
+                'wahaUrl' => $wahaUrl,
+                'session' => $session,
+                'erro' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'erro' => 'Servico indisponivel',
+                'waha_url' => $wahaUrl,
+                'detalhe' => $e->getMessage(),
+            ], 503);
         }
     }
 
