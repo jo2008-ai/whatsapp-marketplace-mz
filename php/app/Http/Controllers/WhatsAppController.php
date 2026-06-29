@@ -33,9 +33,7 @@ class WhatsAppController extends Controller
     {
         $tenant = $request->user()->tenant;
         $instancias = $tenant->instancias()->get();
-        $tenantId = $tenant->id;
-        $wahaUrls = config('services.waha.urls', []);
-        return view('painel.whatsapp.index', compact('instancias', 'tenant', 'tenantId', 'wahaUrls'));
+        return view('painel.whatsapp.index', compact('instancias', 'tenant'));
     }
 
     public function conectar(Request $request)
@@ -46,14 +44,15 @@ class WhatsAppController extends Controller
 
         if ($instancia) {
             if (!$instancia->waha_url) {
-                $wahaUrl = $request->input('waha_url') ?: $this->getWahaUrl($tenant->id) ?? config('services.waha.url');
-                $instancia->update(['waha_url' => $wahaUrl]);
+                $instancia->update(['waha_url' => $this->resolveWahaUrl($instancia)]);
             }
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
                 ->with('success', 'Sessao WhatsApp ja existe.');
         }
 
-        $wahaUrl = $request->input('waha_url') ?: $this->getWahaUrl($tenant->id);
+        $wahaUrl = $this->getWahaUrl($tenant->id)
+            ?? config('services.waha.url')
+            ?? env('WAHA_URL_1');
 
         try {
             $instancia = InstanciaWhatsApp::create([

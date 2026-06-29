@@ -13,9 +13,6 @@
                 <div>
                     <div class="font-medium text-gray-800">{{ $inst->nome_instancia }}</div>
                     <div class="text-xs text-gray-500">{{ $inst->numero_whatsapp ?? 'Sem número' }}</div>
-                    @if($inst->waha_url)
-                        <div class="text-xs text-gray-400 truncate" title="{{ $inst->waha_url }}">WAHA: {{ $inst->waha_url }}</div>
-                    @endif
                 </div>
                 @if($inst->estado === 'conectada')
                     <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">🟢 Conectada</span>
@@ -37,16 +34,6 @@
 
         <form method="POST" action="/painel/whatsapp/conectar" class="mt-4 space-y-3">
             @csrf
-            <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Servidor WAHA</label>
-                <select name="waha_url" class="w-full px-3 py-2 border rounded-lg text-sm">
-                    @foreach($wahaUrls as $id => $url)
-                        <option value="{{ $url }}" {{ $id == $tenantId ? 'selected' : '' }}>
-                            WAHA #{{ $id }} — {{ $url }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
             <button class="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-600 text-sm">
                 + Adicionar novo número
             </button>
@@ -76,8 +63,6 @@
 
 @push('scripts')
 <script>
-    const tenantId = {{ $tenantId ?? 1 }};
-
     let pollingInterval = null;
     let instanciaAtual = null;
 
