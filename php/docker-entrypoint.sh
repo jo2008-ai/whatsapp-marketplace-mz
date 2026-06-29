@@ -41,6 +41,7 @@ fi
 echo "==> [5/7] A correr migrations..."
 if [ "$DB_READY" = true ]; then
     php artisan migrate --force 2>&1 || echo "AVISO: migrate falhou (a continuar...)"
+    php artisan migrate --force 2>&1 || echo "AVISO: 2o attempt migrate falhou (a continuar...)"
 fi
 
 echo "==> [6/7] A correr seeders..."
