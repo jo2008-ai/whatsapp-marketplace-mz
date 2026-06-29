@@ -82,9 +82,13 @@ services:
       name: waha-data
       mountPath: /app/.media
       sizeGB: 1
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
       - key: WAHA_CORE_LOG_LEVEL
         value: info
       - key: WAHA_LISTENING_HOST
         value: "0.0.0.0"
+      - key: WAHA_ENGINE
+        value: NOWEB
+      - key: WAHA_PORT
+        value: "3000"
