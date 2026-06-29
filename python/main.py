@@ -321,11 +321,12 @@ def eliminar_todas():
 @app.route('/painel/instancia/<int:tenant_id>', methods=['POST'])
 def criar_instancia(tenant_id: int):
     """Cria instancia WAHA para uma loja."""
+    waha_server = request.form.get('waha_server', '1')
     try:
         php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.post(f"{php_api}/api/admin/lojas/{tenant_id}/instancia", timeout=15, headers={
             'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
-        })
+        }, json={'waha_server': int(waha_server)})
 
         if resp.ok:
             msg = resp.json().get('mensagem', 'Feito.')

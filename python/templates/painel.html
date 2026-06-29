@@ -91,16 +91,34 @@
                                     {% if not loja.activo %}<span class="text-red-500">(inactivo)</span>{% endif %}
                                 </div>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 items-center">
                                 {% if loja.waha == '—' %}
-                                <form method="POST" action="/painel/instancia/{{ loja.id }}">
+                                <form method="POST" action="/painel/instancia/{{ loja.id }}" class="flex gap-1">
+                                    <select name="waha_server" class="text-xs border rounded px-1 py-1">
+                                        <option value="1">WAHA #1</option>
+                                        <option value="2">WAHA #2</option>
+                                        <option value="3">WAHA #3</option>
+                                        <option value="4">WAHA #4</option>
+                                    </select>
                                     <button type="submit"
                                             class="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600">
                                         Criar WAHA
                                     </button>
                                 </form>
                                 {% else %}
-                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-lg">WAHA OK</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-lg">{{ loja.waha|replace('https://marketplace-waha-', '')|replace('.onrender.com', '') }}</span>
+                                <form method="POST" action="/painel/instancia/{{ loja.id }}" class="flex gap-1">
+                                    <select name="waha_server" class="text-xs border rounded px-1 py-1">
+                                        <option value="1">WAHA #1</option>
+                                        <option value="2">WAHA #2</option>
+                                        <option value="3">WAHA #3</option>
+                                        <option value="4">WAHA #4</option>
+                                    </select>
+                                    <button type="submit"
+                                            class="px-2 py-1 bg-yellow-500 text-white text-xs rounded-lg hover:bg-yellow-600">
+                                        Trocar
+                                    </button>
+                                </form>
                                 {% endif %}
                                 <form method="POST" action="/painel/eliminar/{{ loja.id }}"
                                       onsubmit="return confirm('Eliminar loja '{{ loja.nome_loja }}'?')">

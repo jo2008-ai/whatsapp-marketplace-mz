@@ -248,21 +248,21 @@ class AdminLojaController extends Controller
             ], 404);
         }
 
+        $wahaServer = request('waha_server', 1);
+        $wahaUrl = config("services.waha.urls.{$wahaServer}")
+            ?? config('services.waha.url')
+            ?? env('WAHA_URL_1');
+
         $instancia = $tenant->instancias()->first();
 
         if ($instancia) {
-            if (!$instancia->waha_url) {
-                $wahaUrl = config("services.waha.urls.{$tenant->id}")
-                    ?? config('services.waha.url')
-                    ?? env('WAHA_URL_1');
-                $instancia->update(['waha_url' => $wahaUrl]);
-            }
-            if ($instancia->waha_session !== 'default') {
-                $instancia->update(['waha_session' => 'default']);
-            }
+            $instancia->update([
+                'waha_url' => $wahaUrl,
+                'waha_session' => 'default',
+            ]);
             return response()->json([
                 'sucesso' => true,
-                'mensagem' => 'Instancia ja existe.',
+                'mensagem' => "Instancia actualizada para WAHA #{$wahaServer}.",
                 'instancia_id' => $instancia->id,
             ]);
         }
