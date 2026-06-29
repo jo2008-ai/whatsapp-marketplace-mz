@@ -81,6 +81,6 @@ Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::post('/banner-global', [AdminLojaController::class, 'bannerGlobal']);
 });
 
-// Rotas do painel Python
-Route::get('/lojas', [ApiPainelController::class, 'listarLojas']);
-Route::post('/registrar', [ApiPainelController::class, 'registrar']);
+// Rotas do painel Python (acesso interno)
+Route::get('/painel/lojas', [ApiPainelController::class, 'listarLojas']);
+Route::post('/painel/registrar', [ApiPainelController::class, 'registrar']);

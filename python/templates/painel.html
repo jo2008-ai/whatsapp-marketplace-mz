@@ -80,6 +80,7 @@
                                 <div class="font-medium text-gray-800">{{ loja.nome_loja }}</div>
                                 <div class="text-xs text-gray-500">
                                     ID: {{ loja.id }} | {{ loja.plano }} | {{ loja.estado }}
+                                    {% if not loja.activo %}<span class="text-red-500">(inactivo)</span>{% endif %}
                                 </div>
                             </div>
                             <form method="POST" action="/painel/eliminar/{{ loja.id }}"

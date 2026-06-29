@@ -14,10 +14,20 @@ class ApiPainelController extends Controller
 {
     public function listarLojas(): JsonResponse
     {
-        $lojas = Tenant::where('activo', true)
-            ->select('id', 'nome_loja')
-            ->orderBy('nome_loja')
-            ->get();
+        $lojas = Tenant::select('id', 'nome_loja', 'plano', 'estado', 'activo')
+            ->with('instancias')
+            ->orderBy('id')
+            ->get()
+            ->map(function ($l) {
+                return [
+                    'id'        => $l->id,
+                    'nome_loja' => $l->nome_loja,
+                    'plano'     => $l->plano,
+                    'estado'    => $l->estado,
+                    'activo'    => $l->activo,
+                    'waha'      => $l->instancias->first()?->waha_url ?? '—',
+                ];
+            });
 
         return response()->json(['lojas' => $lojas]);
     }
