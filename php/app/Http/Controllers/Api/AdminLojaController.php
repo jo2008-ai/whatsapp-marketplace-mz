@@ -87,7 +87,7 @@ class AdminLojaController extends Controller
             InstanciaWhatsApp::create([
                 'tenant_id'     => $tenant->id,
                 'nome_instancia'=> "loja_{$tenant->id}",
-                'waha_session'  => "loja_{$tenant->id}",
+                'waha_session'  => 'default',
                 'waha_url'      => $wahaUrl,
                 'estado'        => 'aguarda_qr',
             ]);
@@ -257,6 +257,9 @@ class AdminLojaController extends Controller
                     ?? env('WAHA_URL_1');
                 $instancia->update(['waha_url' => $wahaUrl]);
             }
+            if ($instancia->waha_session !== 'default') {
+                $instancia->update(['waha_session' => 'default']);
+            }
             return response()->json([
                 'sucesso' => true,
                 'mensagem' => 'Instancia ja existe.',
@@ -271,7 +274,7 @@ class AdminLojaController extends Controller
         $nova = InstanciaWhatsApp::create([
             'tenant_id'     => $tenant->id,
             'nome_instancia'=> "loja_{$tenant->id}",
-            'waha_session'  => "loja_{$tenant->id}",
+            'waha_session'  => 'default',
             'waha_url'      => $wahaUrl,
             'estado'        => 'aguarda_qr',
         ]);
