@@ -79,6 +79,7 @@ Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::get('/lojas', [AdminLojaController::class, 'listar']);
     Route::delete('/lojas/{id}', [AdminLojaController::class, 'eliminar']);
     Route::delete('/lojas', [AdminLojaController::class, 'eliminarTodas']);
+    Route::post('/lojas/{id}/instancia', [AdminLojaController::class, 'criarInstancia']);
     Route::post('/banner-global', [AdminLojaController::class, 'bannerGlobal']);
 });
 

@@ -316,6 +316,26 @@ def eliminar_todas():
     return redirect(url_for('painel'))
 
 
+@app.route('/painel/instancia/<int:tenant_id>', methods=['POST'])
+def criar_instancia(tenant_id: int):
+    """Cria instancia WAHA para uma loja."""
+    try:
+        php_api = os.getenv('PHP_API_URL', 'http://localhost:8000/api/mensagem').replace('/api/mensagem', '')
+        resp = requests.post(f"{php_api}/api/admin/lojas/{tenant_id}/instancia", timeout=15, headers={
+            'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
+        })
+
+        if resp.ok:
+            msg = resp.json().get('mensagem', 'Feito.')
+            flash(msg, 'sucesso')
+        else:
+            flash('Erro ao criar instancia.', 'erro')
+    except Exception as e:
+        flash(f'Erro de conexao: {e}', 'erro')
+
+    return redirect(url_for('painel'))
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(

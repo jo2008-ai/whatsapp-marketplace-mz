@@ -236,4 +236,50 @@ class AdminLojaController extends Controller
             'mensagem'  => "{$eliminadas} loja(s) eliminada(s).",
         ]);
     }
+
+    public function criarInstancia(int $id): JsonResponse
+    {
+        $tenant = Tenant::find($id);
+
+        if (!$tenant) {
+            return response()->json([
+                'sucesso' => false,
+                'erro'    => 'Loja nao encontrada.',
+            ], 404);
+        }
+
+        $instancia = $tenant->instancias()->first();
+
+        if ($instancia) {
+            if (!$instancia->waha_url) {
+                $wahaUrl = config("services.waha.urls.{$tenant->id}")
+                    ?? config('services.waha.url')
+                    ?? env('WAHA_URL_1');
+                $instancia->update(['waha_url' => $wahaUrl]);
+            }
+            return response()->json([
+                'sucesso' => true,
+                'mensagem' => 'Instancia ja existe.',
+                'instancia_id' => $instancia->id,
+            ]);
+        }
+
+        $wahaUrl = config("services.waha.urls.{$tenant->id}")
+            ?? config('services.waha.url')
+            ?? env('WAHA_URL_1');
+
+        $nova = InstanciaWhatsApp::create([
+            'tenant_id'     => $tenant->id,
+            'nome_instancia'=> "loja_{$tenant->id}",
+            'waha_session'  => "loja_{$tenant->id}",
+            'waha_url'      => $wahaUrl,
+            'estado'        => 'aguarda_qr',
+        ]);
+
+        return response()->json([
+            'sucesso'     => true,
+            'mensagem'    => 'Instancia WAHA criada.',
+            'instancia_id'=> $nova->id,
+        ]);
+    }
 }

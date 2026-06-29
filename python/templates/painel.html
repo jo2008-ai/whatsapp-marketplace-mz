@@ -91,13 +91,25 @@
                                     {% if not loja.activo %}<span class="text-red-500">(inactivo)</span>{% endif %}
                                 </div>
                             </div>
-                            <form method="POST" action="/painel/eliminar/{{ loja.id }}"
-                                  onsubmit="return confirm('Eliminar loja '{{ loja.nome_loja }}'? Esta accao e irreversivel.')">
-                                <button type="submit"
-                                        class="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">
-                                    Eliminar
-                                </button>
-                            </form>
+                            <div class="flex gap-2">
+                                {% if loja.waha == '—' %}
+                                <form method="POST" action="/painel/instancia/{{ loja.id }}">
+                                    <button type="submit"
+                                            class="px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600">
+                                        Criar WAHA
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-lg">WAHA OK</span>
+                                {% endif %}
+                                <form method="POST" action="/painel/eliminar/{{ loja.id }}"
+                                      onsubmit="return confirm('Eliminar loja '{{ loja.nome_loja }}'?')">
+                                    <button type="submit"
+                                            class="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
