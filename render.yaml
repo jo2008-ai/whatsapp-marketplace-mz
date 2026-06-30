@@ -104,6 +104,8 @@ services:
         value: NOWEB
       - key: WAHA_PORT
         value: "3000"
+      - key: WAHA_SECRET
+        value: CHANGE_ME_RANDOM_SECRET
 
   - type: web
     name: marketplace-waha-2
@@ -126,6 +128,8 @@ services:
         value: NOWEB
       - key: WAHA_PORT
         value: "3000"
+      - key: WAHA_SECRET
+        value: CHANGE_ME_RANDOM_SECRET
 
   - type: web
     name: marketplace-waha-3
@@ -148,6 +152,8 @@ services:
         value: NOWEB
       - key: WAHA_PORT
         value: "3000"
+      - key: WAHA_SECRET
+        value: CHANGE_ME_RANDOM_SECRET
 
   - type: web
     name: marketplace-waha-4
@@ -170,3 +176,5 @@ services:
         value: NOWEB
       - key: WAHA_PORT
         value: "3000"
+      - key: WAHA_SECRET
+        value: CHANGE_ME_RANDOM_SECRET

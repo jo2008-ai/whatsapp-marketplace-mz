@@ -108,6 +108,13 @@ class WhatsAppController extends Controller
                     'body' => $statusResp->body(),
                 ]);
 
+                if ($statusResp->status() === 401) {
+                    return response()->json([
+                        'erro' => 'Chave de API invalida. Verifica WAHA_SECRET no Render.',
+                        'waha_url' => $wahaUrl,
+                    ], 401);
+                }
+
                 if ($statusResp->successful()) {
                     break;
                 }
