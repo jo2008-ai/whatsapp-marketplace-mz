@@ -1,6 +1,5 @@
-const CACHE = 'marketplace-v1';
+const CACHE = 'marketplace-v2';
 const ASSETS = [
-  '/painel',
   '/manifest.json',
 ];
 

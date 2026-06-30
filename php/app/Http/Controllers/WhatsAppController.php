@@ -96,16 +96,28 @@ class WhatsAppController extends Controller
                 'instancia_id' => $instancia->id,
             ]);
 
-            $statusResp = Http::withHeaders($headers)
-                ->timeout(10)
-                ->get("{$wahaUrl}/api/{$session}");
+            $statusResp = null;
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
+                $statusResp = Http::withHeaders($headers)
+                    ->timeout(30)
+                    ->get("{$wahaUrl}/api/{$session}");
 
-            \Log::info("QR: status response", [
-                'status' => $statusResp->status(),
-                'body' => $statusResp->body(),
-            ]);
+                \Log::info("QR: status response", [
+                    'attempt' => $attempt,
+                    'status' => $statusResp->status(),
+                    'body' => $statusResp->body(),
+                ]);
 
-            if ($statusResp->successful()) {
+                if ($statusResp->successful()) {
+                    break;
+                }
+
+                if ($attempt < 3) {
+                    sleep(3);
+                }
+            }
+
+            if ($statusResp && $statusResp->successful()) {
                 $statusData = $statusResp->json();
                 $currentState = $statusData['status'] ?? 'unknown';
 
@@ -113,7 +125,7 @@ class WhatsAppController extends Controller
                     \Log::info("QR: sessao nao esta pronta, a iniciar", ['currentState' => $currentState]);
 
                     $startResp = Http::withHeaders($headers)
-                        ->timeout(10)
+                        ->timeout(30)
                         ->post("{$wahaUrl}/api/{$session}/start");
 
                     \Log::info("QR: start response", ['status' => $startResp->status()]);
@@ -127,7 +139,7 @@ class WhatsAppController extends Controller
             }
 
             $response = Http::withHeaders($headers)
-                ->timeout(10)
+                ->timeout(30)
                 ->get("{$wahaUrl}/api/{$session}/auth/qr");
 
             \Log::info("QR: qr response", [
@@ -185,7 +197,7 @@ class WhatsAppController extends Controller
         try {
             $response = Http::withHeaders([
                 'X-Api-Key' => $this->getWahaKey(),
-            ])->timeout(10)->get("{$wahaUrl}/api/{$session}");
+            ])->timeout(30)->get("{$wahaUrl}/api/{$session}");
 
             if ($response->successful()) {
                 $data = $response->json();

@@ -68,12 +68,19 @@
 
         if (pollingInterval) clearInterval(pollingInterval);
         buscarQR();
-        pollingInterval = setInterval(buscarQR, 3000);
+        pollingInterval = setInterval(buscarQR, 10000);
     }
 
     async function buscarQR() {
         try {
             const resp = await fetch(`/painel/whatsapp/qr?instancia=${instanciaAtual}`);
+
+            if (resp.status === 503) {
+                document.getElementById('qr-loading').innerHTML =
+                    '<p class="text-yellow-600">Serviço WhatsApp a iniciar... aguarda um momento.</p>';
+                return;
+            }
+
             const data = await resp.json();
 
             if (data.erro) {
