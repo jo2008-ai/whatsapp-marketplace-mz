@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('instancias_whatsapp', function (Blueprint $table) {
-            $table->string('waha_url')->nullable()->after('waha_session');
-        });
+        if (!Schema::hasColumn('instancias_whatsapp', 'waha_url')) {
+            Schema::table('instancias_whatsapp', function (Blueprint $table) {
+                $table->string('waha_url')->nullable()->after('waha_session');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('instancias_whatsapp', function (Blueprint $table) {
-            $table->dropColumn('waha_url');
-        });
+        if (Schema::hasColumn('instancias_whatsapp', 'waha_url')) {
+            Schema::table('instancias_whatsapp', function (Blueprint $table) {
+                $table->dropColumn('waha_url');
+            });
+        }
     }
 };
