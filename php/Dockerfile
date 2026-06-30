@@ -1,3 +1,11 @@
+FROM node:20-alpine AS frontend
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tailwind.config.js ./
+COPY resources/css/ ./resources/css/
+RUN npm run build
+
 FROM php:8.3-cli
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
@@ -16,6 +24,8 @@ COPY . .
 RUN mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chmod +x docker-entrypoint.sh
+
+COPY --from=frontend /app/public/css/ ./public/css/
 
 EXPOSE 10000
 

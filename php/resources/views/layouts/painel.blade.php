@@ -7,23 +7,12 @@
 
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="{{ $tenant->cor_primaria ?? '#2563EB' }}">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Marketplace">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/app.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '{{ preg_replace('/[^#a-fA-F0-9]/', '', $tenant->cor_primaria ?? "#2563EB") }}',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="flex min-h-screen">

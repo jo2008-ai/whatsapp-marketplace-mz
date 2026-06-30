@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registar Loja — WhatsApp Marketplace</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/app.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-10 px-4">

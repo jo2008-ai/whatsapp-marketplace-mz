@@ -31,7 +31,7 @@ services:
       - key: PYTHON_URL
         value: https://marketplace-python.onrender.com
       - key: WAHA_URL_1
-        value: https://marketplace-waha.onrender.com
+        value: https://marketplace-waha-1.onrender.com
       - key: WAHA_URL_2
         value: https://marketplace-waha-2.onrender.com
       - key: WAHA_URL_3
@@ -63,7 +63,7 @@ services:
       - key: APP_URL
         value: https://whatsapp-marketplace-mz.onrender.com
       - key: WAHA_URL_1
-        value: https://marketplace-waha.onrender.com
+        value: https://marketplace-waha-1.onrender.com
       - key: WAHA_URL_2
         value: https://marketplace-waha-2.onrender.com
       - key: WAHA_URL_3
@@ -82,3 +82,91 @@ services:
         value: "5000"
       - key: DEBUG
         value: "false"
+
+  - type: web
+    name: marketplace-waha-1
+    env: docker
+    region: frankfurt
+    plan: free
+    image:
+      url: ghcr.io/devlikeapro/waha-core:latest
+    disk:
+      name: waha-data-1
+      mountPath: /app/.media
+      sizeGB: 1
+    healthCheckPath: /health
+    envVars:
+      - key: WAHA_CORE_LOG_LEVEL
+        value: info
+      - key: WAHA_LISTENING_HOST
+        value: "0.0.0.0"
+      - key: WAHA_ENGINE
+        value: NOWEB
+      - key: WAHA_PORT
+        value: "3000"
+
+  - type: web
+    name: marketplace-waha-2
+    env: docker
+    region: frankfurt
+    plan: free
+    image:
+      url: ghcr.io/devlikeapro/waha-core:latest
+    disk:
+      name: waha-data-2
+      mountPath: /app/.media
+      sizeGB: 1
+    healthCheckPath: /health
+    envVars:
+      - key: WAHA_CORE_LOG_LEVEL
+        value: info
+      - key: WAHA_LISTENING_HOST
+        value: "0.0.0.0"
+      - key: WAHA_ENGINE
+        value: NOWEB
+      - key: WAHA_PORT
+        value: "3000"
+
+  - type: web
+    name: marketplace-waha-3
+    env: docker
+    region: frankfurt
+    plan: free
+    image:
+      url: ghcr.io/devlikeapro/waha-core:latest
+    disk:
+      name: waha-data-3
+      mountPath: /app/.media
+      sizeGB: 1
+    healthCheckPath: /health
+    envVars:
+      - key: WAHA_CORE_LOG_LEVEL
+        value: info
+      - key: WAHA_LISTENING_HOST
+        value: "0.0.0.0"
+      - key: WAHA_ENGINE
+        value: NOWEB
+      - key: WAHA_PORT
+        value: "3000"
+
+  - type: web
+    name: marketplace-waha-4
+    env: docker
+    region: frankfurt
+    plan: free
+    image:
+      url: ghcr.io/devlikeapro/waha-core:latest
+    disk:
+      name: waha-data-4
+      mountPath: /app/.media
+      sizeGB: 1
+    healthCheckPath: /health
+    envVars:
+      - key: WAHA_CORE_LOG_LEVEL
+        value: info
+      - key: WAHA_LISTENING_HOST
+        value: "0.0.0.0"
+      - key: WAHA_ENGINE
+        value: NOWEB
+      - key: WAHA_PORT
+        value: "3000"
