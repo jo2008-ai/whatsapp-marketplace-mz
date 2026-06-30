@@ -89,7 +89,7 @@ services:
     region: frankfurt
     plan: free
     image:
-      url: ghcr.io/devlikeapro/waha-core:latest
+      url: devlikeapro/waha:latest
     disk:
       name: waha-data-1
       mountPath: /app/.media
@@ -113,7 +113,7 @@ services:
     region: frankfurt
     plan: free
     image:
-      url: ghcr.io/devlikeapro/waha-core:latest
+      url: devlikeapro/waha:latest
     disk:
       name: waha-data-2
       mountPath: /app/.media
@@ -137,7 +137,7 @@ services:
     region: frankfurt
     plan: free
     image:
-      url: ghcr.io/devlikeapro/waha-core:latest
+      url: devlikeapro/waha:latest
     disk:
       name: waha-data-3
       mountPath: /app/.media
@@ -161,7 +161,7 @@ services:
     region: frankfurt
     plan: free
     image:
-      url: ghcr.io/devlikeapro/waha-core:latest
+      url: devlikeapro/waha:latest
     disk:
       name: waha-data-4
       mountPath: /app/.media
