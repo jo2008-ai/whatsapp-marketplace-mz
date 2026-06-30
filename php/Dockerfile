@@ -2,8 +2,7 @@ FROM node:20-alpine AS frontend
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-COPY tailwind.config.js ./
-COPY resources/css/ ./resources/css/
+COPY . .
 RUN npm run build
 
 FROM php:8.3-cli
