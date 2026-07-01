@@ -100,7 +100,7 @@ class WhatsAppController extends Controller
             for ($attempt = 1; $attempt <= 3; $attempt++) {
                 $statusResp = Http::withHeaders($headers)
                     ->timeout(30)
-                    ->get("{$wahaUrl}/api/{$session}");
+                    ->get("{$wahaUrl}/api/sessions/{$session}");
 
                 \Log::info("QR: status response", [
                     'attempt' => $attempt,
@@ -133,7 +133,7 @@ class WhatsAppController extends Controller
 
                     $startResp = Http::withHeaders($headers)
                         ->timeout(30)
-                        ->post("{$wahaUrl}/api/{$session}/start");
+                        ->post("{$wahaUrl}/api/sessions/{$session}/start");
 
                     \Log::info("QR: start response", ['status' => $startResp->status()]);
 
@@ -157,10 +157,12 @@ class WhatsAppController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
 
-                if (isset($data['base64']) && $data['base64']) {
+                $qrBase64 = $data['base64'] ?? $data['data'] ?? null;
+
+                if ($qrBase64) {
                     return response()->json([
                         'estado' => 'aguarda_qr',
-                        'qr' => $data['base64'],
+                        'qr' => $qrBase64,
                     ]);
                 }
 
@@ -204,7 +206,7 @@ class WhatsAppController extends Controller
         try {
             $response = Http::withHeaders([
                 'X-Api-Key' => $this->getWahaKey(),
-            ])->timeout(30)->get("{$wahaUrl}/api/{$session}");
+            ])->timeout(30)->get("{$wahaUrl}/api/sessions/{$session}");
 
             if ($response->successful()) {
                 $data = $response->json();

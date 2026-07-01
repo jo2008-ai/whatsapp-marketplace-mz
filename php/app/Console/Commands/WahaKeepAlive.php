@@ -32,7 +32,7 @@ class WahaKeepAlive extends Command
             try {
                 $resp = Http::withHeaders($headers)
                     ->timeout(30)
-                    ->get("{$url}/api/default");
+                    ->get("{$url}/api/sessions/default");
 
                 if ($resp->successful()) {
                     $status = $resp->json('status', 'unknown');
