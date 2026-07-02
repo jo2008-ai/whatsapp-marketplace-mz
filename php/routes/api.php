@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BotController;
+use App\Http\Controllers\TypebotController;
 use App\Http\Controllers\WahaWebhookController;
 use App\Http\Controllers\Api\ApiAuthController;
 use App\Http\Controllers\Api\ApiLojaController;
@@ -17,6 +18,17 @@ use Illuminate\Support\Facades\Route;
 // Webhook do bot (vindo do Python, protegido com HMAC + rate limit)
 Route::post('/mensagem', [BotController::class, 'processar'])
     ->middleware(['webhook.verify', 'webhook.rate']);
+
+// Webhook Typebot (respostas do Typebot para clientes)
+Route::post('/typebot/webhook/{tenantId}', [TypebotController::class, 'webhook'])
+    ->middleware(['webhook.verify', 'webhook.rate']);
+
+// Config Typebot (protegido por auth)
+Route::middleware('auth:sanctum')->prefix('typebot')->group(function () {
+    Route::get('/config', [TypebotController::class, 'config']);
+    Route::post('/config', [TypebotController::class, 'guardarConfig']);
+    Route::get('/bots', [TypebotController::class, 'listarBots']);
+});
 
 // Webhook Evolution API (eventos de estado de conexão)
 Route::post('/waha/webhook', [WahaWebhookController::class, 'processar'])

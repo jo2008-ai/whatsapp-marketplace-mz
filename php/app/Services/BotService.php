@@ -9,16 +9,19 @@ use App\Models\Produto;
 use App\Models\SessaoBot;
 use App\Models\Tenant;
 use App\Models\Vendedor;
+use App\Services\TypebotService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BotService
 {
     private NotificacaoService $notificacaoService;
+    private TypebotService $typebotService;
 
-    public function __construct(NotificacaoService $notificacaoService)
+    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService)
     {
         $this->notificacaoService = $notificacaoService;
+        $this->typebotService = $typebotService;
     }
 
     public function responder(Tenant $tenant, string $numero, string $mensagem, string $nome = ''): array|string
@@ -32,6 +35,10 @@ class BotService
 
         if ($sessao->estado === 'transferido_vendedor') {
             return $this->processarTransferidoVendedor($tenant, $sessao, $msg, $numero, $nome);
+        }
+
+        if ($tenant->usar_typebot && $tenant->typebot_bot_id) {
+            return $this->processarTypebot($tenant, $sessao, $msg, $mensagem, $numero, $nome);
         }
 
         if (in_array($msg, ['0', 'menu', 'voltar', 'inicio'])) {
@@ -56,6 +63,68 @@ class BotService
             'transferido_vendedor' => $this->processarTransferidoVendedor($tenant, $sessao, $msg, $numero, $nome),
             default => $this->menuPrincipal($tenant, $nome),
         };
+    }
+
+    private function processarTypebot(Tenant $tenant, SessaoBot $sessao, string $msg, string $mensagemOriginal, string $numero, string $nome): array|string
+    {
+        $typebotData = $sessao->dados['typebot'] ?? null;
+
+        if (!$typebotData || !isset($typebotData['session_id'])) {
+            $resultado = $this->typebotService->iniciarSessao($tenant, $numero, $mensagemOriginal, $nome);
+
+            if (!$resultado || empty($resultado['session_id'])) {
+                $sessao->atualizarEstado('inicio');
+                return $this->menuPrincipal($tenant, $nome);
+            }
+
+            $sessao->atualizarEstado('typebot', [
+                'typebot' => [
+                    'session_id' => $resultado['session_id'],
+                ],
+            ]);
+
+            $mensagens = $this->typebotService->processarRespostas($resultado['messages']);
+            $texto = $this->formatarMensagensTypebot($mensagens);
+
+            return $texto ?: $this->menuPrincipal($tenant, $nome);
+        }
+
+        $resultado = $this->typebotService->enviarMensagem(
+            $tenant,
+            $typebotData['session_id'],
+            $mensagemOriginal
+        );
+
+        if (!$resultado) {
+            $sessao->atualizarEstado('inicio');
+            return $this->menuPrincipal($tenant, $nome);
+        }
+
+        $mensagens = $this->typebotService->processarRespostas($resultado['messages']);
+        $texto = $this->formatarMensagensTypebot($mensagens);
+
+        return $texto ?: $this->menuPrincipal($tenant, $nome);
+    }
+
+    private function formatarMensagensTypebot(array $mensagens): string
+    {
+        $texto = '';
+
+        foreach ($mensagens as $msg) {
+            if ($msg['tipo'] === 'texto') {
+                $texto .= ($texto ? "\n\n" : '') . $msg['conteudo'];
+            }
+
+            if ($msg['tipo'] === 'botoes') {
+                $texto .= ($texto ? "\n\n" : '') . $msg['conteudo'];
+                foreach ($msg['botoes'] as $i => $botao) {
+                    $num = $i + 1;
+                    $texto .= "\n{$num}️⃣ {$botao}";
+                }
+            }
+        }
+
+        return $texto;
     }
 
     private function menuPrincipal(Tenant $tenant, string $nome): string

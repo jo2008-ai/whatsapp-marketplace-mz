@@ -23,6 +23,7 @@ class Tenant extends Model
         'banner_promo_activo', 'banner_promo_titulo', 'banner_promo_texto',
         'banner_promo_cor', 'banner_promo_expira_em',
         'banner_global_activo', 'banner_global_titulo', 'banner_global_texto', 'banner_global_cor',
+        'usar_typebot', 'typebot_bot_id', 'typebot_api_url',
     ];
 
     protected static function booted(): void

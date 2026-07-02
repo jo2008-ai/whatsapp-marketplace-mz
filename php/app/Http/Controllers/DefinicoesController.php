@@ -28,7 +28,12 @@ class DefinicoesController extends Controller
             'mensagem_pedido_cancelado' => 'nullable|string|max:500',
             'mensagem_vendedores_indisponivel' => 'nullable|string|max:500',
             'mensagem_transferencia' => 'nullable|string|max:500',
+            'usar_typebot' => 'boolean',
+            'typebot_bot_id' => 'nullable|string|max:255',
+            'typebot_api_url' => 'nullable|url|max:500',
         ]);
+
+        $validated['usar_typebot'] = $validated['usar_typebot'] ?? false;
 
         $tenant->update($validated);
 

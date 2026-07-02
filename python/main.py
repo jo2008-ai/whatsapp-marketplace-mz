@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 PHP_API_URL = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem')
 APP_URL = os.getenv('APP_URL', 'http://localhost:8000')
 TENANT_ID_DEFAULT = int(os.getenv('TENANT_ID_DEFAULT', '1'))
+TYPEBOT_WEBHOOK_URL = os.getenv('TYPEBOT_WEBHOOK_URL', 'http://php:8000/api/typebot/webhook')
 
 
 class RateLimiter:
@@ -216,6 +217,40 @@ def qr(tenant_id: int):
     """Retorna o QR code da sessao WAHA para um tenant."""
     resultado = obter_qr_code(tenant_id)
     return jsonify(resultado)
+
+
+@app.route('/typebot/webhook/<int:tenant_id>', methods=['POST'])
+def typebot_webhook(tenant_id: int):
+    """Recebe respostas do Typebot e envia ao cliente via WAHA."""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'no data'}), 400
+
+        numero = data.get('numero')
+        mensagem = data.get('mensagem')
+        session_id = data.get('session_id')
+
+        if not all([numero, mensagem]):
+            return jsonify({'error': 'missing parameters'}), 400
+
+        rate_key = f"typebot:{tenant_id}:{numero}"
+        if not api_limiter.is_allowed(rate_key):
+            return jsonify({
+                'error': 'rate_limited',
+                'retry_after': api_limiter.retry_after(rate_key),
+            }), 429
+
+        resultado = enviar_texto(tenant_id, numero, mensagem)
+
+        if 'error' in resultado:
+            return jsonify(resultado), 500
+
+        return jsonify({'status': 'sent', 'result': resultado})
+
+    except Exception as e:
+        logger.error(f"Erro no typebot webhook: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/estado/<int:tenant_id>', methods=['GET'])

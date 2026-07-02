@@ -73,6 +73,8 @@ services:
       WAHA_URL_3: http://waha:3000
       WAHA_URL_4: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
+      TYPEBOT_API_URL: http://typebot-viewer:3000
+      TYPEBOT_API_KEY: ${TYPEBOT_API_KEY:-typebot_secret_key_2026}
       APP_KEY: ${APP_KEY}
       APP_ENV: production
       APP_DEBUG: "false"
@@ -84,6 +86,50 @@ services:
       redis:
         condition: service_started
 
+  typebot-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: typebot
+      POSTGRES_USER: typebot
+      POSTGRES_PASSWORD: ${TYPEBOT_DB_PASSWORD:-typebot_secret_2026}
+    volumes:
+      - typebot_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typebot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  typebot-builder:
+    image: baptistejohn/typebot-builder:latest
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://typebot:${TYPEBOT_DB_PASSWORD:-typebot_secret_2026}@typebot-db:5432/typebot
+      NEXTAUTH_URL: ${TYPEBOT_BUILDER_URL:-http://localhost:3001}
+      NEXTAUTH_SECRET: ${TYPEBOT_NEXTAUTH_SECRET:-typebot_nextauth_secret_2026}
+      ENCRYPTION_PASSWORD: ${TYPEBOT_ENCRYPTION_PASSWORD:-typebot_encryption_2026}
+      ADMIN_EMAIL: ${TYPEBOT_ADMIN_EMAIL:-admin@marketplace.mz}
+      ADMIN_PASSWORD: ${TYPEBOT_ADMIN_PASSWORD:-admin123}
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+
+  typebot-viewer:
+    image: baptistejohn/typebot-viewer:latest
+    ports:
+      - "3002:3000"
+    environment:
+      DATABASE_URL: postgresql://typebot:${TYPEBOT_DB_PASSWORD:-typebot_secret_2026}@typebot-db:5432/typebot
+      TYPEBOT_BUILDER_INTERNAL_URL: http://typebot-builder:3000
+      NEXT_PUBLIC_VIEWER_URL: ${TYPEBOT_VIEWER_URL:-http://localhost:3002}
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+      typebot-builder:
+        condition: service_started
+
 volumes:
   pgdata:
   waha_data:
+  typebot_db_data:

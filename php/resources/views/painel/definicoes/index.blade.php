@@ -110,6 +110,41 @@
             </div>
         </div>
 
+        {{-- Typebot --}}
+        <div class="border-b pb-4">
+            <h3 class="font-semibold text-gray-700 mb-3">Typebot (Bot Visual)</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" name="usar_typebot" id="usar_typebot" value="1"
+                           {{ old('usar_typebot', $tenant->usar_typebot) ? 'checked' : '' }}
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="usar_typebot" class="text-sm font-medium text-gray-700">Usar Typebot como bot principal</label>
+                </div>
+                <p class="text-xs text-gray-500">Quando activo, o bot usa fluxos visuais do Typebot em vez do bot predefinido.</p>
+
+                <div id="typebot-config" class="{{ old('usar_typebot', $tenant->usar_typebot) ? '' : 'hidden' }}">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bot ID do Typebot</label>
+                            <input type="text" name="typebot_bot_id" value="{{ old('typebot_bot_id', $tenant->typebot_bot_id) }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                   placeholder="ID do bot no Typebot (ex: abc123)">
+                            <p class="text-xs text-gray-500 mt-1">Encontra no Typebot: Share → WhatsApp → Bot ID</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">URL da API Typebot (opcional)</label>
+                            <input type="url" name="typebot_api_url" value="{{ old('typebot_api_url', $tenant->typebot_api_url) }}"
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                   placeholder="http://typebot-viewer:3000 (predefinido)">
+                            <p class="text-xs text-gray-500 mt-1">Deixa vazio para usar a URL predefinida do servidor.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Estado da Loja --}}
         <div class="bg-gray-50 rounded-lg p-4">
             <h4 class="font-medium text-gray-700 mb-2">Estado da Loja</h4>
@@ -123,4 +158,13 @@
         </button>
     </form>
 </div>
+
+<script>
+    const typebotCheckbox = document.getElementById('usar_typebot');
+    const typebotConfig = document.getElementById('typebot-config');
+    
+    typebotCheckbox.addEventListener('change', function() {
+        typebotConfig.classList.toggle('hidden', !this.checked);
+    });
+</script>
 @endsection

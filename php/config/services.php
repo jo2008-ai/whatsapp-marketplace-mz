@@ -18,4 +18,8 @@ return [
         ],
         'key' => env('WAHA_API_KEY', ''),
     ],
+    'typebot' => [
+        'url' => env('TYPEBOT_API_URL', 'http://typebot-viewer:3000'),
+        'key' => env('TYPEBOT_API_KEY', 'typebot_secret_key_2026'),
+    ],
 ];
