@@ -2,27 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Produto;
+use App\Services\ProdutoService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ProdutoController extends Controller
 {
+    public function __construct(
+        private ProdutoService $produtoService
+    ) {}
+
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
-        $query = $tenant->produtos()->with(['categoria', 'vendedor']);
-
-        if ($request->filled('categoria_id')) {
-            $query->where('categoria_id', $request->categoria_id);
-        }
-
-        if ($request->filled('busca')) {
-            $busca = $request->busca;
-            $query->where(fn($q) => $q->where('nome', 'ILIKE', "%{$busca}%")->orWhere('descricao', 'ILIKE', "%{$busca}%"));
-        }
-
-        $produtos = $query->orderByDesc('created_at')->paginate(20);
+        $produtos = $this->produtoService->listar($tenant, $request);
         $categorias = $tenant->categorias()->where('ativo', true)->orderBy('nome')->get();
 
         return view('painel.produtos.index', compact('produtos', 'categorias', 'tenant'));
@@ -31,7 +23,6 @@ class ProdutoController extends Controller
     public function create(Request $request)
     {
         $tenant = $request->user()->tenant;
-
         $categorias = $tenant->categorias()->where('ativo', true)->orderBy('nome')->get();
         $vendedores = $tenant->vendedores()->where('ativo', true)->orderBy('nome')->get();
 
@@ -55,34 +46,29 @@ class ProdutoController extends Controller
             'destaque' => 'boolean',
         ]);
 
-        $validated['tenant_id'] = $tenant->id;
         $validated['disponivel'] = $request->boolean('disponivel', true);
         $validated['destaque'] = $request->boolean('destaque');
-
-        if ($request->hasFile('imagem')) {
-            $validated['imagem_url'] = $this->guardarImagem($request->file('imagem'));
-        }
-
-        if ($request->hasFile('imagem2')) {
-            $validated['imagem2_url'] = $this->guardarImagem($request->file('imagem2'));
-        }
-
-        unset($validated['imagem'], $validated['imagem2']);
 
         $validated['cores'] = $this->parseJsonArray($request->input('cores_json'));
         $validated['tamanhos'] = $this->parseJsonArray($request->input('tamanhos_json'));
 
-        Produto::create($validated);
+        $this->produtoService->criar(
+            $tenant,
+            $validated,
+            $request->file('imagem'),
+            $request->file('imagem2')
+        );
 
         return redirect('/painel/produtos')->with('success', 'Produto criado com sucesso!');
     }
 
-    public function edit(Request $request, Produto $produto)
+    public function edit(Request $request, int $id)
     {
         $tenant = $request->user()->tenant;
+        $produto = $this->produtoService->obterPorId($tenant, $id);
 
-        if ($produto->tenant_id !== $tenant->id) {
-            abort(403);
+        if (!$produto) {
+            abort(404);
         }
 
         $categorias = $tenant->categorias()->where('ativo', true)->orderBy('nome')->get();
@@ -91,13 +77,9 @@ class ProdutoController extends Controller
         return view('painel.produtos.form', compact('produto', 'categorias', 'vendedores', 'tenant'));
     }
 
-    public function update(Request $request, Produto $produto)
+    public function update(Request $request, int $id)
     {
         $tenant = $request->user()->tenant;
-
-        if ($produto->tenant_id !== $tenant->id) {
-            abort(403);
-        }
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -115,40 +97,30 @@ class ProdutoController extends Controller
         $validated['disponivel'] = $request->boolean('disponivel', true);
         $validated['destaque'] = $request->boolean('destaque');
 
-        if ($request->hasFile('imagem')) {
-            $validated['imagem_url'] = $this->guardarImagem($request->file('imagem'));
-        }
-
-        if ($request->hasFile('imagem2')) {
-            $validated['imagem2_url'] = $this->guardarImagem($request->file('imagem2'));
-        }
-
-        unset($validated['imagem'], $validated['imagem2']);
-
         $validated['cores'] = $this->parseJsonArray($request->input('cores_json'));
         $validated['tamanhos'] = $this->parseJsonArray($request->input('tamanhos_json'));
 
-        $produto->update($validated);
+        $produto = $this->produtoService->actualizar(
+            $tenant,
+            $id,
+            $validated,
+            $request->file('imagem'),
+            $request->file('imagem2')
+        );
+
+        if (!$produto) {
+            abort(404);
+        }
 
         return redirect('/painel/produtos')->with('success', 'Produto actualizado!');
     }
 
-    public function destroy(Request $request, Produto $produto)
+    public function destroy(Request $request, int $id)
     {
-        if ($produto->tenant_id !== $request->user()->tenant_id) {
-            abort(403);
-        }
-
-        $produto->delete();
+        $tenant = $request->user()->tenant;
+        $this->produtoService->eliminar($tenant, $id);
 
         return redirect('/painel/produtos')->with('success', 'Produto removido.');
-    }
-
-    private function guardarImagem($file): string
-    {
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $file->storeAs('public/produtos', $filename);
-        return url('storage/produtos/' . $filename);
     }
 
     private function parseJsonArray(?string $json): ?array

@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
+use App\Services\CategoriaService;
 use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
 {
+    public function __construct(
+        private CategoriaService $categoriaService
+    ) {}
+
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
-        $categorias = $tenant->categorias()->orderBy('ordem')->withCount('produtos')->get();
+        $categorias = $this->categoriaService->listar($tenant);
 
         return view('painel.categorias.index', compact('categorias', 'tenant'));
     }
@@ -30,18 +34,14 @@ class CategoriaController extends Controller
             'ordem' => 'nullable|integer|min:0',
         ]);
 
-        $validated['tenant_id'] = $tenant->id;
-
-        Categoria::create($validated);
+        $this->categoriaService->criar($tenant, $validated);
 
         return redirect('/painel/categorias')->with('success', 'Categoria criada!');
     }
 
-    public function update(Request $request, Categoria $categoria)
+    public function update(Request $request, int $id)
     {
-        if ($categoria->tenant_id !== $request->user()->tenant_id) {
-            abort(403);
-        }
+        $tenant = $request->user()->tenant;
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -53,19 +53,24 @@ class CategoriaController extends Controller
 
         $validated['ativo'] = $request->boolean('ativo', true);
 
-        $categoria->update($validated);
+        $categoria = $this->categoriaService->actualizar($tenant, $id, $validated);
+
+        if (!$categoria) {
+            abort(404);
+        }
 
         return redirect('/painel/categorias')->with('success', 'Categoria actualizada!');
     }
 
-    public function destroy(Request $request, Categoria $categoria)
+    public function destroy(Request $request, int $id)
     {
-        if ($categoria->tenant_id !== $request->user()->tenant_id) {
-            abort(403);
+        $tenant = $request->user()->tenant;
+        $resultado = $this->categoriaService->eliminar($tenant, $id);
+
+        if (!$resultado['success']) {
+            return back()->withErrors(['error' => $resultado['message']]);
         }
 
-        $categoria->delete();
-
-        return redirect('/painel/categorias')->with('success', 'Categoria removida.');
+        return redirect('/painel/categorias')->with('success', $resultado['message']);
     }
 }

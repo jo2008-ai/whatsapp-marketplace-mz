@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\VendedorRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\Vendedor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ApiVendedorController extends Controller
 {
@@ -33,20 +35,18 @@ class ApiVendedorController extends Controller
             return $this->notFound('Vendedor não encontrado.');
         }
 
+        Gate::authorize('view', $vendedor);
+
         return $this->success($vendedor);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(VendedorRequest $request): JsonResponse
     {
+        Gate::authorize('create', Vendedor::class);
+
         $tenant = $request->user()->tenant;
 
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'numero_whatsapp' => 'required|string|max:20',
-            'descricao' => 'nullable|string|max:255',
-            'ativo' => 'boolean',
-        ]);
-
+        $validated = $request->validated();
         $validated['tenant_id'] = $tenant->id;
         $validated['ativo'] = $request->boolean('ativo', true);
 
@@ -55,7 +55,7 @@ class ApiVendedorController extends Controller
         return $this->created($vendedor, 'Vendedor criado com sucesso.');
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(VendedorRequest $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
 
@@ -65,13 +65,9 @@ class ApiVendedorController extends Controller
             return $this->notFound('Vendedor não encontrado.');
         }
 
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'numero_whatsapp' => 'required|string|max:20',
-            'descricao' => 'nullable|string|max:255',
-            'ativo' => 'boolean',
-        ]);
+        Gate::authorize('update', $vendedor);
 
+        $validated = $request->validated();
         $validated['ativo'] = $request->boolean('ativo', true);
 
         $vendedor->update($validated);
@@ -89,6 +85,8 @@ class ApiVendedorController extends Controller
             return $this->notFound('Vendedor não encontrado.');
         }
 
+        Gate::authorize('delete', $vendedor);
+
         $vendedor->delete();
 
         return $this->success(null, 'Vendedor removido.');
@@ -103,6 +101,8 @@ class ApiVendedorController extends Controller
         if (!$vendedor) {
             return $this->notFound('Vendedor não encontrado.');
         }
+
+        Gate::authorize('update', $vendedor);
 
         $vendedor->update(['ativo' => !$vendedor->ativo]);
 

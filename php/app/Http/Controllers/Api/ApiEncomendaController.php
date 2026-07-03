@@ -7,6 +7,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\Encomenda;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ApiEncomendaController extends Controller
 {
@@ -37,6 +38,8 @@ class ApiEncomendaController extends Controller
         if (!$encomenda) {
             return $this->notFound('Encomenda não encontrada.');
         }
+
+        Gate::authorize('update', $encomenda);
 
         $request->validate([
             'estado' => 'required|in:pendente,confirmada,entregue,cancelada',

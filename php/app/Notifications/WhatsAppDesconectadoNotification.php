@@ -32,7 +32,7 @@ class WhatsAppDesconectadoNotification extends Notification implements ShouldQue
             ->subject("⚠️ WhatsApp da loja {$this->tenant->nome_loja} desconectado")
             ->greeting("Olá {$notifiable->name}!")
             ->line("O número WhatsApp da loja **{$this->tenant->nome_loja}** foi desconectado.")
-            ->line("Número: {$this->instancia->numero_whatsapp ?? 'N/A'}")
+            ->line("Número: " . ($this->instancia->numero_whatsapp ?? 'N/A'))
             ->line("O bot WhatsApp está parado. Os clientes não conseguem fazer encomendas.")
             ->action("Reconectar WhatsApp", $this->linkReconnect)
             ->line("Abre o painel e escaneia o novo QR code para reconectar.")

@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendedor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class ProdutoApiTest extends TestCase
@@ -86,6 +87,7 @@ class ProdutoApiTest extends TestCase
                 'stock' => 20,
                 'categoria_id' => $this->categoria->id,
                 'vendedor_id' => $this->vendedor->id,
+                'imagem' => UploadedFile::fake()->create('maca.jpg', 100, 'image/jpeg'),
             ]);
 
         $response->assertStatus(201)
@@ -166,7 +168,7 @@ class ProdutoApiTest extends TestCase
             ->deleteJson("/api/loja/produtos/{$produto->id}");
 
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('produtos', ['id' => $produto->id]);
+        $this->assertSoftDeleted('produtos', ['id' => $produto->id]);
     }
 
     public function test_produto_de_outro_tenant_nao_acessivel(): void

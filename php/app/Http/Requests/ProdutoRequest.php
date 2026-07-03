@@ -13,7 +13,7 @@ class ProdutoRequest extends FormRequest
 
     public function rules(): array
     {
-        $produtoId = $this->route('id');
+        $isCreate = $this->isMethod('post');
 
         return [
             'nome' => 'required|string|max:100',
@@ -22,9 +22,16 @@ class ProdutoRequest extends FormRequest
             'stock' => 'required|integer|min:0',
             'categoria_id' => 'required|integer|exists:categorias,id',
             'vendedor_id' => 'required|integer|exists:vendedores,id',
+            'imagem' => ($isCreate ? 'required' : 'nullable') . '|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'imagem2' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'imagem_url' => 'nullable|url|max:2000',
+            'imagem2_url' => 'nullable|url|max:2000',
             'disponivel' => 'boolean',
             'destaque' => 'boolean',
+            'cores' => 'nullable|array|max:10',
+            'cores.*' => 'string|max:30',
+            'tamanhos' => 'nullable|array|max:10',
+            'tamanhos.*' => 'string|max:10',
         ];
     }
 

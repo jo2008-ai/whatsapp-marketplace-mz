@@ -15,7 +15,7 @@ class SafeString implements ValidationRule
 
         foreach ($dangerous as $pattern) {
             if (str_contains($lower, $pattern)) {
-                fail("O campo {$attribute} contém caracteres não permitidos.");
+                $fail("O campo {$attribute} contém caracteres não permitidos.");
                 return;
             }
         }
@@ -24,7 +24,7 @@ class SafeString implements ValidationRule
         $sqlPatterns = ["'", '"', ';--', '/*', '*/', 'UNION SELECT', 'DROP TABLE'];
         foreach ($sqlPatterns as $pattern) {
             if (str_contains(strtoupper($value), strtoupper($pattern))) {
-                fail("O campo {$attribute} contém caracteres não permitidos.");
+                $fail("O campo {$attribute} contém caracteres não permitidos.");
                 return;
             }
         }

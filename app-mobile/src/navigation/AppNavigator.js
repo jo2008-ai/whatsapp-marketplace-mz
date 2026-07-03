@@ -1,9 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
+import { COLORS } from '../constants/colors';
 import LoginScreen from '../screens/LoginScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProdutosScreen from '../screens/ProdutosScreen';
@@ -13,6 +14,7 @@ import EncomendasScreen from '../screens/EncomendasScreen';
 import EncomendaDetalheScreen from '../screens/EncomendaDetalheScreen';
 import CategoriasScreen from '../screens/CategoriasScreen';
 import VendedoresScreen from '../screens/VendedoresScreen';
+import MaisMenuScreen from '../screens/MaisMenuScreen';
 import LoadingOverlay from '../components/LoadingOverlay';
 
 const Tab = createBottomTabNavigator();
@@ -53,66 +55,18 @@ function MaisStack() {
   );
 }
 
-function MaisMenuScreen({ navigation }) {
-  const items = [
-    { label: 'Encomendas', icon: '📋', screen: 'Encomendas' },
-    { label: 'Categorias', icon: '🏷️', screen: 'Categorias' },
-    { label: 'Vendedores', icon: '👥', screen: 'Vendedores' },
-  ];
-
-  return (
-    <View style={menuStyles.container}>
-      {items.map((item) => (
-        <TouchableOpacity
-          key={item.screen}
-          onPress={() => navigation.navigate(item.screen)}
-          style={menuStyles.item}
-        >
-          <Text style={menuStyles.icon}>{item.icon}</Text>
-          <Text style={menuStyles.label}>{item.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-const menuStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    padding: 16,
-  },
-  item: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  icon: {
-    fontSize: 24,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-});
-
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ focused }) => <TabIcon label={route.name} focused={focused} />,
-        tabBarActiveTintColor: '#2563EB',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textMuted,
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: COLORS.bg,
           borderTopWidth: 1,
-          borderTopColor: '#f3f4f6',
+          borderTopColor: COLORS.bgGrayDark,
           paddingBottom: 4,
           height: 56,
         },

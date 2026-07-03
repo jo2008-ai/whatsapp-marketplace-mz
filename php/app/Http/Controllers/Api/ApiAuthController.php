@@ -74,7 +74,7 @@ class ApiAuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
         return $this->success(null, 'Sessão encerrada.');
     }
 

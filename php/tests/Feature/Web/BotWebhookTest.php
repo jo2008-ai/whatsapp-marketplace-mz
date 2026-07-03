@@ -21,11 +21,14 @@ class BotWebhookTest extends TestCase
     {
         parent::setUp();
 
+        config(['services.waha.webhook_secret' => 'test-webhook-secret']);
+
         $this->tenant = Tenant::create([
             'nome_loja' => 'Teste',
             'email_dono' => 'loja@teste.com',
             'plano' => 'basic',
             'estado' => 'activo',
+            'activo' => true,
             'max_produtos' => 50,
             'max_numeros' => 1,
         ]);
@@ -59,9 +62,26 @@ class BotWebhookTest extends TestCase
         ]);
     }
 
+    private function assinarPayload(array $payload): string
+    {
+        $secret = config('services.waha.webhook_secret');
+        $content = json_encode($payload);
+        return 'sha256=' . hash_hmac('sha256', $content, $secret);
+    }
+
+    private function sendBotWebhook(array $payload): \Illuminate\Testing\TestResponse
+    {
+        $signature = $this->assinarPayload($payload);
+
+        return $this->postJson('/api/mensagem', $payload, [
+            'X-Hub-Signature-256' => $signature,
+        ]);
+    }
+
     public function test_webhook_retorna_resposta(): void
     {
-        $response = $this->postJson('/api/mensagem', [
+        $response = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => 'olá',
@@ -75,7 +95,8 @@ class BotWebhookTest extends TestCase
 
     public function test_webhook_instancia_inexistente_falha(): void
     {
-        $response = $this->postJson('/api/mensagem', [
+        $response = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => 'inexistente_999_abc',
             'numero' => '+258841111111',
             'mensagem' => 'olá',
@@ -87,7 +108,8 @@ class BotWebhookTest extends TestCase
 
     public function test_webhook_grupo_nao_responde(): void
     {
-        $response = $this->postJson('/api/mensagem', [
+        $response = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '120363001234567@g.us',
             'mensagem' => 'olá',
@@ -100,7 +122,8 @@ class BotWebhookTest extends TestCase
 
     public function test_webhook_regista_log(): void
     {
-        $this->postJson('/api/mensagem', [
+        $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => 'olá',
@@ -115,7 +138,8 @@ class BotWebhookTest extends TestCase
 
     public function test_webhook_mensagem_obrigatoria(): void
     {
-        $response = $this->postJson('/api/mensagem', [
+        $response = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
         ]);
@@ -125,9 +149,10 @@ class BotWebhookTest extends TestCase
 
     public function test_webhook_tenant_inactivo_responde_indisponivel(): void
     {
-        $this->tenant->update(['estado' => 'suspenso']);
+        $this->tenant->update(['activo' => false]);
 
-        $response = $this->postJson('/api/mensagem', [
+        $response = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => 'olá',
@@ -140,7 +165,8 @@ class BotWebhookTest extends TestCase
 
     public function test_webhook_fluxo_completo_pedido(): void
     {
-        $response = $this->postJson('/api/mensagem', [
+        $response = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => '1',
@@ -150,7 +176,8 @@ class BotWebhookTest extends TestCase
         $response->assertStatus(200)
             ->assertJson(['enviar' => true]);
 
-        $response2 = $this->postJson('/api/mensagem', [
+        $response2 = $this->sendBotWebhook([
+            'tenant_id' => $this->tenant->id,
             'instance_name' => $this->instancia->waha_session,
             'numero' => '+258841111111',
             'mensagem' => '1',

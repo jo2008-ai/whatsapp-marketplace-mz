@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class AuthApiTest extends TestCase
@@ -80,11 +81,17 @@ class AuthApiTest extends TestCase
     {
         $token = $this->user->createToken('test')->plainTextToken;
 
-        $this->withHeader('Authorization', "Bearer {$token}")
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
             ->postJson('/api/auth/logout')
             ->assertStatus(200);
 
-        $this->withHeader('Authorization', "Bearer {$token}")
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $this->user->id,
+        ]);
+
+        Auth::forgetGuards();
+
+        $this->withHeaders(['Authorization' => "Bearer {$token}"])
             ->getJson('/api/auth/me')
             ->assertStatus(401);
     }

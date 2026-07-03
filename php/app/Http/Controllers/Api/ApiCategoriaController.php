@@ -3,24 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoriaRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\Categoria;
+use App\Services\CategoriaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ApiCategoriaController extends Controller
 {
     use ApiResponse;
 
+    public function __construct(
+        private CategoriaService $categoriaService
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
         $tenant = $request->user()->tenant;
-
-        $categorias = Categoria::where('tenant_id', $tenant->id)
-            ->where('ativo', true)
-            ->orderBy('ordem')
-            ->withCount('produtos')
-            ->get();
+        $categorias = $this->categoriaService->listar($tenant);
 
         return $this->success($categorias);
     }
@@ -28,59 +30,45 @@ class ApiCategoriaController extends Controller
     public function show(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
-
-        $categoria = Categoria::where('tenant_id', $tenant->id)
-            ->withCount('produtos')
-            ->find($id);
+        $categoria = $this->categoriaService->obterPorId($tenant, $id);
 
         if (!$categoria) {
             return $this->notFound('Categoria não encontrada.');
         }
+
+        Gate::authorize('view', $categoria);
 
         return $this->success($categoria);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CategoriaRequest $request): JsonResponse
     {
+        Gate::authorize('create', Categoria::class);
+
         $tenant = $request->user()->tenant;
-
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string|max:255',
-            'icone' => 'nullable|string|max:10',
-            'ordem' => 'nullable|integer|min:0',
-            'ativo' => 'boolean',
-        ]);
-
-        $validated['tenant_id'] = $tenant->id;
+        $validated = $request->validated();
         $validated['ativo'] = $request->boolean('ativo', true);
 
-        $categoria = Categoria::create($validated);
+        $categoria = $this->categoriaService->criar($tenant, $validated);
 
         return $this->created($categoria, 'Categoria criada.');
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(CategoriaRequest $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
-
-        $categoria = Categoria::where('tenant_id', $tenant->id)->find($id);
+        $categoria = $this->categoriaService->obterPorId($tenant, $id);
 
         if (!$categoria) {
             return $this->notFound('Categoria não encontrada.');
         }
 
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string|max:255',
-            'icone' => 'nullable|string|max:10',
-            'ordem' => 'nullable|integer|min:0',
-            'ativo' => 'boolean',
-        ]);
+        Gate::authorize('update', $categoria);
 
+        $validated = $request->validated();
         $validated['ativo'] = $request->boolean('ativo', true);
 
-        $categoria->update($validated);
+        $categoria = $this->categoriaService->actualizar($tenant, $id, $validated);
 
         return $this->success($categoria, 'Categoria actualizada.');
     }
@@ -88,22 +76,20 @@ class ApiCategoriaController extends Controller
     public function destroy(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
-
-        $categoria = Categoria::where('tenant_id', $tenant->id)->find($id);
+        $categoria = $this->categoriaService->obterPorId($tenant, $id);
 
         if (!$categoria) {
             return $this->notFound('Categoria não encontrada.');
         }
 
-        if ($categoria->produtos()->count() > 0) {
-            return $this->error(
-                'Não é possível remover uma categoria com produtos.',
-                422
-            );
+        Gate::authorize('delete', $categoria);
+
+        $resultado = $this->categoriaService->eliminar($tenant, $id);
+
+        if (!$resultado['success']) {
+            return $this->error($resultado['message'], 422);
         }
 
-        $categoria->delete();
-
-        return $this->success(null, 'Categoria removida.');
+        return $this->success(null, $resultado['message']);
     }
 }
