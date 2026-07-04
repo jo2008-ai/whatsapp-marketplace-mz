@@ -101,11 +101,11 @@ services:
       - key: WAHA_LISTENING_HOST
         value: "0.0.0.0"
       - key: WAHA_ENGINE
-        value: NOWEB
+        value: WEBJS
       - key: WAHA_PORT
         value: "3000"
       - key: WAHA_SECRET
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
 
   - type: web
     name: marketplace-waha-2
@@ -125,11 +125,11 @@ services:
       - key: WAHA_LISTENING_HOST
         value: "0.0.0.0"
       - key: WAHA_ENGINE
-        value: NOWEB
+        value: WEBJS
       - key: WAHA_PORT
         value: "3000"
       - key: WAHA_SECRET
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
 
   - type: web
     name: marketplace-waha-3
@@ -149,11 +149,11 @@ services:
       - key: WAHA_LISTENING_HOST
         value: "0.0.0.0"
       - key: WAHA_ENGINE
-        value: NOWEB
+        value: WEBJS
       - key: WAHA_PORT
         value: "3000"
       - key: WAHA_SECRET
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
 
   - type: web
     name: marketplace-waha-4
@@ -173,8 +173,8 @@ services:
       - key: WAHA_LISTENING_HOST
         value: "0.0.0.0"
       - key: WAHA_ENGINE
-        value: NOWEB
+        value: WEBJS
       - key: WAHA_PORT
         value: "3000"
       - key: WAHA_SECRET
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
