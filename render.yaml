@@ -39,9 +39,9 @@ services:
       - key: WAHA_URL_4
         value: https://marketplace-waha-4.onrender.com
       - key: WAHA_API_KEY
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
       - key: WEBHOOK_SECRET
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
       - key: ADMIN_API_KEY
         value: 0871@py
       - key: SUPER_ADMIN_EMAIL
@@ -71,7 +71,7 @@ services:
       - key: WAHA_URL_4
         value: https://marketplace-waha-4.onrender.com
       - key: WAHA_API_KEY
-        value: CHANGE_ME_RANDOM_SECRET
+        value: marketplace_secret_key_2026
       - key: ADMIN_API_KEY
         value: 0871@py
       - key: WAHA_SESSION

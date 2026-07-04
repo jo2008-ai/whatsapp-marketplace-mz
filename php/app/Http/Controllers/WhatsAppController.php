@@ -15,7 +15,7 @@ class WhatsAppController extends Controller
 
     private function getWahaKey(): string
     {
-        return config('services.waha.key', '');
+        return trim(config('services.waha.key', ''));
     }
 
     private function resolveWahaUrl(InstanciaWhatsApp $instancia): ?string
