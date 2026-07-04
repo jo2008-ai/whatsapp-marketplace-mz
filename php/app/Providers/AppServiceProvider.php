@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Context\TenantContext;
 use App\Models\Categoria;
 use App\Models\Encomenda;
 use App\Models\Produto;
@@ -15,7 +16,12 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->scoped(TenantContext::class, function () {
+            return TenantContext::empty();
+        });
+    }
 
     public function boot(): void
     {

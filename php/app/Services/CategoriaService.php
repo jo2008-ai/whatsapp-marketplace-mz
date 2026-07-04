@@ -2,36 +2,49 @@
 
 namespace App\Services;
 
+use App\Context\TenantContext;
 use App\Models\Categoria;
 use App\Models\Tenant;
 use Illuminate\Support\Collection;
 
 class CategoriaService
 {
-    public function listar(Tenant $tenant): Collection
+    private function resolveTenant(?Tenant $tenant = null): Tenant
     {
-        return $tenant->categorias()
-            ->where('ativo', true)
+        if ($tenant) {
+            return $tenant;
+        }
+
+        return app(TenantContext::class)->tenant();
+    }
+
+    public function listar(?Tenant $tenant = null): Collection
+    {
+        $tenant = $this->resolveTenant($tenant);
+
+        return Categoria::where('ativo', true)
             ->orderBy('ordem')
             ->withCount('produtos')
             ->get();
     }
 
-    public function obterPorId(Tenant $tenant, int $id): ?Categoria
+    public function obterPorId(?Tenant $tenant = null, int $id): ?Categoria
     {
-        return $tenant->categorias()
-            ->withCount('produtos')
+        $tenant = $this->resolveTenant($tenant);
+
+        return Categoria::withCount('produtos')
             ->find($id);
     }
 
-    public function criar(Tenant $tenant, array $validated): Categoria
+    public function criar(?Tenant $tenant = null, array $validated): Categoria
     {
+        $tenant = $this->resolveTenant($tenant);
         $validated['tenant_id'] = $tenant->id;
 
         return Categoria::create($validated);
     }
 
-    public function actualizar(Tenant $tenant, int $id, array $validated): ?Categoria
+    public function actualizar(?Tenant $tenant = null, int $id, array $validated): ?Categoria
     {
         $categoria = $this->obterPorId($tenant, $id);
 
@@ -44,7 +57,7 @@ class CategoriaService
         return $categoria;
     }
 
-    public function eliminar(Tenant $tenant, int $id): array
+    public function eliminar(?Tenant $tenant = null, int $id): array
     {
         $categoria = $this->obterPorId($tenant, $id);
 

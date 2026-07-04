@@ -24,7 +24,7 @@ Route::post('/typebot/webhook/{tenantId}', [TypebotController::class, 'webhook']
     ->middleware(['webhook.verify', 'webhook.rate']);
 
 // Config Typebot (protegido por auth)
-Route::middleware('auth:sanctum')->prefix('typebot')->group(function () {
+Route::middleware(['auth:sanctum', 'tenant.context'])->prefix('typebot')->group(function () {
     Route::get('/config', [TypebotController::class, 'config']);
     Route::post('/config', [TypebotController::class, 'guardarConfig']);
     Route::get('/bots', [TypebotController::class, 'listarBots']);
@@ -45,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Rotas protegidas da loja
-Route::middleware(['auth:sanctum', 'tenant.activo'])->prefix('loja')->group(function () {
+Route::middleware(['auth:sanctum', 'tenant.context', 'tenant.activo'])->prefix('loja')->group(function () {
     // Dashboard
     Route::get('/dashboard', [ApiLojaController::class, 'dashboard']);
 
@@ -83,6 +83,23 @@ Route::middleware(['auth:sanctum', 'tenant.activo'])->prefix('loja')->group(func
 
     // Upload
     Route::post('/upload/imagem', [ApiUploadController::class, 'imagem']);
+
+    // Atributos
+    Route::get('/atributos', [\App\Http\Controllers\Api\ApiAtributoController::class, 'index']);
+    Route::get('/atributos/{id}', [\App\Http\Controllers\Api\ApiAtributoController::class, 'show']);
+    Route::post('/atributos', [\App\Http\Controllers\Api\ApiAtributoController::class, 'store']);
+    Route::put('/atributos/{id}', [\App\Http\Controllers\Api\ApiAtributoController::class, 'update']);
+    Route::delete('/atributos/{id}', [\App\Http\Controllers\Api\ApiAtributoController::class, 'destroy']);
+    Route::post('/atributos/{id}/valores', [\App\Http\Controllers\Api\ApiAtributoController::class, 'adicionarValor']);
+    Route::put('/atributos/valores/{valorId}', [\App\Http\Controllers\Api\ApiAtributoController::class, 'actualizarValor']);
+    Route::delete('/atributos/valores/{valorId}', [\App\Http\Controllers\Api\ApiAtributoController::class, 'eliminarValor']);
+
+    // Variantes de Produto
+    Route::get('/produtos/{produtoId}/variantes', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'index']);
+    Route::post('/produtos/{produtoId}/variantes', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'store']);
+    Route::put('/variantes/{id}', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'update']);
+    Route::delete('/variantes/{id}', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'destroy']);
+    Route::patch('/variantes/{id}/toggle', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'toggleDisponivel']);
 });
 
 // Rotas admin — protegidas por chave secreta

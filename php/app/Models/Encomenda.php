@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Observers\EncomendaObserver;
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,9 +14,14 @@ class Encomenda extends Model
 {
     use SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
+
     protected $fillable = [
         'tenant_id', 'numero_cliente', 'nome_cliente', 'produto_id',
-        'cor_escolhida', 'tamanho_escolhido',
+        'variante_id', 'cor_escolhida', 'tamanho_escolhido',
         'vendedor_id', 'quantidade', 'preco_total', 'estado', 'observacoes',
     ];
 
@@ -36,8 +42,31 @@ class Encomenda extends Model
         return $this->belongsTo(Produto::class);
     }
 
+    public function variante(): BelongsTo
+    {
+        return $this->belongsTo(ProdutoVariante::class, 'variante_id');
+    }
+
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(Vendedor::class);
+    }
+
+    public function descricaoVariante(): string
+    {
+        $partes = array_filter([
+            $this->cor_escolhida,
+            $this->tamanho_escolhido,
+        ]);
+
+        if (!empty($partes)) {
+            return implode(' · ', $partes);
+        }
+
+        if ($this->variante) {
+            return $this->variante->descricaoVariantes();
+        }
+
+        return '';
     }
 }

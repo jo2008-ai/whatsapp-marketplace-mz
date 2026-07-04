@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Context\TenantContext;
 use App\Models\Produto;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
@@ -14,35 +15,47 @@ class ProdutoService
         private ImageService $imageService
     ) {}
 
-    public function listar(Tenant $tenant, Request $request): LengthAwarePaginator
+    private function resolveTenant(?Tenant $tenant = null): Tenant
     {
-        $query = $tenant->produtos()->with(['categoria:id,nome,icone', 'vendedor:id,nome']);
+        if ($tenant) {
+            return $tenant;
+        }
 
-        if ($request->filled('categoria_id')) {
+        return app(TenantContext::class)->tenant();
+    }
+
+    public function listar(?Tenant $tenant = null, Request $request = null): LengthAwarePaginator
+    {
+        $tenant = $this->resolveTenant($tenant);
+        $query = Produto::with(['categoria:id,nome,icone', 'vendedor:id,nome']);
+
+        if ($request && $request->filled('categoria_id')) {
             $query->where('categoria_id', $request->categoria_id);
         }
 
-        if ($request->filled('pesquisa') || $request->filled('busca')) {
+        if ($request && ($request->filled('pesquisa') || $request->filled('busca'))) {
             $pesquisa = $request->input('pesquisa') ?? $request->input('busca');
             $query->where(fn($q) => $q->where('nome', 'ILIKE', "%{$pesquisa}%")->orWhere('descricao', 'ILIKE', "%{$pesquisa}%"));
         }
 
-        if ($request->has('disponivel')) {
+        if ($request && $request->has('disponivel')) {
             $query->where('disponivel', $request->boolean('disponivel'));
         }
 
         return $query->orderByDesc('created_at')->paginate(20);
     }
 
-    public function obterPorId(Tenant $tenant, int $id): ?Produto
+    public function obterPorId(?Tenant $tenant = null, int $id): ?Produto
     {
-        return $tenant->produtos()
-            ->with(['categoria:id,nome,icone', 'vendedor:id,nome,numero_whatsapp'])
+        $tenant = $this->resolveTenant($tenant);
+
+        return Produto::with(['categoria:id,nome,icone', 'vendedor:id,nome,numero_whatsapp'])
             ->find($id);
     }
 
-    public function criar(Tenant $tenant, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): Produto
+    public function criar(?Tenant $tenant = null, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): Produto
     {
+        $tenant = $this->resolveTenant($tenant);
         $validated['tenant_id'] = $tenant->id;
         $validated = $this->imageService->processarImagens($validated, $imagem, $imagem2);
 
@@ -52,7 +65,7 @@ class ProdutoService
         return $produto;
     }
 
-    public function actualizar(Tenant $tenant, int $id, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): ?Produto
+    public function actualizar(?Tenant $tenant = null, int $id, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): ?Produto
     {
         $produto = $this->obterPorId($tenant, $id);
 
@@ -80,7 +93,7 @@ class ProdutoService
         return $produto;
     }
 
-    public function eliminar(Tenant $tenant, int $id): bool
+    public function eliminar(?Tenant $tenant = null, int $id): bool
     {
         $produto = $this->obterPorId($tenant, $id);
 
@@ -92,7 +105,7 @@ class ProdutoService
         return true;
     }
 
-    public function toggleDisponivel(Tenant $tenant, int $id): ?array
+    public function toggleDisponivel(?Tenant $tenant = null, int $id): ?array
     {
         $produto = $this->obterPorId($tenant, $id);
 

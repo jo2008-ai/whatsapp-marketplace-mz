@@ -30,7 +30,7 @@ Route::post('/esqueci-password', [PasswordResetController::class, 'sendResetLink
 Route::get('/repor-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
 Route::post('/repor-password/{token}', [PasswordResetController::class, 'reset']);
 
-Route::prefix('painel')->middleware(['auth', 'tenant.activo'])->group(function () {
+Route::prefix('painel')->middleware(['auth', 'tenant.context', 'tenant.activo'])->group(function () {
     Route::get('/', [PainelController::class, 'dashboard'])->name('painel.dashboard');
 
     Route::resource('produtos', ProdutoController::class)->except(['show']);

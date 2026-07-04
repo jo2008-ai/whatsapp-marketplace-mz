@@ -13,3 +13,7 @@ app-mobile/node_modules/
 app-mobile/.env
 .DS_Store
 *.log
+php/storage/app/public/produtos/
+php/bootstrap/cache/
+docs/
+generate-pdfs.js

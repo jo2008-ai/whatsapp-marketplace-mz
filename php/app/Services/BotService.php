@@ -383,7 +383,7 @@ class BotService
             return "Produto não encontrado ou indisponível. 🙁\n\n" . $this->menuPrincipal($tenant, $nome);
         }
 
-        if ($produto->stock <= 0) {
+        if ($produto->temStock() === false) {
             return "⚠️ Este produto está sem stock no momento. Tenta novamente mais tarde.";
         }
 
@@ -403,8 +403,9 @@ class BotService
     private function montarMensagemCores(Produto $produto): string
     {
         $emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
+        $cores = $produto->obterCoresDisponiveis();
         $texto = "Qual a cor pretendida?\n\n";
-        foreach ($produto->cores as $i => $cor) {
+        foreach ($cores as $i => $cor) {
             $emoji = $emojis[$i] ?? ($i + 1);
             $texto .= "{$emoji} {$cor}\n";
         }
@@ -416,7 +417,8 @@ class BotService
     {
         $texto = "Qual o tamanho?\n\n";
         $emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-        foreach ($produto->tamanhos as $i => $tamanho) {
+        $tamanhos = $produto->obterTamanhosDisponiveis();
+        foreach ($tamanhos as $i => $tamanho) {
             $emoji = $emojis[$i] ?? ($i + 1);
             $texto .= "{$emoji} {$tamanho}\n";
         }
@@ -441,13 +443,14 @@ class BotService
             return "Produto não encontrado.\n\n" . $this->menuPrincipal($tenant, '');
         }
 
+        $cores = $produto->obterCoresDisponiveis();
         $index = (int) $msg - 1;
 
-        if ($index < 0 || $index >= count($produto->cores)) {
-            return "Opção inválida. Escolhe um número de 1 a " . count($produto->cores) . " ou *0* para voltar.";
+        if ($index < 0 || $index >= count($cores)) {
+            return "Opção inválida. Escolhe um número de 1 a " . count($cores) . " ou *0* para voltar.";
         }
 
-        $novaDados = array_merge($dados, ['cor_escolhida' => $produto->cores[$index]]);
+        $novaDados = array_merge($dados, ['cor_escolhida' => $cores[$index]]);
 
         if ($produto->temTamanhos()) {
             $sessao->atualizarEstado('escolher_tamanho', $novaDados);
@@ -474,13 +477,14 @@ class BotService
             return "Produto não encontrado.\n\n" . $this->menuPrincipal($tenant, '');
         }
 
+        $tamanhos = $produto->obterTamanhosDisponiveis();
         $index = (int) $msg - 1;
 
-        if ($index < 0 || $index >= count($produto->tamanhos)) {
-            return "Opção inválida. Escolhe um número de 1 a " . count($produto->tamanhos) . " ou *0* para voltar.";
+        if ($index < 0 || $index >= count($tamanhos)) {
+            return "Opção inválida. Escolhe um número de 1 a " . count($tamanhos) . " ou *0* para voltar.";
         }
 
-        $novaDados = array_merge($dados, ['tamanho_escolhido' => $produto->tamanhos[$index]]);
+        $novaDados = array_merge($dados, ['tamanho_escolhido' => $tamanhos[$index]]);
 
         return $this->criarEncomenda($tenant, $sessao, $produto, $sessao->numero_whatsapp, '', $novaDados);
     }
@@ -497,8 +501,30 @@ class BotService
         $resultado = DB::transaction(function () use ($tenant, $produto, $numero, $nome, $cor, $tamanho) {
             $produtoAtualizado = Produto::lockForUpdate()->find($produto->id);
 
-            if (!$produtoAtualizado || $produtoAtualizado->stock <= 0) {
+            if (!$produtoAtualizado) {
                 return null;
+            }
+
+            $variante = null;
+            $precoFinal = $produtoAtualizado->preco;
+            $stockDisponivel = $produtoAtualizado->stock;
+
+            if ($produtoAtualizado->temVariantesNovas()) {
+                $variante = $produtoAtualizado->obterVariante($cor, $tamanho);
+
+                if (!$variante || !$variante->temStock()) {
+                    return null;
+                }
+
+                $variante->decrement('stock');
+                $precoFinal = $variante->precoFinal();
+                $stockDisponivel = $variante->stock;
+            } else {
+                if ($produtoAtualizado->stock <= 0) {
+                    return null;
+                }
+
+                $produtoAtualizado->decrement('stock');
             }
 
             $encomenda = Encomenda::create([
@@ -506,15 +532,14 @@ class BotService
                 'numero_cliente' => $numero,
                 'nome_cliente' => $nome,
                 'produto_id' => $produtoAtualizado->id,
+                'variante_id' => $variante?->id,
                 'cor_escolhida' => $cor,
                 'tamanho_escolhido' => $tamanho,
                 'vendedor_id' => $produtoAtualizado->vendedor_id,
                 'quantidade' => 1,
-                'preco_total' => $produtoAtualizado->preco,
+                'preco_total' => $precoFinal,
                 'estado' => 'pendente',
             ]);
-
-            $produtoAtualizado->decrement('stock');
 
             return $encomenda;
         });
@@ -538,7 +563,7 @@ class BotService
         $vendedorInfo = $encomenda->vendedor ? "\n📱 O vendedor *{$encomenda->vendedor->nome}* irá contactar-te." : '';
 
         $mensagemSucesso = $tenant->mensagem_pedido_sucesso ?: "✅ Encomenda feita com sucesso!\n\n"
-             . "📋 *{$produto->nome}{$linhaVariante}* — {$produto->preco} MZN{$vendedorInfo}\n\n"
+             . "📋 *{$produto->nome}{$linhaVariante}* — {$encomenda->preco_total} MZN{$vendedorInfo}\n\n"
              . "Obrigado pela preferência! 🙏";
 
         return $mensagemSucesso;

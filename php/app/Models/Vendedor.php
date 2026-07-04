@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
+use App\Observers\VendedorObserver;
+use App\Scopes\TenantScope;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy(VendedorObserver::class)]
 class Vendedor extends Model
 {
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     protected $table = 'vendedores';
 

@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
+use App\Observers\CategoriaObserver;
+use App\Scopes\TenantScope;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy(CategoriaObserver::class)]
 class Categoria extends Model
 {
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     protected $fillable = [
         'tenant_id', 'nome', 'descricao', 'icone', 'ativo', 'ordem',
