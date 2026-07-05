@@ -25,7 +25,7 @@ class ApiPainelController extends Controller
                     'plano'     => $l->plano,
                     'estado'    => $l->estado,
                     'activo'    => $l->activo,
-                    'waha'      => $l->instancias->first()?->waha_url ?? '—',
+'waha' => $l->instancias->first()->waha_url ?? '—',
                 ];
             });
 
@@ -61,7 +61,7 @@ class ApiPainelController extends Controller
             'telefone'   => $telefone,
             'password'   => null,
             'role'       => 'user',
-            'login_code' => str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+            'login_code' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
         ]);
 
         return response()->json([

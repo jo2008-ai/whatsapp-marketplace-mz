@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\App;
 
 class TenantScope implements Scope
 {
+    /** @param Builder<\App\Models\Tenant> $builder */
     public function apply(Builder $builder, Model $model): void
     {
         $context = App::make(TenantContext::class);
@@ -19,6 +20,7 @@ class TenantScope implements Scope
         }
     }
 
+    /** @param Builder<\App\Models\Tenant> $builder */
     public function extend(Builder $builder): void
     {
         $builder->macro('withoutTenantScope', function (Builder $builder) {

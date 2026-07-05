@@ -27,6 +27,9 @@ class ApiCategoriaController extends Controller
         return $this->success($categorias);
     }
 
+    /**
+     * @param int $id
+     */
     public function show(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -54,6 +57,9 @@ class ApiCategoriaController extends Controller
         return $this->created($categoria, 'Categoria criada.');
     }
 
+    /**
+     * @param int $id
+     */
     public function update(CategoriaRequest $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -73,6 +79,9 @@ class ApiCategoriaController extends Controller
         return $this->success($categoria, 'Categoria actualizada.');
     }
 
+    /**
+     * @param int $id
+     */
     public function destroy(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;

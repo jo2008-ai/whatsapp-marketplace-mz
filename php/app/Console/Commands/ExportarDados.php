@@ -49,8 +49,8 @@ class ExportarDados extends Command
             $csv .= implode(',', [
                 $p->id,
                 '"' . $p->nome . '"',
-                '"' . ($p->categoria?->nome ?? '') . '"',
-                '"' . ($p->vendedor?->nome ?? '') . '"',
+                '"' . ($p->categoria->nome ?? '') . '"',
+                '"' . ($p->vendedor->nome ?? '') . '"',
                 $p->preco,
                 $p->stock,
                 $p->disponivel ? 'Sim' : 'Não',
@@ -73,11 +73,11 @@ class ExportarDados extends Command
                 $e->id,
                 '"' . ($e->nome_cliente ?? '') . '"',
                 $e->numero_cliente,
-                '"' . ($e->produto?->nome ?? '') . '"',
+                '"' . ($e->produto->nome ?? '') . '"',
                 $e->quantidade,
                 $e->preco_total,
                 $e->estado,
-                $e->created_at->format('Y-m-d H:i'),
+                \Illuminate\Support\Carbon::parse($e->created_at)->format('Y-m-d H:i'),
             ]) . "\n";
         }
 

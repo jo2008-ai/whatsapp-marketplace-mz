@@ -13,7 +13,7 @@ class RateLimitApi
     {
         $isLogin = $request->is('api/auth/login');
         $tipo = $isLogin ? 'login' : 'geral';
-        $key = 'api:' . $tipo . ':' . ($request->user()?->id ?? $request->ip());
+        $key = 'api:' . $tipo . ':' . ($request->user()->id ?? $request->ip());
         $maxAttempts = $isLogin ? 5 : 200;
         $decayMinutes = 1;
 
@@ -22,7 +22,7 @@ class RateLimitApi
             return response()->json([
                 'success' => false,
                 'message' => "Demasiadas tentativas. Tenta novamente em {$seconds} segundos.",
-            ], 429)->header('Retry-After', $seconds);
+            ], 429)->header('Retry-After', (string) $seconds);
         }
 
         RateLimiter::hit($key, $decayMinutes * 60);

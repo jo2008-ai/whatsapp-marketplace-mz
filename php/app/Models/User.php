@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens;
+    use HasApiTokens, Notifiable;
 
     protected $fillable = [
         'tenant_id', 'name', 'email', 'telefone', 'password', 'role', 'login_code',
@@ -26,6 +27,7 @@ class User extends Authenticatable
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

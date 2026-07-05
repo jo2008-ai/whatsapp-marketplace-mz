@@ -15,11 +15,13 @@ use Illuminate\Support\Facades\Log;
 
 class RegistoController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function show()
     {
         return view('publico.registar');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function criar(Request $request)
     {
         $validated = $request->validate([

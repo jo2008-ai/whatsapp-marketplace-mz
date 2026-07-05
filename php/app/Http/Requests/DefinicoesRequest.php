@@ -11,6 +11,7 @@ class DefinicoesRequest extends FormRequest
         return true;
     }
 
+    /** @return array<string, string> */
     public function rules(): array
     {
         return [
@@ -21,6 +22,7 @@ class DefinicoesRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
     public function messages(): array
     {
         return [

@@ -26,6 +26,7 @@ class BotService
         $this->wahaService = $wahaService;
     }
 
+    /** @return array<int, mixed>|string */
     public function responder(Tenant $tenant, string $numero, string $mensagem, string $nome = ''): array|string
     {
         if (!$tenant->activo) {
@@ -108,6 +109,9 @@ class BotService
         return $texto ?: $this->menuPrincipal($tenant, $nome);
     }
 
+    /**
+     * @param array<int, array{tipo: string, conteudo: string, botoes?: array<int, string>}> $mensagens
+     */
     private function formatarMensagensTypebot(array $mensagens): string
     {
         $texto = '';
@@ -239,6 +243,7 @@ class BotService
         $sessao->atualizarEstado('categorias');
 
         $texto = "🛍️ Escolhe uma categoria:\n\n";
+        /** @var Categoria $cat */
         foreach ($categorias as $i => $cat) {
             $icone = $cat->icone ?: '📦';
             $num = $i + 1;
@@ -263,6 +268,7 @@ class BotService
             return "Opção inválida. Escolhe um número de 1 a {$categorias->count()} ou *0* para voltar.";
         }
 
+        /** @var Categoria $categoria */
         $categoria = $categorias[$index];
 
         $sessao->atualizarEstado('produtos_categoria', [
@@ -295,6 +301,7 @@ class BotService
         $produtos = $produtos->take($porPagina);
 
         $texto = "📦 *{$categoriaNome}*\n\n";
+        /** @var Produto $p */
         foreach ($produtos as $i => $p) {
             $num = $i + 1;
             $destaque = $p->destaque ? '⭐ ' : '';
@@ -309,7 +316,8 @@ class BotService
         return $texto;
     }
 
-    private function processarProdutosCategoria(Tenant $tenant, SessaoBot $sessao, string $msg): array|string
+    /** @return string|array{texto: string, imagens: string[]} */
+    private function processarProdutosCategoria(Tenant $tenant, SessaoBot $sessao, string $msg): string|array
     {
         $dados = $sessao->dados;
         $categoriaId = $dados['categoria_id'] ?? null;
@@ -498,6 +506,9 @@ class BotService
         return $this->criarEncomenda($tenant, $sessao, $produto, $sessao->numero_whatsapp, '', $novaDados);
     }
 
+    /**
+     * @param array<string, mixed> $dadosSessao
+     */
     private function criarEncomenda(Tenant $tenant, SessaoBot $sessao, Produto $produto, string $numero, string $nome, array $dadosSessao = []): string
     {
         if (empty($dadosSessao)) {
@@ -614,6 +625,7 @@ class BotService
         ]);
 
         $texto = "🔍 Resultados para \"{$msg}\":\n\n";
+        /** @var Produto $p */
         foreach ($produtos as $i => $p) {
             $num = $i + 1;
             $cat = $p->categoria ? "[{$p->categoria->nome}] " : '';
@@ -624,7 +636,8 @@ class BotService
         return $texto;
     }
 
-    private function processarPesquisaResultados(Tenant $tenant, SessaoBot $sessao, string $msg, string $numero, string $nome): array|string
+    /** @return string|array{texto: string, imagens: string[]} */
+    private function processarPesquisaResultados(Tenant $tenant, SessaoBot $sessao, string $msg, string $numero, string $nome): string|array
     {
         $dados = $sessao->dados;
         $produtoIds = $dados['produtos'] ?? [];
@@ -687,10 +700,12 @@ class BotService
         }
 
         $texto = "📋 *As suas encomendas activas:*\n\n";
+        /** @var Encomenda $e */
         foreach ($encomendas as $i => $e) {
             $num = $i + 1;
             $estado = $e->estado === 'pendente' ? '🟡 Pendente' : '🔵 Confirmada';
-            $data = $e->created_at->format('d/m/Y');
+            /** @var string $data */
+            $data = $e->created_at instanceof \Carbon\Carbon ? $e->created_at->format('d/m/Y') : $e->created_at;
             $variante = $this->formatarVariante($e->cor_escolhida, $e->tamanho_escolhido);
             $linhaVar = $variante ? " — {$variante}" : '';
             $texto .= "{$num}️⃣ {$e->produto->nome}{$linhaVar} — {$e->preco_total} MZN\n  {$estado} ({$data})\n\n";
@@ -725,7 +740,8 @@ class BotService
         $sessao->atualizarEstado('detalhe_encomenda', ['encomenda_id' => $encomenda->id]);
 
         $estado = $encomenda->estado === 'pendente' ? '🟡 Pendente' : '🔵 Confirmada';
-        $data = $encomenda->created_at->format('d/m/Y H:i');
+        /** @var string $data */
+        $data = $encomenda->created_at instanceof \Carbon\Carbon ? $encomenda->created_at->format('d/m/Y H:i') : $encomenda->created_at;
         $variante = $this->formatarVariante($encomenda->cor_escolhida, $encomenda->tamanho_escolhido);
         $linhaVar = $variante ? "🎨 {$variante}\n" : '';
 

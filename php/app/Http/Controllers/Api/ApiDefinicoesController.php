@@ -27,7 +27,7 @@ class ApiDefinicoesController extends Controller
                 'titulo' => $tenant->banner_promo_titulo,
                 'texto' => $tenant->banner_promo_texto,
                 'cor' => $tenant->banner_promo_cor,
-                'expira_em' => $tenant->banner_promo_expira_em?->toIso8601String(),
+                'expira_em' => $tenant->banner_promo_expira_em ? \Illuminate\Support\Carbon::parse($tenant->banner_promo_expira_em)->toIso8601String() : null,
             ],
         ]);
     }
@@ -72,7 +72,7 @@ class ApiDefinicoesController extends Controller
                 'titulo' => $tenant->banner_promo_titulo,
                 'texto' => $tenant->banner_promo_texto,
                 'cor' => $tenant->banner_promo_cor,
-                'expira_em' => $tenant->banner_promo_expira_em?->toIso8601String(),
+                'expira_em' => $tenant->banner_promo_expira_em ? \Illuminate\Support\Carbon::parse($tenant->banner_promo_expira_em)->toIso8601String() : null,
             ],
         ], 'Definições guardadas com sucesso.');
     }
@@ -106,7 +106,7 @@ class ApiDefinicoesController extends Controller
             'titulo' => $tenant->banner_promo_titulo,
             'texto' => $tenant->banner_promo_texto,
             'cor' => $tenant->banner_promo_cor,
-            'expira_em' => $tenant->banner_promo_expira_em?->toIso8601String(),
+                'expira_em' => $tenant->banner_promo_expira_em ? \Illuminate\Support\Carbon::parse($tenant->banner_promo_expira_em)->toIso8601String() : null,
         ], 'Banner de promoção actualizado com sucesso.');
     }
 }

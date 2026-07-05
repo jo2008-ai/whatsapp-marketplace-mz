@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $icone
  * @property bool $ativo
  * @property int $ordem
+ * @property int $produtos_count
  */
 #[ObservedBy(CategoriaObserver::class)]
 class Categoria extends Model
@@ -38,16 +39,19 @@ class Categoria extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** @return HasMany<Produto, $this> */
     public function produtos(): HasMany
     {
         return $this->hasMany(Produto::class);
     }
 
+    /** @return HasMany<Produto, $this> */
     public function produtosDisponiveis(): HasMany
     {
         return $this->hasMany(Produto::class)->where('disponivel', true);

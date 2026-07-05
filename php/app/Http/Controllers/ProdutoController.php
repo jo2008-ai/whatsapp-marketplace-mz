@@ -12,6 +12,7 @@ class ProdutoController extends Controller
         private ProdutoService $produtoService
     ) {}
 
+    /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -21,6 +22,7 @@ class ProdutoController extends Controller
         return view('painel.produtos.index', compact('produtos', 'categorias', 'tenant'));
     }
 
+    /** @return \Illuminate\View\View */
     public function create(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -30,6 +32,7 @@ class ProdutoController extends Controller
         return view('painel.produtos.form', compact('categorias', 'vendedores', 'tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function store(WebProdutoRequest $request)
     {
         $tenant = $request->user()->tenant;
@@ -51,6 +54,7 @@ class ProdutoController extends Controller
         return redirect('/painel/produtos')->with('success', 'Produto criado com sucesso!');
     }
 
+    /** @return \Illuminate\View\View */
     public function edit(Request $request, int $id)
     {
         $tenant = $request->user()->tenant;
@@ -66,6 +70,7 @@ class ProdutoController extends Controller
         return view('painel.produtos.form', compact('produto', 'categorias', 'vendedores', 'tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function update(WebProdutoRequest $request, int $id)
     {
         $tenant = $request->user()->tenant;
@@ -92,6 +97,7 @@ class ProdutoController extends Controller
         return redirect('/painel/produtos')->with('success', 'Produto actualizado!');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function destroy(Request $request, int $id)
     {
         $tenant = $request->user()->tenant;
@@ -100,6 +106,7 @@ class ProdutoController extends Controller
         return redirect('/painel/produtos')->with('success', 'Produto removido.');
     }
 
+    /** @return array<int, string>|null */
     private function parseJsonArray(?string $json): ?array
     {
         if (empty($json) || $json === '[]') {

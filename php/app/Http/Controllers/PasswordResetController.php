@@ -12,11 +12,13 @@ use Illuminate\Support\Str;
 
 class PasswordResetController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function showLinkRequestForm()
     {
         return view('auth.esqueci-password');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate([
@@ -46,6 +48,7 @@ class PasswordResetController extends Controller
         return back()->with('success', 'Se o email existir, receberás um link para repor a password.');
     }
 
+    /** @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse */
     public function showResetForm(Request $request, string $token)
     {
         $email = $request->query('email');
@@ -70,6 +73,7 @@ class PasswordResetController extends Controller
         return view('auth.repor-password', ['token' => $token, 'email' => $email]);
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function reset(Request $request)
     {
         $request->validate([

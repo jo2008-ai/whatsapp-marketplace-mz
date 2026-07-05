@@ -20,6 +20,7 @@ class AtributoValor extends Model
         ];
     }
 
+    /** @return BelongsTo<Atributo, $this> */
     public function atributo(): BelongsTo
     {
         return $this->belongsTo(Atributo::class);

@@ -25,9 +25,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $imagem2_url
  * @property bool $disponivel
  * @property bool $destaque
- * @property array|null $cores
- * @property array|null $tamanhos
+ * @property array<int, string>|null $cores
+ * @property array<int, string>|null $tamanhos
  * @property \Illuminate\Database\Eloquent\Collection<int, ProdutoVariante> $atributos
+ * @property-read \App\Models\Tenant|null $tenant
+ * @property-read \App\Models\Categoria|null $categoria
+ * @property-read \App\Models\Vendedor|null $vendedor
  */
 #[ObservedBy(ProdutoObserver::class)]
 class Produto extends Model implements HasMedia
@@ -56,11 +59,13 @@ class Produto extends Model implements HasMedia
         ];
     }
 
+    /** @return HasMany<ProdutoVariante, $this> */
     public function variantes(): HasMany
     {
         return $this->hasMany(ProdutoVariante::class);
     }
 
+    /** @return HasMany<ProdutoVariante, $this> */
     public function variantesDisponiveis(): HasMany
     {
         return $this->hasMany(ProdutoVariante::class)->where('disponivel', true)->where('stock', '>', 0);
@@ -98,6 +103,7 @@ class Produto extends Model implements HasMedia
         return !empty($this->tamanhos);
     }
 
+    /** @return array<int, string> */
     public function obterCoresDisponiveis(): array
     {
         if ($this->temVariantesNovas()) {
@@ -115,6 +121,7 @@ class Produto extends Model implements HasMedia
         return $this->cores ?? [];
     }
 
+    /** @return array<int, string> */
     public function obterTamanhosDisponiveis(): array
     {
         if ($this->temVariantesNovas()) {
@@ -158,16 +165,19 @@ class Produto extends Model implements HasMedia
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** @return BelongsTo<Categoria, $this> */
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(Categoria::class);
     }
 
+    /** @return BelongsTo<Vendedor, $this> */
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(Vendedor::class);

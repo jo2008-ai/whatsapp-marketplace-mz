@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 
 class DefinicoesController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
         return view('painel.definicoes.index', compact('tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function guardar(Request $request)
     {
         $tenant = $request->user()->tenant;

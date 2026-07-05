@@ -35,11 +35,13 @@ class PlanoConfig
         ],
     ];
 
+    /** @return array<string, string|int> */
     public static function obter(string $plano): array
     {
         return self::PLANOS[$plano] ?? self::PLANOS['gratuito'];
     }
 
+    /** @return array<string, array<string, string|int>> */
     public static function todos(): array
     {
         return self::PLANOS;
@@ -70,6 +72,7 @@ class PlanoConfig
         return isset(self::PLANOS[$plano]);
     }
 
+    /** @return array<int, string> */
     public static function planosDisponiveis(): array
     {
         return array_keys(self::PLANOS);

@@ -31,6 +31,7 @@ class NovaEncomenda implements ShouldBroadcast
         return 'nova.encomenda';
     }
 
+    /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
         return [
@@ -39,7 +40,7 @@ class NovaEncomenda implements ShouldBroadcast
             'produto' => $this->encomenda->produto?->nome,
             'total' => (float) $this->encomenda->preco_total,
             'estado' => $this->encomenda->estado,
-            'data' => $this->encomenda->created_at->format('d/m/Y H:i'),
+            'data' => \Illuminate\Support\Carbon::parse($this->encomenda->created_at)->format('d/m/Y H:i'),
         ];
     }
 }

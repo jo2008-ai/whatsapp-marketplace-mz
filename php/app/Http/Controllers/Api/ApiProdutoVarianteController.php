@@ -19,6 +19,9 @@ class ApiProdutoVarianteController extends Controller
         private ProdutoVarianteService $varianteService
     ) {}
 
+    /**
+     * @param int $produtoId
+     */
     public function index(Request $request, $produtoId): JsonResponse
     {
         $produto = Produto::find($produtoId);
@@ -32,6 +35,9 @@ class ApiProdutoVarianteController extends Controller
         return $this->success($variantes);
     }
 
+    /**
+     * @param int $produtoId
+     */
     public function store(Request $request, $produtoId): JsonResponse
     {
         $produto = Produto::find($produtoId);
@@ -58,6 +64,9 @@ class ApiProdutoVarianteController extends Controller
         return $this->created($variante, 'Variante criada.');
     }
 
+    /**
+     * @param int $id
+     */
     public function update(Request $request, $id): JsonResponse
     {
         $variante = ProdutoVariante::find($id);
@@ -84,6 +93,9 @@ class ApiProdutoVarianteController extends Controller
         return $this->success($variante, 'Variante actualizada.');
     }
 
+    /**
+     * @param int $id
+     */
     public function destroy(Request $request, $id): JsonResponse
     {
         $variante = ProdutoVariante::find($id);
@@ -97,6 +109,9 @@ class ApiProdutoVarianteController extends Controller
         return $this->success(null, 'Variante removida.');
     }
 
+    /**
+     * @param int $id
+     */
     public function toggleDisponivel(Request $request, $id): JsonResponse
     {
         $variante = ProdutoVariante::find($id);

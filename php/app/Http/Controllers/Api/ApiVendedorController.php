@@ -25,6 +25,9 @@ class ApiVendedorController extends Controller
         return $this->success($vendedores);
     }
 
+    /**
+     * @param int $id
+     */
     public function show(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -55,6 +58,9 @@ class ApiVendedorController extends Controller
         return $this->created($vendedor, 'Vendedor criado com sucesso.');
     }
 
+    /**
+     * @param int $id
+     */
     public function update(VendedorRequest $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -75,6 +81,9 @@ class ApiVendedorController extends Controller
         return $this->success($vendedor, 'Vendedor actualizado.');
     }
 
+    /**
+     * @param int $id
+     */
     public function destroy(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -92,6 +101,9 @@ class ApiVendedorController extends Controller
         return $this->success(null, 'Vendedor removido.');
     }
 
+    /**
+     * @param int $id
+     */
     public function toggleAtivo(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;

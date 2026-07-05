@@ -31,6 +31,7 @@ class ProdutoVariante extends Model
         ];
     }
 
+    /** @return BelongsTo<Produto, $this> */
     public function produto(): BelongsTo
     {
         return $this->belongsTo(Produto::class);

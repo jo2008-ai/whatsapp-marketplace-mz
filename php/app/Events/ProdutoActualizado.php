@@ -30,6 +30,7 @@ class ProdutoActualizado implements ShouldBroadcast
         return 'produto.actualizado';
     }
 
+    /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
         return [

@@ -66,6 +66,7 @@ class ImageService
         return $media->getUrl();
     }
 
+    /** @return array<int, array{id: int, url: string, thumb: string, name: string}> */
     public function obterImagensProduto(Produto $produto): array
     {
         return $produto->getMedia('imagens')->map(fn($media) => [
@@ -81,6 +82,10 @@ class ImageService
         $produto->clearMediaCollection('imagens');
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
     public function processarImagens(array $data, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): array
     {
         if ($imagem) {

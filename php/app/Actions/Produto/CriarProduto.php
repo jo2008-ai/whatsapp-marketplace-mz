@@ -14,6 +14,9 @@ class CriarProduto
         private ImageService $imageService
     ) {}
 
+    /**
+     * @param array<string, mixed> $dados
+     */
     public function handle(Tenant $tenant, array $dados, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): Produto
     {
         return DB::transaction(function () use ($tenant, $dados, $imagem, $imagem2) {

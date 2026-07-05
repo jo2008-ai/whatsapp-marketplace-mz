@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -36,6 +38,7 @@ class AuthController extends Controller
         return redirect('/painel');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function logout(Request $request)
     {
         Auth::logout();

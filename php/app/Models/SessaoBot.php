@@ -23,6 +23,7 @@ class SessaoBot extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -36,6 +37,9 @@ class SessaoBot extends Model
         );
     }
 
+    /**
+     * @param array<string, mixed> $dados
+     */
     public function atualizarEstado(string $estado, array $dados = []): void
     {
         $this->update([

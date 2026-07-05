@@ -15,6 +15,7 @@ class EncomendaPushNotification extends Notification
     {
     }
 
+    /** @return array<int, string> */
     public function via(object $notifiable): array
     {
         return ['broadcast'];

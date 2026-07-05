@@ -157,6 +157,9 @@ class TypebotController extends Controller
         return response()->json(['bots' => $bots]);
     }
 
+    /**
+     * @param array<int, array{tipo: string, conteudo: string, botoes?: array<int, string>}> $mensagens
+     */
     private function formatarMensagens(array $mensagens): string
     {
         $texto = '';

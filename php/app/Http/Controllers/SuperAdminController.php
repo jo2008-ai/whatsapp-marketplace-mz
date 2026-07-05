@@ -21,6 +21,7 @@ class SuperAdminController extends Controller
         $this->wahaService = $wahaService;
     }
 
+    /** @return \Illuminate\View\View */
     public function dashboard()
     {
         $lojas = Tenant::withCount(['produtos', 'encomendas'])->get();
@@ -30,6 +31,7 @@ class SuperAdminController extends Controller
         return view('super.dashboard', compact('lojas', 'instanciasLigadas', 'totalInstancias'));
     }
 
+    /** @return \Illuminate\View\View */
     public function lojas()
     {
         $lojas = Tenant::withCount(['produtos', 'encomendas'])
@@ -40,11 +42,13 @@ class SuperAdminController extends Controller
         return view('super.lojas.index', compact('lojas'));
     }
 
+    /** @return \Illuminate\View\View */
     public function criar()
     {
         return view('super.lojas.criar');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function criarRapido(Request $request)
     {
         $validated = $request->validate([
@@ -69,7 +73,7 @@ class SuperAdminController extends Controller
             'activo' => true,
         ]);
 
-        $loginCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $loginCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $user = User::create([
             'tenant_id' => $tenant->id,
@@ -112,6 +116,7 @@ class SuperAdminController extends Controller
             ->with('success', "Loja criada! Login Code: {$loginCode}");
     }
 
+    /** @return \Illuminate\View\View */
     public function show(Tenant $tenant)
     {
         $tenant->load(['users', 'instancias']);
@@ -126,6 +131,7 @@ class SuperAdminController extends Controller
         return view('super.lojas.detalhe', compact('tenant', 'encomendasRecentes'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function toggleActivo(Tenant $tenant)
     {
         $tenant->update(['activo' => !$tenant->activo]);
@@ -134,6 +140,7 @@ class SuperAdminController extends Controller
         return back()->with('success', "Loja \"{$tenant->nome_loja}\" {$estado}.");
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function gerarCodigo(Tenant $tenant)
     {
         $user = $tenant->users()->first();
@@ -142,7 +149,7 @@ class SuperAdminController extends Controller
             return back()->with('error', 'Utilizador não encontrado.');
         }
 
-        $loginCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $loginCode = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $user->update(['login_code' => $loginCode]);
 
         return back()->with('success', "Novo código gerado: {$loginCode}");

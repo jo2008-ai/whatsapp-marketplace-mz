@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class VendedorController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -15,6 +16,7 @@ class VendedorController extends Controller
         return view('painel.vendedores.index', compact('vendedores', 'tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function store(Request $request)
     {
         if (!$request->user()->isAdmin()) {
@@ -36,6 +38,7 @@ class VendedorController extends Controller
         return redirect('/painel/vendedores')->with('success', 'Vendedor adicionado!');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function update(Request $request, Vendedor $vendedor)
     {
         if (!$request->user()->isAdmin()) {
@@ -60,6 +63,7 @@ class VendedorController extends Controller
         return redirect('/painel/vendedores')->with('success', 'Vendedor actualizado!');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function destroy(Request $request, Vendedor $vendedor)
     {
         if (!$request->user()->isAdmin()) {

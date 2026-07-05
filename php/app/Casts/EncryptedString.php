@@ -5,6 +5,7 @@ namespace App\Casts;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Support\Facades\Crypt;
 
+/** @implements CastsAttributes<string, string> */
 class EncryptedString implements CastsAttributes
 {
     public function get($model, string $key, $value, array $attributes): ?string

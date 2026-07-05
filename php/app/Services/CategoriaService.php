@@ -18,6 +18,7 @@ class CategoriaService
         return app(TenantContext::class)->tenant();
     }
 
+    /** @return Collection<int, Categoria> */
     public function listar(?Tenant $tenant = null): Collection
     {
         $tenant = $this->resolveTenant($tenant);
@@ -36,6 +37,9 @@ class CategoriaService
             ->find($id);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function criar(?Tenant $tenant = null, array $validated): Categoria
     {
         $tenant = $this->resolveTenant($tenant);
@@ -44,6 +48,9 @@ class CategoriaService
         return Categoria::create($validated);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function actualizar(?Tenant $tenant = null, int $id, array $validated): ?Categoria
     {
         $categoria = $this->obterPorId($tenant, $id);
@@ -57,6 +64,7 @@ class CategoriaService
         return $categoria;
     }
 
+    /** @return array{success: bool, message: string} */
     public function eliminar(?Tenant $tenant = null, int $id): array
     {
         $categoria = $this->obterPorId($tenant, $id);

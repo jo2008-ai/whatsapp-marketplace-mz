@@ -42,6 +42,9 @@ class WahaWebhookController extends Controller
         return response()->json(['status' => 'processed']);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function processarSessionStatus(
         InstanciaWhatsApp $instancia,
         array $data
@@ -79,6 +82,9 @@ class WahaWebhookController extends Controller
         }
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function processarSessionQr(
         InstanciaWhatsApp $instancia,
         array $data
@@ -93,6 +99,7 @@ class WahaWebhookController extends Controller
         $tenant = $instancia->tenant;
         if (!$tenant) return;
 
+        /** @var \App\Models\User|null $dono */
         $dono = $tenant->users()->first();
         if (!$dono) return;
 

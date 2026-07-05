@@ -66,51 +66,61 @@ use Illuminate\Support\Str;
         });
     }
 
+    /** @return HasMany<User, $this> */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
+    /** @return HasMany<Produto, $this> */
     public function produtos(): HasMany
     {
         return $this->hasMany(Produto::class);
     }
 
+    /** @return HasMany<Categoria, $this> */
     public function categorias(): HasMany
     {
         return $this->hasMany(Categoria::class);
     }
 
+    /** @return HasMany<Vendedor, $this> */
     public function vendedores(): HasMany
     {
         return $this->hasMany(Vendedor::class);
     }
 
+    /** @return HasMany<Encomenda, $this> */
     public function encomendas(): HasMany
     {
         return $this->hasMany(Encomenda::class);
     }
 
+    /** @return HasMany<InstanciaWhatsApp, $this> */
     public function instancias(): HasMany
     {
         return $this->hasMany(InstanciaWhatsApp::class);
     }
 
+    /** @return HasOne<InstanciaWhatsApp, $this> */
     public function instanciaAtiva(): HasOne
     {
         return $this->hasOne(InstanciaWhatsApp::class)->where('estado', 'conectada');
     }
 
+    /** @return HasMany<SessaoBot, $this> */
     public function sessoes(): HasMany
     {
         return $this->hasMany(SessaoBot::class);
     }
 
+    /** @return HasMany<LogBot, $this> */
     public function logs(): HasMany
     {
         return $this->hasMany(LogBot::class);
     }
 
+    /** @return HasMany<Subscricao, $this> */
     public function subscricoes(): HasMany
     {
         return $this->hasMany(Subscricao::class);

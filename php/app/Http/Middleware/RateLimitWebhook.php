@@ -27,7 +27,7 @@ class RateLimitWebhook
             return response()->json([
                 'status' => 'rate_limited',
                 'retry_after' => $seconds,
-            ], 429)->header('Retry-After', $seconds);
+            ], 429)->header('Retry-After', (string) $seconds);
         }
 
         RateLimiter::hit($key, $decayMinutes * 60);

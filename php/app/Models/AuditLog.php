@@ -23,16 +23,22 @@ class AuditLog extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @param array<string, mixed> $antes
+     * @param array<string, mixed> $depois
+     */
     public static function registrar(
         ?int $tenantId,
         ?int $userId,

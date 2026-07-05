@@ -26,10 +26,13 @@ class VariantMatrix extends Page implements HasForms
 
     public ?Produto $record = null;
 
+    /** @var array<int, string> */
     public array $cores = [];
 
+    /** @var array<int, string> */
     public array $tamanhos = [];
 
+    /** @var array<string, array{cor: string, tamanho: string, stock: int, preco_override: string|int, sku: string, disponivel: bool, variante_id: int|null}> */
     public array $matriz = [];
 
     public function mount(int|string $record): void
@@ -65,11 +68,11 @@ class VariantMatrix extends Page implements HasForms
                 $this->matriz[$chave] = [
                     'cor' => $cor,
                     'tamanho' => $tamanho,
-                    'stock' => $variante?->stock ?? 0,
-                    'preco_override' => $variante?->preco_override ?? '',
-                    'sku' => $variante?->sku ?? $this->gerarSku($cor, $tamanho),
-                    'disponivel' => $variante?->disponivel ?? true,
-                    'variante_id' => $variante?->id ?? null,
+                    'stock' => $variante->stock ?? 0,
+                    'preco_override' => $variante->preco_override ?? '',
+                    'sku' => $variante->sku ?? $this->gerarSku($cor, $tamanho),
+                    'disponivel' => $variante->disponivel ?? true,
+                    'variante_id' => $variante->id ?? null,
                 ];
             }
         }
@@ -151,6 +154,11 @@ class VariantMatrix extends Page implements HasForms
         $this->construirMatriz();
     }
 
+    /**
+     * @param string $chave
+     * @param string $campo
+     * @param mixed $valor
+     */
     public function actualizarCelula(string $chave, string $campo, $valor): void
     {
         if (isset($this->matriz[$chave])) {

@@ -11,6 +11,7 @@ class ProdutoRequest extends FormRequest
         return true;
     }
 
+    /** @return array<string, string> */
     public function rules(): array
     {
         $isCreate = $this->isMethod('post');
@@ -35,6 +36,7 @@ class ProdutoRequest extends FormRequest
         ];
     }
 
+    /** @return array<string, string> */
     public function messages(): array
     {
         return [

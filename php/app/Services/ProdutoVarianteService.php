@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProdutoVarianteService
 {
+    /** @return \Illuminate\Database\Eloquent\Collection<int, ProdutoVariante> */
     public function listarVariantes(?Tenant $tenant = null, Produto $produto): \Illuminate\Database\Eloquent\Collection
     {
         return $produto->variantes()
@@ -19,8 +20,12 @@ class ProdutoVarianteService
             ->get();
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function criarVariante(?Tenant $tenant = null, Produto $produto, array $validated): ProdutoVariante
     {
+        /** @var ProdutoVariante */
         return DB::transaction(function () use ($produto, $validated) {
             $atributos = $validated['atributos'] ?? [];
 
@@ -59,6 +64,9 @@ class ProdutoVarianteService
         });
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function actualizarVariante(?Tenant $tenant = null, ProdutoVariante $variante, array $validated): ProdutoVariante
     {
         return DB::transaction(function () use ($variante, $validated) {
@@ -106,6 +114,10 @@ class ProdutoVarianteService
         return $variante;
     }
 
+    /**
+     * @param array<int, string>|null $cores
+     * @param array<int, string>|null $tamanhos
+     */
     public function criarVariantesViaJSON(?Tenant $tenant = null, Produto $produto, ?array $cores, ?array $tamanhos): void
     {
         if (empty($cores) && empty($tamanhos)) {

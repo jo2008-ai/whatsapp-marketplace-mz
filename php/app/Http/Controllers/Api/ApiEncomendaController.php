@@ -29,6 +29,9 @@ class ApiEncomendaController extends Controller
         return $this->success($encomendas);
     }
 
+    /**
+     * @param int $id
+     */
     public function atualizarEstado(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;

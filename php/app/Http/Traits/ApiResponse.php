@@ -6,6 +6,10 @@ use Illuminate\Http\JsonResponse;
 
 trait ApiResponse
 {
+    /**
+     * @param mixed $data
+     * @return JsonResponse
+     */
     protected function success($data = null, string $message = 'Sucesso', int $code = 200): JsonResponse
     {
         return response()->json([
@@ -15,6 +19,10 @@ trait ApiResponse
         ], $code);
     }
 
+    /**
+     * @param mixed $errors
+     * @return JsonResponse
+     */
     protected function error(string $message = 'Erro', int $code = 400, $errors = null): JsonResponse
     {
         $response = [
@@ -29,6 +37,10 @@ trait ApiResponse
         return response()->json($response, $code);
     }
 
+    /**
+     * @param mixed $data
+     * @return JsonResponse
+     */
     protected function created($data, string $message = 'Criado com sucesso'): JsonResponse
     {
         return $this->success($data, $message, 201);
@@ -49,6 +61,10 @@ trait ApiResponse
         return $this->error($message, 403);
     }
 
+    /**
+     * @param mixed $errors
+     * @return JsonResponse
+     */
     protected function validationError($errors, string $message = 'Dados inválidos'): JsonResponse
     {
         return $this->error($message, 422, $errors);

@@ -36,7 +36,7 @@ class TenantOverrider
 
     private static function loadCachePrefix(Tenant $tenant): void
     {
-        config(['cache.prefix' => "tenant_{$tenant->id}_" . env('CACHE_PREFIX', 'marketplace_cache')]);
+        config(['cache.prefix' => "tenant_{$tenant->id}_" . config('cache.prefix', 'marketplace_cache')]);
     }
 
     private static function loadFilesystem(Tenant $tenant): void

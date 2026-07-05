@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class EncomendaController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -21,6 +22,7 @@ class EncomendaController extends Controller
         return view('painel.encomendas.index', compact('encomendas', 'tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function atualizarEstado(Request $request, Encomenda $encomenda)
     {
         if ($encomenda->tenant_id !== $request->user()->tenant_id) {

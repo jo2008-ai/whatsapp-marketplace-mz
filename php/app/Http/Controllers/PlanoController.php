@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 
 class PlanoController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function index()
     {
         $tenant = auth()->user()->tenant;
@@ -42,6 +43,7 @@ class PlanoController extends Controller
         return view('painel.plano', compact('tenant', 'subscricao', 'planos'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function upgrade(Request $request)
     {
         $tenant = auth()->user()->tenant;

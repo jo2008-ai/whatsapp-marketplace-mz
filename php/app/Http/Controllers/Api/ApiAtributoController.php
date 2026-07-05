@@ -25,6 +25,9 @@ class ApiAtributoController extends Controller
         return $this->success($atributos);
     }
 
+    /**
+     * @param int $id
+     */
     public function show(Request $request, $id): JsonResponse
     {
         $atributo = $this->atributoService->obterPorId(null, $id);
@@ -53,6 +56,9 @@ class ApiAtributoController extends Controller
         return $this->created($atributo, 'Atributo criado.');
     }
 
+    /**
+     * @param int $id
+     */
     public function update(Request $request, $id): JsonResponse
     {
         $atributo = $this->atributoService->obterPorId(null, $id);
@@ -74,6 +80,9 @@ class ApiAtributoController extends Controller
         return $this->success($atributo, 'Atributo actualizado.');
     }
 
+    /**
+     * @param int $id
+     */
     public function destroy(Request $request, $id): JsonResponse
     {
         $atributo = $this->atributoService->obterPorId(null, $id);
@@ -87,6 +96,9 @@ class ApiAtributoController extends Controller
         return $this->success(null, 'Atributo removido.');
     }
 
+    /**
+     * @param int $id
+     */
     public function adicionarValor(Request $request, $id): JsonResponse
     {
         $atributo = $this->atributoService->obterPorId(null, $id);
@@ -108,6 +120,9 @@ class ApiAtributoController extends Controller
         return $this->created($valor, 'Valor adicionado.');
     }
 
+    /**
+     * @param int $valorId
+     */
     public function actualizarValor(Request $request, $valorId): JsonResponse
     {
         $valor = $this->atributoService->actualizarValor(null, $valorId, $request->all());
@@ -119,6 +134,9 @@ class ApiAtributoController extends Controller
         return $this->success($valor, 'Valor actualizado.');
     }
 
+    /**
+     * @param int $valorId
+     */
     public function eliminarValor(Request $request, $valorId): JsonResponse
     {
         $resultado = $this->atributoService->eliminarValor(null, $valorId);

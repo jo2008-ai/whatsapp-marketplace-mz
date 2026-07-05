@@ -28,6 +28,7 @@ class RelatorioReceita extends Command
             ->groupBy('plano')
             ->get();
 
+        /** @var \Illuminate\Support\Collection<int, \stdClass> $receitaSubs */
         $this->info('Receita por Subscrições:');
         $this->table(
             ['Plano', 'Subscrições', 'Total (MZN)'],

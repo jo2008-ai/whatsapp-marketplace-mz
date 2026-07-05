@@ -29,6 +29,7 @@ class ProdutoService
         return app(TenantContext::class)->tenant();
     }
 
+    /** @return LengthAwarePaginator<array-key, \App\Models\Produto> */
     public function listar(?Tenant $tenant = null, Request $request = null): LengthAwarePaginator
     {
         $tenant = $this->resolveTenant($tenant);
@@ -58,6 +59,9 @@ class ProdutoService
             ->find($id);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function criar(?Tenant $tenant = null, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): Produto
     {
         $tenant = $this->resolveTenant($tenant);
@@ -65,6 +69,9 @@ class ProdutoService
         return $this->criarProduto->handle($tenant, $validated, $imagem, $imagem2);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function actualizar(?Tenant $tenant = null, int $id, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): ?Produto
     {
         $tenant = $this->resolveTenant($tenant);
@@ -79,6 +86,7 @@ class ProdutoService
         return $this->eliminarProduto->handle($tenant, $id);
     }
 
+    /** @return array{id: int, disponivel: bool}|null */
     public function toggleDisponivel(?Tenant $tenant = null, int $id): ?array
     {
         $produto = $this->obterPorId($tenant, $id);

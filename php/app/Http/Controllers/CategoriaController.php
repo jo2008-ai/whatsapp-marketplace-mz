@@ -11,6 +11,7 @@ class CategoriaController extends Controller
         private CategoriaService $categoriaService
     ) {}
 
+    /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -19,6 +20,7 @@ class CategoriaController extends Controller
         return view('painel.categorias.index', compact('categorias', 'tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function store(Request $request)
     {
         if (!$request->user()->isAdmin()) {
@@ -39,6 +41,7 @@ class CategoriaController extends Controller
         return redirect('/painel/categorias')->with('success', 'Categoria criada!');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function update(Request $request, int $id)
     {
         $tenant = $request->user()->tenant;
@@ -62,6 +65,7 @@ class CategoriaController extends Controller
         return redirect('/painel/categorias')->with('success', 'Categoria actualizada!');
     }
 
+    /** @return \Illuminate\Http\RedirectResponse */
     public function destroy(Request $request, int $id)
     {
         $tenant = $request->user()->tenant;

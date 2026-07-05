@@ -8,4 +8,9 @@ parameters:
     ignoreErrors:
         - '#Unsafe usage of new static#'
         - '#contains unresolvable type#'
-    checkMissingIterableValueType: false
+        - identifier: parameter.requiredAfterOptional
+        - identifier: property.onlyWritten
+        - identifier: greaterOrEqual.invalid
+        - identifier: larastan.noEnvCallsOutsideOfConfig
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false

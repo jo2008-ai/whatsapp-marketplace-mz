@@ -17,6 +17,7 @@ class TypebotService
         $this->apiKey = config('services.typebot.key', 'typebot_secret_key_2026');
     }
 
+    /** @return array{session_id: string, messages: array<int, mixed>}|null */
     public function iniciarSessao(Tenant $tenant, string $numero, string $mensagem, string $nome = ''): ?array
     {
         $botId = $tenant->typebot_bot_id;
@@ -75,6 +76,7 @@ class TypebotService
         }
     }
 
+    /** @return array{messages: array<int, mixed>}|null */
     public function enviarMensagem(Tenant $tenant, string $sessionId, string $mensagem): ?array
     {
         $apiUrl = $tenant->typebot_api_url ?: $this->apiUrl;
@@ -111,6 +113,7 @@ class TypebotService
         }
     }
 
+    /** @return array<int, mixed> */
     public function listarBots(Tenant $tenant): array
     {
         $apiUrl = $tenant->typebot_api_url ?: $this->apiUrl;
@@ -133,6 +136,10 @@ class TypebotService
         }
     }
 
+    /**
+     * @param array<int, mixed> $messages
+     * @return array<int, array{tipo: string, conteudo: string, botoes?: array<int, string>}>
+     */
     public function processarRespostas(array $messages): array
     {
         $resultados = [];

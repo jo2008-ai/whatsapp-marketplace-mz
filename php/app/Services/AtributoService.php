@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 
 class AtributoService
 {
+    /** @return Collection<int, Atributo> */
     public function listar(?Tenant $tenant = null): Collection
     {
         return Atributo::with('valores')
@@ -22,6 +23,9 @@ class AtributoService
         return Atributo::with('valores')->find($id);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function criar(?Tenant $tenant = null, array $validated): Atributo
     {
         $tenant = $tenant ?? app(\App\Context\TenantContext::class)->tenant();
@@ -30,6 +34,9 @@ class AtributoService
         return Atributo::create($validated);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function actualizar(?Tenant $tenant = null, int $id, array $validated): ?Atributo
     {
         $atributo = $this->obterPorId($tenant, $id);
@@ -54,6 +61,9 @@ class AtributoService
         return $atributo->delete();
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function adicionarValor(?Tenant $tenant = null, int $atributoId, array $validated): ?AtributoValor
     {
         $atributo = $this->obterPorId($tenant, $atributoId);
@@ -65,6 +75,9 @@ class AtributoService
         return $atributo->valores()->create($validated);
     }
 
+    /**
+     * @param array<string, mixed> $validated
+     */
     public function actualizarValor(?Tenant $tenant = null, int $valorId, array $validated): ?AtributoValor
     {
         $valor = AtributoValor::find($valorId);

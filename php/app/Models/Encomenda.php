@@ -43,21 +43,25 @@ class Encomenda extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** @return BelongsTo<Produto, $this> */
     public function produto(): BelongsTo
     {
         return $this->belongsTo(Produto::class);
     }
 
+    /** @return BelongsTo<ProdutoVariante, $this> */
     public function variante(): BelongsTo
     {
         return $this->belongsTo(ProdutoVariante::class, 'variante_id');
     }
 
+    /** @return BelongsTo<Vendedor, $this> */
     public function vendedor(): BelongsTo
     {
         return $this->belongsTo(Vendedor::class);

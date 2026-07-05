@@ -29,6 +29,7 @@ class EncomendaActualizada implements ShouldBroadcast
         return 'encomenda.actualizada';
     }
 
+    /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
         return [

@@ -16,6 +16,7 @@ class WahaService
         $this->apiKey = config('services.waha.key', '');
     }
 
+    /** @return array{sucesso: bool, dados?: mixed, erro?: string} */
     public function criarInstancia(int $tenantId): array
     {
         $nome = $this->nomeInstancia($tenantId);
@@ -238,6 +239,7 @@ class WahaService
         }
     }
 
+    /** @return array<int, mixed> */
     public function listarInstancias(): array
     {
         try {
@@ -264,6 +266,7 @@ class WahaService
         return "loja-{$tenantId}";
     }
 
+    /** @return array{X-Api-Key: string} */
     private function headers(): array
     {
         return ['X-Api-Key' => $this->apiKey];

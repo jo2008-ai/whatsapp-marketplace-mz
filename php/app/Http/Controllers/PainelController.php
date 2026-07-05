@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class PainelController extends Controller
 {
+    /** @return \Illuminate\View\View */
     public function dashboard(Request $request)
     {
         $tenant = $request->user()->tenant;

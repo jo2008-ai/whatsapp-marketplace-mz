@@ -21,6 +21,7 @@ class InstanciaWhatsApp extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

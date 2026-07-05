@@ -28,11 +28,13 @@ class Atributo extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** @return HasMany<AtributoValor, $this> */
     public function valores(): HasMany
     {
         return $this->hasMany(AtributoValor::class);

@@ -21,6 +21,7 @@ class WhatsAppDesconectadoNotification extends Notification implements ShouldQue
     ) {
     }
 
+    /** @return array<int, string> */
     public function via(object $notifiable): array
     {
         return ['mail'];

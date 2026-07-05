@@ -40,16 +40,19 @@ class Vendedor extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /** @return HasMany<Produto, $this> */
     public function produtos(): HasMany
     {
         return $this->hasMany(Produto::class);
     }
 
+    /** @return HasMany<Encomenda, $this> */
     public function encomendas(): HasMany
     {
         return $this->hasMany(Encomenda::class);

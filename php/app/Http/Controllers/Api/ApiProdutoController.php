@@ -27,6 +27,9 @@ class ApiProdutoController extends Controller
         return $this->success($produtos);
     }
 
+    /**
+     * @param int $id
+     */
     public function show(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -61,6 +64,9 @@ class ApiProdutoController extends Controller
         return $this->created($produto, 'Produto criado com sucesso.');
     }
 
+    /**
+     * @param int $id
+     */
     public function update(ProdutoRequest $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -88,6 +94,9 @@ class ApiProdutoController extends Controller
         return $this->success($produto, 'Produto actualizado.');
     }
 
+    /**
+     * @param int $id
+     */
     public function destroy(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;
@@ -104,6 +113,9 @@ class ApiProdutoController extends Controller
         return $this->success(null, 'Produto removido.');
     }
 
+    /**
+     * @param int $id
+     */
     public function toggleDisponivel(Request $request, $id): JsonResponse
     {
         $tenant = $request->user()->tenant;

@@ -14,6 +14,9 @@ class ActualizarProduto
         private ImageService $imageService
     ) {}
 
+    /**
+     * @param array<string, mixed> $dados
+     */
     public function handle(Tenant $tenant, int $id, array $dados, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): ?Produto
     {
         $produto = Produto::with(['categoria:id,nome,icone', 'vendedor:id,nome'])->find($id);

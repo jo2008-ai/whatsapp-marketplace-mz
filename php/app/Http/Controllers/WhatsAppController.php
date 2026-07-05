@@ -15,6 +15,7 @@ class WhatsAppController extends Controller
         $this->wahaService = $wahaService;
     }
 
+    /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -22,6 +23,7 @@ class WhatsAppController extends Controller
         return view('painel.whatsapp.index', compact('instancias', 'tenant'));
     }
 
+    /** @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse */
     public function conectar(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -56,6 +58,7 @@ class WhatsAppController extends Controller
         }
     }
 
+    /** @return \Illuminate\Http\JsonResponse */
     public function qr(Request $request)
     {
         $tenant = $request->user()->tenant;
@@ -119,6 +122,7 @@ class WhatsAppController extends Controller
         }
     }
 
+    /** @return \Illuminate\Http\JsonResponse */
     public function estado(Request $request)
     {
         $tenant = $request->user()->tenant;

@@ -42,7 +42,7 @@ class ApiLojaController extends Controller
                 'produto' => $e->produto?->nome,
                 'total' => (float) $e->preco_total,
                 'estado' => $e->estado,
-                'data' => $e->created_at->format('d/m/Y H:i'),
+                'data' => \Illuminate\Support\Carbon::parse($e->created_at)->format('d/m/Y H:i'),
             ]);
 
         return $this->success([
