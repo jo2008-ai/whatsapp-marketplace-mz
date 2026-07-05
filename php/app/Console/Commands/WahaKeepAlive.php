@@ -38,6 +38,8 @@ class WahaKeepAlive extends Command
                     $status = $resp->json('status', 'unknown');
                     $this->info("WAHA {$id}: {$url} -> {$status}");
                     Log::info("WAHA keep-alive", ['id' => $id, 'url' => $url, 'status' => $status]);
+                } elseif ($resp->status() === 404) {
+                    $this->info("WAHA {$id}: {$url} -> sessao 'default' nao existe (ok - sem inquilinos)");
                 } else {
                     $this->warn("WAHA {$id}: {$url} -> HTTP {$resp->status()}");
                     Log::warning("WAHA keep-alive failed", ['id' => $id, 'url' => $url, 'status' => $resp->status()]);

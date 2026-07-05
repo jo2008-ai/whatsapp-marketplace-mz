@@ -46,6 +46,7 @@ class WhatsAppController extends Controller
             if (!$instancia->waha_url) {
                 $instancia->update(['waha_url' => $this->resolveWahaUrl($instancia)]);
             }
+            $this->ensureWahaSession($instancia);
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
                 ->with('success', 'Sessao WhatsApp ja existe.');
         }
@@ -63,10 +64,57 @@ class WhatsAppController extends Controller
                 'estado' => 'aguarda_qr',
             ]);
 
+            $this->ensureWahaSession($instancia);
+
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
                 ->with('success', 'Sessao criada! Escaneia o QR code.');
         } catch (\Exception $e) {
+            \Log::error("Conectar: erro ao criar instancia", [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+            ]);
             return back()->with('error', 'Servico WhatsApp indisponivel. Tenta mais tarde.');
+        }
+    }
+
+    private function ensureWahaSession(InstanciaWhatsApp $instancia): void
+    {
+        $wahaUrl = $this->resolveWahaUrl($instancia);
+        if (!$wahaUrl) {
+            return;
+        }
+
+        $session = $instancia->waha_session ?: 'default';
+        $key = $this->getWahaKey();
+        $headers = ['X-Api-Key' => $key];
+
+        try {
+            $resp = Http::withHeaders($headers)
+                ->timeout(15)
+                ->get("{$wahaUrl}/api/sessions/{$session}");
+
+            if ($resp->successful()) {
+                \Log::info("Session ja existe no WAHA", ['session' => $session]);
+                return;
+            }
+
+            if ($resp->status() === 404) {
+                \Log::info("Session nao existe, a iniciar no WAHA", ['session' => $session]);
+
+                $startResp = Http::withHeaders($headers)
+                    ->timeout(15)
+                    ->post("{$wahaUrl}/api/sessions/{$session}/start");
+
+                \Log::info("WAHA session start", [
+                    'session' => $session,
+                    'status' => $startResp->status(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error("Erro ao contactar WAHA para session", [
+                'session' => $session,
+                'erro' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -119,6 +167,23 @@ class WhatsAppController extends Controller
                     break;
                 }
 
+                if ($statusResp->status() === 404 && $attempt < 3) {
+                    \Log::info("QR: sessao nao existe, a iniciar", ['session' => $session]);
+
+                    $startResp = Http::withHeaders($headers)
+                        ->timeout(30)
+                        ->post("{$wahaUrl}/api/sessions/{$session}/start");
+
+                    \Log::info("QR: start response", [
+                        'status' => $startResp->status(),
+                        'body' => $startResp->body(),
+                    ]);
+
+                    if ($startResp->successful()) {
+                        sleep(5);
+                    }
+                }
+
                 if ($attempt < 3) {
                     sleep(3);
                 }
@@ -143,6 +208,22 @@ class WhatsAppController extends Controller
                         'mensagem' => 'Sessao a iniciar...',
                     ]);
                 }
+            }
+
+            if ($statusResp && $statusResp->status() === 404) {
+                $startResp = Http::withHeaders($headers)
+                    ->timeout(30)
+                    ->post("{$wahaUrl}/api/sessions/{$session}/start");
+
+                \Log::info("QR: sessao inexistente, a criar via start", [
+                    'status' => $startResp->status(),
+                ]);
+
+                return response()->json([
+                    'estado' => 'aguarda_qr',
+                    'qr' => null,
+                    'mensagem' => 'Sessao a criar...',
+                ]);
             }
 
             $response = Http::withHeaders($headers)
