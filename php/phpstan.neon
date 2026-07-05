@@ -4,42 +4,8 @@ includes:
 parameters:
     paths:
         - app
-    level: 5
+    level: 6
     ignoreErrors:
-        - '/Unsafe usage of new static/'
-        - '/Parameter \$[a-z]+ of \(closure\|class .+\) expects .+, .+\|null given/'
-        - '/Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$/'
-        - '/Access to an undefined property App\\Models\\[A-Za-z]+::\$/'
-        - '/Call to an undefined method Illuminate\\Database\\Eloquent\\Model::/'
-        - '/Call to an undefined method App\\Models\\[A-Za-z]+::/'
-        - '/Deprecated in PHP 8\.[01]: Required parameter.*follows optional parameter/'
-        - '/Using nullsafe method call on non-nullable type/'
-        - '/Using nullsafe property access.* on left side of \?\? is unnecessary/'
-        - '/Called .env. outside of the config directory/'
-        - '/Property App\\Services\\BotService::\$notificacaoService is never read/'
-        - '/Property App\\Console\\Commands\\WahaKeepAlive::\$wahaService is never read/'
-        - '/Negated boolean expression is always true\./'
-        - '/Result of \|\| is always true\./'
-        - '/Offset .* on \*NEVER\* in isset\(\) always exists/'
-        - '/Offset .* on string\|null on left side of \?\? does not exist\./'
-        - '/Unreachable statement - code above always terminates\./'
-        - '/Variable \$.* in empty\(\) always exists and is always falsy\./'
-        - '/Empty variable .* always exists and is always falsy\./'
-        - '/Parameter #\d+ \$string of function str_pad expects string, int<0, 999999> given/'
-        - '/Parameter #\d+ \$values of method Illuminate\\Http\\JsonResponse::header\(\) expects array\|string, int given/'
-        - '/Parameter #\d+ \$tenant of static method App\\Context\\TenantContext::make\(\) expects App\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model given/'
-        - '/Parameter #\d+ \$tenant of static method App\\Utilities\\TenantOverrider::load\(\) expects App\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model given/'
-        - '/Method App\\Models\\Tenant::subscricaoAtiva\(\) should return App\\Models\\Subscricao\|null but returns Illuminate\\Database\\Eloquent\\Model\|null/'
-        - '/Method App\\Services\\ProdutoVarianteService::criarVariante\(\) should return App\\Models\\ProdutoVariante but returns Illuminate\\Database\\Eloquent\\Model/'
-        - '/Method App\\Services\\AtributoService::adicionarValor\(\) should return App\\Models\\AtributoValor\|null but returns Illuminate\\Database\\Eloquent\\Model/'
-        - '/Comparison operation.* between int.* and \*NEVER\* results in an error/'
-        - '/Parameter #\d+ \$callback of method Illuminate\\Database\\Eloquent\\Collection.*::map\(\) contains unresolvable type/'
-        - '/Cannot call method format\(\) on string/'
-        - '/Offset . does not exist on array/'
-        - '/Parameter #\d+ \$tenant of method .+ expects App\\Models\\Tenant\|null, Illuminate\\Database\\Eloquent\\Model\|null given/'
-        - '/Parameter #\d+ \$tenant of method .+ expects App\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model\|null given/'
-        - '/Parameter #\d+ \$tenant of method .+ expects App\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model given/'
-        - '/Parameter #\d+ \$.+ of class .+ constructor expects App\\Models\\Tenant, Illuminate\\Database\\Eloquent\\Model\|null given/'
-        - '/Call to private method nomeInstancia\(\) of class/'
-    reportUnmatchedIgnoredErrors: false
-    treatPhpDocTypesAsCertain: false
+        - '#Unsafe usage of new static#'
+        - '#contains unresolvable type#'
+    checkMissingIterableValueType: false
