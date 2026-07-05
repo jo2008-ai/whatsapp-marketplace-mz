@@ -59,6 +59,13 @@ class ProdutoApiTest extends TestCase
         return ['Authorization' => "Bearer {$token}"];
     }
 
+    private function fakeImage(): UploadedFile
+    {
+        $tempFile = tempnam(sys_get_temp_dir(), 'test_img_');
+        file_put_contents($tempFile, base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAFRABAQAAAAAAAAAAAAAAAAAAAAf/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AaA//2Q=='));
+        return new UploadedFile($tempFile, 'maca.jpg', 'image/jpeg', null, true);
+    }
+
     public function test_listar_produtos(): void
     {
         Produto::create([
@@ -87,7 +94,7 @@ class ProdutoApiTest extends TestCase
                 'stock' => 20,
                 'categoria_id' => $this->categoria->id,
                 'vendedor_id' => $this->vendedor->id,
-                'imagem' => UploadedFile::fake()->create('maca.jpg', 100, 'image/jpeg'),
+                'imagem' => $this->fakeImage(),
             ]);
 
         $response->assertStatus(201)

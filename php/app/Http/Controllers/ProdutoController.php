@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Web\ProdutoRequest as WebProdutoRequest;
 use App\Services\ProdutoService;
 use Illuminate\Http\Request;
 
@@ -29,22 +30,10 @@ class ProdutoController extends Controller
         return view('painel.produtos.form', compact('categorias', 'vendedores', 'tenant'));
     }
 
-    public function store(Request $request)
+    public function store(WebProdutoRequest $request)
     {
         $tenant = $request->user()->tenant;
-
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'preco' => 'required|numeric|min:0.01',
-            'stock' => 'required|integer|min:0',
-            'categoria_id' => 'nullable|exists:categorias,id',
-            'vendedor_id' => 'nullable|exists:vendedores,id',
-            'imagem' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'imagem2' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'disponivel' => 'boolean',
-            'destaque' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $validated['disponivel'] = $request->boolean('disponivel', true);
         $validated['destaque'] = $request->boolean('destaque');
@@ -77,22 +66,10 @@ class ProdutoController extends Controller
         return view('painel.produtos.form', compact('produto', 'categorias', 'vendedores', 'tenant'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(WebProdutoRequest $request, int $id)
     {
         $tenant = $request->user()->tenant;
-
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'preco' => 'required|numeric|min:0.01',
-            'stock' => 'required|integer|min:0',
-            'categoria_id' => 'nullable|exists:categorias,id',
-            'vendedor_id' => 'nullable|exists:vendedores,id',
-            'imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'imagem2' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'disponivel' => 'boolean',
-            'destaque' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $validated['disponivel'] = $request->boolean('disponivel', true);
         $validated['destaque'] = $request->boolean('destaque');

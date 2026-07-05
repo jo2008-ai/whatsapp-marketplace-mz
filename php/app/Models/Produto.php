@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy(ProdutoObserver::class)]
-class Produto extends Model
+class Produto extends Model implements HasMedia
 {
-    use SoftDeletes;
+    use SoftDeletes, InteractsWithMedia;
 
     protected static function booted(): void
     {
@@ -130,6 +132,12 @@ class Produto extends Model
         }
 
         return null;
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('imagens')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
     }
 
     public function tenant(): BelongsTo

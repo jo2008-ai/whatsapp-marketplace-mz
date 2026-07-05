@@ -19,7 +19,7 @@ class Tenant extends Model
         'max_produtos', 'max_numeros',
         'trial_aviso_3d', 'trial_aviso_1d',
         'instancia_whatsapp', 'activo',
-        'logo_url', 'cor_primaria', 'mensagem_boas_vindas',
+        'logo_url', 'cor_primaria', 'timezone', 'moeda', 'idioma', 'mensagem_boas_vindas',
         'mensagem_erro_menu', 'mensagem_categoria_vazia', 'mensagem_pesquisa_vazia',
         'mensagem_pedido_sucesso', 'mensagem_pedido_cancelado',
         'mensagem_vendedores_indisponivel', 'mensagem_transferencia',

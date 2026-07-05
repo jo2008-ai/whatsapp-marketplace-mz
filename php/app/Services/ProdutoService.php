@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Actions\Produto\ActualizarProduto;
+use App\Actions\Produto\CriarProduto;
+use App\Actions\Produto\EliminarProduto;
 use App\Context\TenantContext;
 use App\Models\Produto;
 use App\Models\Tenant;
@@ -12,7 +15,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class ProdutoService
 {
     public function __construct(
-        private ImageService $imageService
+        private CriarProduto $criarProduto,
+        private ActualizarProduto $actualizarProduto,
+        private EliminarProduto $eliminarProduto
     ) {}
 
     private function resolveTenant(?Tenant $tenant = null): Tenant
@@ -56,53 +61,22 @@ class ProdutoService
     public function criar(?Tenant $tenant = null, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): Produto
     {
         $tenant = $this->resolveTenant($tenant);
-        $validated['tenant_id'] = $tenant->id;
-        $validated = $this->imageService->processarImagens($validated, $imagem, $imagem2);
 
-        $produto = Produto::create($validated);
-        $produto->load(['categoria:id,nome,icone', 'vendedor:id,nome']);
-
-        return $produto;
+        return $this->criarProduto->handle($tenant, $validated, $imagem, $imagem2);
     }
 
     public function actualizar(?Tenant $tenant = null, int $id, array $validated, ?UploadedFile $imagem = null, ?UploadedFile $imagem2 = null): ?Produto
     {
-        $produto = $this->obterPorId($tenant, $id);
+        $tenant = $this->resolveTenant($tenant);
 
-        if (!$produto) {
-            return null;
-        }
-
-        if ($imagem) {
-            $validated['imagem_url'] = $this->imageService->guardarImagem($imagem);
-        } elseif ($imagem === null && !isset($validated['imagem_url'])) {
-            unset($validated['imagem_url']);
-        }
-
-        if ($imagem2) {
-            $validated['imagem2_url'] = $this->imageService->guardarImagem($imagem2);
-        } elseif ($imagem2 === null && !isset($validated['imagem2_url'])) {
-            unset($validated['imagem2_url']);
-        }
-
-        unset($validated['imagem'], $validated['imagem2']);
-
-        $produto->update($validated);
-        $produto->load(['categoria:id,nome,icone', 'vendedor:id,nome']);
-
-        return $produto;
+        return $this->actualizarProduto->handle($tenant, $id, $validated, $imagem, $imagem2);
     }
 
     public function eliminar(?Tenant $tenant = null, int $id): bool
     {
-        $produto = $this->obterPorId($tenant, $id);
+        $tenant = $this->resolveTenant($tenant);
 
-        if (!$produto) {
-            return false;
-        }
-
-        $produto->delete();
-        return true;
+        return $this->eliminarProduto->handle($tenant, $id);
     }
 
     public function toggleDisponivel(?Tenant $tenant = null, int $id): ?array

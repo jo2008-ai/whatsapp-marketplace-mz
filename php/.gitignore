@@ -1,9 +1,17 @@
 /node_modules/
 /public/build/
 /public/css/app.css
+/public/css/filament/
 /public/hot
+/public/js/filament/
 /public/storage
 /storage/*.key
+/storage/app/public/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/storage/media-library/
 /vendor/
 .env
 .env.backup
@@ -17,4 +25,3 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-/storage/framework/views/
