@@ -7,6 +7,7 @@ use App\Models\InstanciaWhatsApp;
 use App\Models\Subscricao;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\WahaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,13 @@ use Illuminate\Validation\ValidationException;
 
 class AdminLojaController extends Controller
 {
+    private WahaService $wahaService;
+
+    public function __construct(WahaService $wahaService)
+    {
+        $this->wahaService = $wahaService;
+    }
+
     public function criar(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -80,17 +88,29 @@ class AdminLojaController extends Controller
                 'metodo_pagamento'  => 'trial',
             ]);
 
-            $wahaUrl = config("services.waha.urls.{$tenant->id}")
-                ?? config('services.waha.url')
-                ?? env('WAHA_URL_1');
-
             InstanciaWhatsApp::create([
                 'tenant_id'     => $tenant->id,
                 'nome_instancia'=> "loja_{$tenant->id}",
-                'waha_session'  => 'default',
-                'waha_url'      => $wahaUrl,
+                'waha_session'  => "loja-{$tenant->id}",
+                'waha_url'      => config('services.waha.url'),
                 'estado'        => 'aguarda_qr',
             ]);
+
+            try {
+                $resultado = $this->wahaService->criarInstancia($tenant->id);
+
+                if (!$resultado['sucesso']) {
+                    Log::warning("Instancia WAHA nao criada via admin", [
+                        'tenant_id' => $tenant->id,
+                        'erro' => $resultado['erro'] ?? 'desconhecido',
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error("Erro ao criar instancia WAHA via admin", [
+                    'tenant_id' => $tenant->id,
+                    'erro' => $e->getMessage(),
+                ]);
+            }
 
             return response()->json([
                 'sucesso' => true,
@@ -106,14 +126,15 @@ class AdminLojaController extends Controller
                 ],
                 'whatsapp' => [
                     'tenant_id' => $tenant->id,
-                    'nota'      => "Use WAHA_URL_{$tenant->id} para ligar o WhatsApp desta loja",
+                    'session'   => "loja-{$tenant->id}",
+                    'nota'      => "Instancia WAHA criada automaticamente",
                 ],
             ]);
 
         } catch (ValidationException $e) {
             return response()->json([
                 'sucesso' => false,
-                'erro'    => 'Dados inválidos.',
+                'erro'    => 'Dados invalidos.',
                 'erros'   => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
@@ -161,7 +182,7 @@ class AdminLojaController extends Controller
         if ($validated['activo'] && empty($validated['titulo'])) {
             return response()->json([
                 'sucesso' => false,
-                'erro' => 'Título é obrigatório quando o banner está activo.',
+                'erro' => 'Titulo e obrigatorio quando o banner esta activo.',
             ], 422);
         }
 
@@ -207,6 +228,15 @@ class AdminLojaController extends Controller
             ], 404);
         }
 
+        try {
+            $this->wahaService->apagarInstancia($tenant->id);
+        } catch (\Exception $e) {
+            Log::warning("Erro ao apagar instancia WAHA ao eliminar loja", [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+            ]);
+        }
+
         $tenant->instancias()->delete();
         $tenant->users()->delete();
         $tenant->subscricoes()->delete();
@@ -224,6 +254,15 @@ class AdminLojaController extends Controller
 
         $eliminadas = 0;
         foreach ($tenants as $tenant) {
+            try {
+                $this->wahaService->apagarInstancia($tenant->id);
+            } catch (\Exception $e) {
+                Log::warning("Erro ao apagar instancia WAHA", [
+                    'tenant_id' => $tenant->id,
+                    'erro' => $e->getMessage(),
+                ]);
+            }
+
             $tenant->instancias()->delete();
             $tenant->users()->delete();
             $tenant->subscricoes()->delete();
@@ -248,41 +287,49 @@ class AdminLojaController extends Controller
             ], 404);
         }
 
-        $wahaServer = request('waha_server', 1);
-        $wahaUrl = config("services.waha.urls.{$wahaServer}")
-            ?? config('services.waha.url')
-            ?? env('WAHA_URL_1');
-
         $instancia = $tenant->instancias()->first();
 
         if ($instancia) {
             $instancia->update([
-                'waha_url' => $wahaUrl,
-                'waha_session' => 'default',
+                'waha_url' => config('services.waha.url'),
+                'waha_session' => "loja-{$tenant->id}",
             ]);
-            return response()->json([
-                'sucesso' => true,
-                'mensagem' => "Instancia actualizada para WAHA #{$wahaServer}.",
-                'instancia_id' => $instancia->id,
+        } else {
+            InstanciaWhatsApp::create([
+                'tenant_id'     => $tenant->id,
+                'nome_instancia'=> "loja_{$tenant->id}",
+                'waha_session'  => "loja-{$tenant->id}",
+                'waha_url'      => config('services.waha.url'),
+                'estado'        => 'aguarda_qr',
             ]);
         }
 
-        $wahaUrl = config("services.waha.urls.{$tenant->id}")
-            ?? config('services.waha.url')
-            ?? env('WAHA_URL_1');
+        try {
+            $resultado = $this->wahaService->criarInstancia($tenant->id);
 
-        $nova = InstanciaWhatsApp::create([
-            'tenant_id'     => $tenant->id,
-            'nome_instancia'=> "loja_{$tenant->id}",
-            'waha_session'  => 'default',
-            'waha_url'      => $wahaUrl,
-            'estado'        => 'aguarda_qr',
-        ]);
+            if (!$resultado['sucesso']) {
+                return response()->json([
+                    'sucesso' => false,
+                    'erro'    => "Falha ao criar instancia WAHA: {$resultado['erro']}",
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error("Erro ao criar instancia WAHA", [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'sucesso' => false,
+                'erro'    => 'Erro ao comunicar com WAHA.',
+            ], 500);
+        }
 
         return response()->json([
             'sucesso'     => true,
             'mensagem'    => 'Instancia WAHA criada.',
-            'instancia_id'=> $nova->id,
+            'instancia_id'=> $instancia?->id,
+            'session'     => "loja-{$tenant->id}",
         ]);
     }
 }

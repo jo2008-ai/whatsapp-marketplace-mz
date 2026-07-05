@@ -52,9 +52,9 @@ class PlanoController extends Controller
         ]);
 
         $planos = [
-            'basic' => ['max_produtos' => 50, 'max_numeros' => 1, 'preco' => 500],
-            'pro' => ['max_produtos' => 500, 'max_numeros' => 3, 'preco' => 1500],
-            'enterprise' => ['max_produtos' => 99999, 'max_numeros' => 99999, 'preco' => 5000],
+            'basic' => ['nome' => 'Basic', 'max_produtos' => 50, 'max_numeros' => 1, 'preco' => 500],
+            'pro' => ['nome' => 'Pro', 'max_produtos' => 500, 'max_numeros' => 3, 'preco' => 1500],
+            'enterprise' => ['nome' => 'Enterprise', 'max_produtos' => 99999, 'max_numeros' => 99999, 'preco' => 5000],
         ];
 
         $planoInfo = $planos[$validated['plano']];

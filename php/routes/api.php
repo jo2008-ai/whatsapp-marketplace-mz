@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ApiEncomendaController;
 use App\Http\Controllers\Api\ApiVendedorController;
 use App\Http\Controllers\Api\ApiDefinicoesController;
 use App\Http\Controllers\Api\ApiUploadController;
+use App\Http\Controllers\Admin\AdminWhatsAppController;
 use App\Http\Controllers\Api\AdminLojaController;
 use App\Http\Controllers\Api\ApiPainelController;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,12 @@ Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::delete('/lojas', [AdminLojaController::class, 'eliminarTodas']);
     Route::post('/lojas/{id}/instancia', [AdminLojaController::class, 'criarInstancia']);
     Route::post('/banner-global', [AdminLojaController::class, 'bannerGlobal']);
+
+    // WhatsApp instances management
+    Route::get('/whatsapp/instancias', [AdminWhatsAppController::class, 'listar']);
+    Route::post('/whatsapp/instancias/{tenantId}', [AdminWhatsAppController::class, 'criar']);
+    Route::delete('/whatsapp/instancias/{tenantId}', [AdminWhatsAppController::class, 'apagar']);
+    Route::get('/whatsapp/instancias/{tenantId}/estado', [AdminWhatsAppController::class, 'estado']);
 });
 
 // Rotas do painel Python (acesso interno)

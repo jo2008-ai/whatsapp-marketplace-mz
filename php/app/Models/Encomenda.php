@@ -9,6 +9,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string|null $nome_cliente
+ * @property string|null $cor_escolhida
+ * @property string|null $tamanho_escolhido
+ * @property float $preco_total
+ * @property string $estado
+ * @property string $created_at
+ * @property-read Produto $produto
+ * @property-read Vendedor|null $vendedor
+ */
 #[ObservedBy(EncomendaObserver::class)]
 class Encomenda extends Model
 {
@@ -63,8 +74,10 @@ class Encomenda extends Model
             return implode(' · ', $partes);
         }
 
-        if ($this->variante) {
-            return $this->variante->descricaoVariantes();
+        /** @var ProdutoVariante|null $variante */
+        $variante = $this->variante;
+        if ($variante) {
+            return $variante->descricaoVariantes();
         }
 
         return '';

@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $nome
+ * @property string $numero_whatsapp
+ * @property string|null $descricao
+ * @property bool $ativo
+ */
 #[ObservedBy(VendedorObserver::class)]
 class Vendedor extends Model
 {

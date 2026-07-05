@@ -17,11 +17,13 @@ class BotService
 {
     private NotificacaoService $notificacaoService;
     private TypebotService $typebotService;
+    private WahaService $wahaService;
 
-    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService)
+    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService, WahaService $wahaService)
     {
         $this->notificacaoService = $notificacaoService;
         $this->typebotService = $typebotService;
+        $this->wahaService = $wahaService;
     }
 
     public function responder(Tenant $tenant, string $numero, string $mensagem, string $nome = ''): array|string
@@ -65,7 +67,7 @@ class BotService
         };
     }
 
-    private function processarTypebot(Tenant $tenant, SessaoBot $sessao, string $msg, string $mensagemOriginal, string $numero, string $nome): array|string
+    private function processarTypebot(Tenant $tenant, SessaoBot $sessao, string $msg, string $mensagemOriginal, string $numero, string $nome): string
     {
         $typebotData = $sessao->dados['typebot'] ?? null;
 
@@ -321,6 +323,7 @@ class BotService
 
         if ($msg === '+' || $msg === 'mais' || $msg === 'ver mais') {
             $novaPagina = $pagina + 1;
+            /** @var array<string, mixed> $dados */
             $sessao->atualizarEstado('produtos_categoria', array_merge($dados, ['pagina' => $novaPagina]));
             return $this->listarProdutos($tenant, $sessao, $categoriaId, $novaPagina, $categoriaNome);
         }
@@ -340,6 +343,7 @@ class BotService
             return "Opção inválida. Escolhe um número ou *0* para voltar.";
         }
 
+        /** @var Produto $produto */
         $produto = $produtos[$index];
 
         $sessao->atualizarEstado('produto_detalhe', ['produto_id' => $produto->id]);
@@ -376,6 +380,7 @@ class BotService
             return $this->menuPrincipal($tenant, $nome);
         }
 
+        /** @var Produto|null $produto */
         $produto = $tenant->produtos()->find($produtoId);
 
         if (!$produto || !$produto->disponivel) {
@@ -436,6 +441,7 @@ class BotService
             return $this->menuPrincipal($tenant, '');
         }
 
+        /** @var Produto $produto */
         $produto = $tenant->produtos()->find($produtoId);
 
         if (!$produto) {
@@ -450,6 +456,7 @@ class BotService
             return "Opção inválida. Escolhe um número de 1 a " . count($cores) . " ou *0* para voltar.";
         }
 
+        /** @var array<string, mixed> $dados */
         $novaDados = array_merge($dados, ['cor_escolhida' => $cores[$index]]);
 
         if ($produto->temTamanhos()) {
@@ -470,6 +477,7 @@ class BotService
             return $this->menuPrincipal($tenant, '');
         }
 
+        /** @var Produto $produto */
         $produto = $tenant->produtos()->find($produtoId);
 
         if (!$produto) {
@@ -484,6 +492,7 @@ class BotService
             return "Opção inválida. Escolhe um número de 1 a " . count($tamanhos) . " ou *0* para voltar.";
         }
 
+        /** @var array<string, mixed> $dados */
         $novaDados = array_merge($dados, ['tamanho_escolhido' => $tamanhos[$index]]);
 
         return $this->criarEncomenda($tenant, $sessao, $produto, $sessao->numero_whatsapp, '', $novaDados);
@@ -631,6 +640,7 @@ class BotService
             return "Opção inválida. Escolhe um número de 1 a " . count($produtoIds) . " ou *0* para voltar.";
         }
 
+        /** @var Produto|null $produto */
         $produto = $tenant->produtos()->find($produtoIds[$index]);
 
         if (!$produto) {
@@ -709,6 +719,7 @@ class BotService
             return "Opção inválida. Escolhe um número de 1 a {$encomendas->count()} ou *0* para voltar.";
         }
 
+        /** @var Encomenda $encomenda */
         $encomenda = $encomendas[$index];
 
         $sessao->atualizarEstado('detalhe_encomenda', ['encomenda_id' => $encomenda->id]);
@@ -739,6 +750,7 @@ class BotService
             return $this->menuPrincipal($tenant, '');
         }
 
+        /** @var Encomenda|null $encomenda */
         $encomenda = $tenant->encomendas()
             ->with('produto', 'vendedor')
             ->find($encomendaId);
@@ -774,7 +786,9 @@ class BotService
         }
 
         if ($msg === '1') {
+            /** @var Encomenda|null $resultado */
             $resultado = DB::transaction(function () use ($tenant, $encomendaId) {
+                /** @var Encomenda|null $encomenda */
                 $encomenda = $tenant->encomendas()
                     ->with('produto', 'vendedor')
                     ->lockForUpdate()
@@ -855,18 +869,14 @@ class BotService
         $mensagem .= "\n💰 Total: {$encomenda->preco_total} MZN\n"
                    . "🕐 " . now()->format('d/m/Y H:i');
 
-        try {
-            \Illuminate\Support\Facades\Http::timeout(10)->post(
-                config('services.python.url') . '/enviar',
-                [
-                    'tenant_id' => $tenant->id,
-                    'numero' => $dono->telefone ?? $encomenda->vendedor?->numero_whatsapp,
-                    'mensagem' => $mensagem,
-                    'instance_name' => 'default',
-                ]
-            );
-        } catch (\Exception $e) {
-            Log::error("Erro ao notificar dono sobre cancelamento: " . $e->getMessage());
+        $numeroDestino = $dono->telefone ?? $encomenda->vendedor?->numero_whatsapp;
+
+        if ($numeroDestino) {
+            try {
+                $this->wahaService->enviarMensagem($tenant->id, $numeroDestino, $mensagem);
+            } catch (\Exception $e) {
+                Log::error("Erro ao notificar dono sobre cancelamento: " . $e->getMessage());
+            }
         }
     }
 
@@ -901,6 +911,7 @@ class BotService
             return "Opção inválida. Escolhe um número de 1 a {$vendedores->count()} ou *0* para voltar.";
         }
 
+        /** @var Vendedor $vendedor */
         $vendedor = $vendedores[$index];
 
         $this->notificarVendedor($tenant, $vendedor, $numero, $nome);
@@ -927,15 +938,7 @@ class BotService
                   . "Por favor, entre em contacto com o cliente.";
 
         try {
-            \Illuminate\Support\Facades\Http::timeout(10)->post(
-                config('services.python.url') . '/enviar',
-                [
-                    'tenant_id' => $tenant->id,
-                    'numero' => $vendedor->numero_whatsapp,
-                    'mensagem' => $mensagem,
-                    'instance_name' => 'default',
-                ]
-            );
+            $this->wahaService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem);
         } catch (\Exception $e) {
             Log::error("Erro ao notificar vendedor: " . $e->getMessage());
         }

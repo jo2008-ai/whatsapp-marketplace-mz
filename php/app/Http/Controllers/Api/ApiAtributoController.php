@@ -110,7 +110,7 @@ class ApiAtributoController extends Controller
 
     public function actualizarValor(Request $request, $valorId): JsonResponse
     {
-        $valor = $this->atributoService->actualizarValor(null, $valorId, $request->validated());
+        $valor = $this->atributoService->actualizarValor(null, $valorId, $request->all());
 
         if (!$valor) {
             return $this->notFound('Valor não encontrado.');

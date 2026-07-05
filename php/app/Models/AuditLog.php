@@ -42,6 +42,7 @@ class AuditLog extends Model
         ?array $antes = null,
         ?array $depois = null
     ): self {
+        $request = request();
         return self::create([
             'tenant_id' => $tenantId,
             'user_id' => $userId,
@@ -50,8 +51,8 @@ class AuditLog extends Model
             'entidade_id' => $entidadeId,
             'dados_antes' => $antes,
             'dados_depois' => $depois,
-            'ip_address' => request()?->ip(),
-            'user_agent' => request()?->userAgent(),
+            'ip_address' => $request?->ip(),
+            'user_agent' => $request?->userAgent(),
             'created_at' => now(),
         ]);
     }

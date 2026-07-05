@@ -5,8 +5,8 @@
 <div class="max-w-lg mx-auto">
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="p-6 border-b bg-blue-50">
-            <h2 class="text-lg font-semibold text-gray-800">Criar Loja Rápido</h2>
-            <p class="text-sm text-gray-600 mt-1">Apenas 3 campos. Login code gerado automaticamente.</p>
+            <h2 class="text-lg font-semibold text-gray-800">Criar Loja Rapido</h2>
+            <p class="text-sm text-gray-600 mt-1">Apenas 3 campos. Login code gerado automaticamente. Instancia WAHA criada automaticamente.</p>
         </div>
 
         <form method="POST" action="/super/lojas/criar-rapido" class="p-6 space-y-4">
@@ -38,23 +38,6 @@
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                        placeholder="841234567">
                 @error('telefone')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Servidor WAHA *</label>
-                <select name="waha_server" required
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
-                    @for($i = 1; $i <= 4; $i++)
-                        @if(env("WAHA_URL_{$i}"))
-                            <option value="{{ $i }}" {{ old('waha_server') == $i ? 'selected' : '' }}>
-                                WAHA #{{ $i }}
-                            </option>
-                        @endif
-                    @endfor
-                </select>
-                @error('waha_server')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>

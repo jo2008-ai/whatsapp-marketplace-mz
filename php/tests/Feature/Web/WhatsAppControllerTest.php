@@ -5,8 +5,10 @@ namespace Tests\Feature\Web;
 use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\WahaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Mockery;
 use Tests\TestCase;
 
 class WhatsAppControllerTest extends TestCase
@@ -41,18 +43,32 @@ class WhatsAppControllerTest extends TestCase
         $this->instancia = InstanciaWhatsApp::create([
             'tenant_id' => $this->tenant->id,
             'nome_instancia' => 'default',
-            'waha_session' => 'default',
+            'waha_session' => "loja-{$this->tenant->id}",
             'waha_url' => 'https://waha.test.com',
             'estado' => 'aguarda_qr',
         ]);
 
         config(['services.waha.key' => 'test-api-key']);
+        config(['services.waha.url' => 'https://waha.test.com']);
         config(['services.waha.webhook_secret' => 'test-webhook-secret']);
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 
     private function auth(): void
     {
         $this->actingAs($this->user);
+    }
+
+    private function mockWahaService(): WahaService
+    {
+        $mock = Mockery::mock(WahaService::class);
+        $this->app->instance(WahaService::class, $mock);
+        return $mock;
     }
 
     // =====================================================
@@ -78,12 +94,17 @@ class WhatsAppControllerTest extends TestCase
 
         $this->instancia->delete();
 
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('ligar')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn(true);
+
         $response = $this->post('/painel/whatsapp/conectar');
 
         $response->assertRedirect();
         $this->assertDatabaseHas('instancias_whatsapp', [
             'tenant_id' => $this->tenant->id,
-            'waha_session' => 'default',
             'estado' => 'aguarda_qr',
         ]);
     }
@@ -92,26 +113,16 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('ligar')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn(true);
+
         $response = $this->post('/painel/whatsapp/conectar');
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
-    }
-
-    public function test_conectar_define_waha_url_se_ausente(): void
-    {
-        $this->auth();
-
-        $this->instancia->delete();
-        config(['services.waha.urls.1' => 'https://waha-from-config.test.com']);
-
-        $response = $this->post('/painel/whatsapp/conectar');
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('instancias_whatsapp', [
-            'tenant_id' => $this->tenant->id,
-            'waha_url' => 'https://waha-from-config.test.com',
-        ]);
     }
 
     // =====================================================
@@ -128,43 +139,20 @@ class WhatsAppControllerTest extends TestCase
             ->assertJson(['erro' => 'Instancia nao encontrada']);
     }
 
-    public function test_qr_retorna_500_se_waha_nao_configurado(): void
+    public function test_qr_retorna_503_se_waha_indisponivel(): void
     {
         $this->auth();
 
-        $this->instancia->update(['waha_url' => null]);
-        config()->offsetUnset('services.waha.urls.' . $this->tenant->id);
-        config(['services.waha.url' => null]);
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andThrow(new \Exception('Connection refused'));
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
 
-        $response->assertStatus(500)
-            ->assertJson(['erro' => 'WAHA nao configurado para este tenant']);
-    }
-
-    public function test_qr_inicia_sessao_se_estado_diferente_de_starting(): void
-    {
-        $this->auth();
-
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([
-                'status' => 'WORKING',
-            ], 200),
-            'waha.test.com/api/sessions/default/start' => Http::response([], 200),
-        ]);
-
-        $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
-
-        $response->assertStatus(200)
-            ->assertJson([
-                'estado' => 'aguarda_qr',
-                'mensagem' => 'Sessao a iniciar...',
-            ]);
-
-        Http::assertSent(function ($request) {
-            return $request->url() === 'https://waha.test.com/api/sessions/default/start'
-                && $request->method() === 'POST';
-        });
+        $response->assertStatus(503)
+            ->assertJson(['erro' => 'Servico indisponivel']);
     }
 
     public function test_qr_retorna_qr_code_quando_sessao_esta_pronta(): void
@@ -173,14 +161,15 @@ class WhatsAppControllerTest extends TestCase
 
         $fakeQr = base64_encode('fake-qr-code');
 
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([
-                'status' => 'SCAN_QR_CODE',
-            ], 200),
-            'waha.test.com/api/default/auth/qr' => Http::response([
-                'base64' => $fakeQr,
-            ], 200),
-        ]);
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn('SCAN_QR_CODE');
+        $wahaMock->shouldReceive('obterQrCode')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn($fakeQr);
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
 
@@ -195,12 +184,15 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([
-                'status' => 'STARTING',
-            ], 200),
-            'waha.test.com/api/default/auth/qr' => Http::response([], 200),
-        ]);
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn('STARTING');
+        $wahaMock->shouldReceive('obterQrCode')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn(null);
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
 
@@ -211,77 +203,27 @@ class WhatsAppControllerTest extends TestCase
             ]);
     }
 
-    public function test_qr_retorna_401_se_api_key_invalida(): void
+    public function test_qr_inicia_sessao_se_estado_nao_e_starting(): void
     {
         $this->auth();
 
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([
-                'error' => 'Unauthorized',
-            ], 401),
-        ]);
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn('NOT_FOUND');
+        $wahaMock->shouldReceive('ligar')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn(true);
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
 
-        $response->assertStatus(401)
-            ->assertJson(['erro' => 'Chave de API invalida. Verifica WAHA_SECRET no Render.']);
-    }
-
-    public function test_qr_retorna_503_se_waha_indisponivel(): void
-    {
-        $this->auth();
-
-        Http::fake(function () {
-            throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
-        });
-
-        $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
-
-        $response->assertStatus(503)
-            ->assertJson(['erro' => 'Servico indisponivel']);
-    }
-
-    public function test_qr_tenta_3_vezes_antes_de_falhar(): void
-    {
-        $this->auth();
-
-        $attemptCount = 0;
-
-        Http::fake([
-            'waha.test.com/api/sessions/default' => function () use (&$attemptCount) {
-                $attemptCount++;
-                return Http::response([], 500);
-            },
-        ]);
-
-        $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
-
-        $this->assertGreaterThanOrEqual(1, $attemptCount);
-    }
-
-    public function test_qr_usa_waha_url_da_instancia(): void
-    {
-        $this->auth();
-
-        $customUrl = 'https://custom-waha.test.com';
-        $this->instancia->update(['waha_url' => $customUrl]);
-
-        Http::fake([
-            $customUrl . '/api/sessions/default' => Http::response([
-                'status' => 'SCAN_QR_CODE',
-            ], 200),
-            $customUrl . '/api/default/auth/qr' => Http::response([
-                'base64' => base64_encode('test'),
-            ], 200),
-        ]);
-
-        $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
-
-        $response->assertStatus(200);
-
-        Http::assertSent(function ($request) use ($customUrl) {
-            return str_starts_with($request->url(), $customUrl);
-        });
+        $response->assertStatus(200)
+            ->assertJson([
+                'estado' => 'aguarda_qr',
+                'mensagem' => 'Sessao a iniciar...',
+            ]);
     }
 
     // =====================================================
@@ -303,11 +245,11 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([
-                'status' => 'WORKING',
-            ], 200),
-        ]);
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn('WORKING');
 
         $response = $this->getJson('/painel/whatsapp/estado');
 
@@ -322,11 +264,11 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([
-                'status' => 'SCAN_QR_CODE',
-            ], 200),
-        ]);
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn('SCAN_QR_CODE');
 
         $response = $this->getJson('/painel/whatsapp/estado');
 
@@ -337,27 +279,15 @@ class WhatsAppControllerTest extends TestCase
             ]);
     }
 
-    public function test_estado_retorna_erro_se_http_falha(): void
-    {
-        $this->auth();
-
-        Http::fake([
-            'waha.test.com/api/sessions/default' => Http::response([], 500),
-        ]);
-
-        $response = $this->getJson('/painel/whatsapp/estado');
-
-        $response->assertStatus(200)
-            ->assertJson(['estado' => 'erro']);
-    }
-
     public function test_estado_retorna_erro_se_waha_indisponivel(): void
     {
         $this->auth();
 
-        Http::fake(function () {
-            throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
-        });
+        $wahaMock = $this->mockWahaService();
+        $wahaMock->shouldReceive('obterEstado')
+            ->once()
+            ->with($this->tenant->id)
+            ->andReturn('ERROR');
 
         $response = $this->getJson('/painel/whatsapp/estado');
 

@@ -97,6 +97,7 @@ class WahaWebhookController extends Controller
         if (!$dono) return;
 
         try {
+            /** @var Tenant $tenant */
             $dono->notify(new WhatsAppDesconectadoNotification(
                 $tenant,
                 $instancia,

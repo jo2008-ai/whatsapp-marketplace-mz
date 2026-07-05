@@ -9,13 +9,7 @@ return [
     ],
     'waha' => [
         'webhook_secret' => env('WAHA_WEBHOOK_SECRET', env('WEBHOOK_SECRET', '')),
-        'url' => env('WAHA_URL_1', 'http://localhost:3000'),
-        'urls' => [
-            1 => env('WAHA_URL_1', 'http://localhost:3000'),
-            2 => env('WAHA_URL_2', env('WAHA_URL_1', 'http://localhost:3000')),
-            3 => env('WAHA_URL_3', env('WAHA_URL_1', 'http://localhost:3000')),
-            4 => env('WAHA_URL_4', env('WAHA_URL_1', 'http://localhost:3000')),
-        ],
+        'url' => env('WAHA_URL', env('WAHA_URL_1', 'http://localhost:3000')),
         'key' => env('WAHA_API_KEY', ''),
     ],
     'typebot' => [

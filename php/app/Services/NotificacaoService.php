@@ -3,11 +3,17 @@
 namespace App\Services;
 
 use App\Models\Encomenda;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NotificacaoService
 {
+    private WahaService $wahaService;
+
+    public function __construct(WahaService $wahaService)
+    {
+        $this->wahaService = $wahaService;
+    }
+
     public function notificarVendedor(Encomenda $encomenda): void
     {
         $vendedor = $encomenda->vendedor;
@@ -44,21 +50,9 @@ class NotificacaoService
                    . "🕐 " . now()->format('d/m/Y H:i');
 
         try {
-            $response = Http::timeout(10)->post(
-                config('services.python.url') . '/enviar',
-                [
-                    'tenant_id' => $tenant->id,
-                    'numero' => $vendedor->numero_whatsapp,
-                    'mensagem' => $mensagem,
-                    'instance_name' => 'default',
-                ]
-            );
-
-            if (!$response->successful()) {
-                Log::error("Falha ao notificar vendedor via Python: " . $response->body());
-            }
+            $this->wahaService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem);
         } catch (\Exception $e) {
-            Log::error("Erro ao chamar Python para notificação: " . $e->getMessage());
+            Log::error("Erro ao notificar vendedor: " . $e->getMessage());
         }
     }
 }

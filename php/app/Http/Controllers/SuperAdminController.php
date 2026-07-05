@@ -6,12 +6,21 @@ use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Subscricao;
+use App\Services\WahaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SuperAdminController extends Controller
 {
+    private WahaService $wahaService;
+
+    public function __construct(WahaService $wahaService)
+    {
+        $this->wahaService = $wahaService;
+    }
+
     public function dashboard()
     {
         $lojas = Tenant::withCount(['produtos', 'encomendas'])->get();
@@ -42,7 +51,6 @@ class SuperAdminController extends Controller
             'nome_loja' => 'required|string|max:255',
             'nome_dono' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
-            'waha_server' => 'required|integer|in:1,2,3,4',
         ]);
 
         $telefone = preg_replace('/[^0-9]/', '', $validated['telefone']);
@@ -83,15 +91,22 @@ class SuperAdminController extends Controller
             'metodo_pagamento' => 'trial',
         ]);
 
-        $wahaUrl = env("WAHA_URL_{$validated['waha_server']}");
-
         InstanciaWhatsApp::create([
             'tenant_id'     => $tenant->id,
             'nome_instancia'=> "loja_{$tenant->id}",
-            'waha_session'  => "loja_{$tenant->id}",
-            'waha_url'      => $wahaUrl,
+            'waha_session'  => "loja-{$tenant->id}",
+            'waha_url'      => config('services.waha.url'),
             'estado'        => 'aguarda_qr',
         ]);
+
+        try {
+            $this->wahaService->criarInstancia($tenant->id);
+        } catch (\Exception $e) {
+            Log::warning("Erro ao criar instancia WAHA no criarRapido", [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+            ]);
+        }
 
         return redirect('/super/lojas/' . $tenant->id)
             ->with('success', "Loja criada! Login Code: {$loginCode}");

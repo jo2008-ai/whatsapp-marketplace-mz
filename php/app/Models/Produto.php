@@ -12,6 +12,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+/**
+ * @property int $id
+ * @property int $tenant_id
+ * @property int|null $vendedor_id
+ * @property int|null $categoria_id
+ * @property string $nome
+ * @property string|null $descricao
+ * @property float $preco
+ * @property int $stock
+ * @property string|null $imagem_url
+ * @property string|null $imagem2_url
+ * @property bool $disponivel
+ * @property bool $destaque
+ * @property array|null $cores
+ * @property array|null $tamanhos
+ * @property \Illuminate\Database\Eloquent\Collection<int, ProdutoVariante> $atributos
+ */
 #[ObservedBy(ProdutoObserver::class)]
 class Produto extends Model implements HasMedia
 {
@@ -128,6 +145,7 @@ class Produto extends Model implements HasMedia
                 $query->whereJsonContains('atributos', ['nome' => 'Tamanho', 'valor' => $tamanho]);
             }
 
+            /** @var ProdutoVariante|null */
             return $query->first();
         }
 

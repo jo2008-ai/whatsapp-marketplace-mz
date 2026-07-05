@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Jobs\EnviarEmailJob;
 use App\Mail\BoasVindasMail;
+use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Subscricao;
+use App\Services\WahaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class RegistoController extends Controller
 {
@@ -63,11 +66,35 @@ class RegistoController extends Controller
             'estado' => 'activa',
         ]);
 
-        // Email de boas-vindas (em background)
+        InstanciaWhatsApp::create([
+            'tenant_id' => $tenant->id,
+            'nome_instancia' => 'default',
+            'waha_session' => "loja-{$tenant->id}",
+            'waha_url' => config('services.waha.url'),
+            'estado' => 'aguarda_qr',
+        ]);
+
+        try {
+            $wahaService = app(WahaService::class);
+            $resultado = $wahaService->criarInstancia($tenant->id);
+
+            if (!$resultado['sucesso']) {
+                Log::warning("Instancia WAHA nao criada no registo", [
+                    'tenant_id' => $tenant->id,
+                    'erro' => $resultado['erro'] ?? 'desconhecido',
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Erro ao criar instancia WAHA no registo", [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+            ]);
+        }
+
         try {
             EnviarEmailJob::dispatch($user->email, new BoasVindasMail($user, $tenant));
         } catch (\Exception $e) {
-            // Não falha o registo se o email não enviar
+            // Nao falha o registo se o email nao enviar
         }
 
         auth()->login($user);

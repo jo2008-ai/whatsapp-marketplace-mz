@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $nome
+ * @property string|null $icone
+ * @property bool $ativo
+ * @property int $ordem
+ */
 #[ObservedBy(CategoriaObserver::class)]
 class Categoria extends Model
 {

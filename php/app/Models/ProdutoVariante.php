@@ -5,6 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property float|null $preco_override
+ * @property int $stock
+ * @property bool $disponivel
+ * @property array<int, array{nome: string, valor: string}> $atributos
+ */
 class ProdutoVariante extends Model
 {
     protected $table = 'produto_variantes';
@@ -31,7 +38,13 @@ class ProdutoVariante extends Model
 
     public function precoFinal(): float
     {
-        return (float) ($this->preco_override ?? $this->produto->preco);
+        if ($this->preco_override !== null) {
+            return (float) $this->preco_override;
+        }
+
+        /** @var Produto $produto */
+        $produto = $this->produto;
+        return (float) $produto->preco;
     }
 
     public function temStock(): bool

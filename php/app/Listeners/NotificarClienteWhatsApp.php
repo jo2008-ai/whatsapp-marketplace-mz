@@ -4,8 +4,8 @@ namespace App\Listeners;
 
 use App\Events\EncomendaActualizada;
 use App\Models\InstanciaWhatsApp;
+use App\Services\WahaService;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NotificarClienteWhatsApp implements ShouldQueue
@@ -14,12 +14,19 @@ class NotificarClienteWhatsApp implements ShouldQueue
 
     public int $backoff = 30;
 
+    private WahaService $wahaService;
+
     private const MENSAGENS = [
         'confirmada' => "✅ A tua encomenda foi confirmada! O vendedor %s irá contactar-te.",
         'em_entrega' => "🚚 A tua encomenda está a caminho!",
         'entregue' => "🎉 Encomenda entregue! Obrigado pela preferência.",
         'cancelada' => "❌ A tua encomenda foi cancelada. Contacta-nos para saber mais.",
     ];
+
+    public function __construct(WahaService $wahaService)
+    {
+        $this->wahaService = $wahaService;
+    }
 
     public function handle(EncomendaActualizada $event): void
     {
@@ -49,23 +56,7 @@ class NotificarClienteWhatsApp implements ShouldQueue
         $mensagem = $this->buildMensagem($encomenda);
 
         try {
-            $response = Http::timeout(10)->post(
-                config('services.python.url') . '/enviar',
-                [
-                    'tenant_id' => $tenant->id,
-                    'numero' => $encomenda->numero_cliente,
-                    'mensagem' => $mensagem,
-                    'instance_name' => 'default',
-                ]
-            );
-
-            if (!$response->successful()) {
-                Log::error("Falha ao notificar cliente via Python", [
-                    'encomenda_id' => $encomenda->id,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-            }
+            $this->wahaService->enviarMensagem($tenant->id, $encomenda->numero_cliente, $mensagem);
         } catch (\Exception $e) {
             Log::error("Erro ao notificar cliente WhatsApp: " . $e->getMessage(), [
                 'encomenda_id' => $encomenda->id,

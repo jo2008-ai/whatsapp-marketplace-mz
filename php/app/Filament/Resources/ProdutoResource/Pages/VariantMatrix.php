@@ -98,6 +98,7 @@ class VariantMatrix extends Page implements HasForms
             ]);
         }
 
+        /** @var ProdutoVariante|null */
         return $query->first();
     }
 
