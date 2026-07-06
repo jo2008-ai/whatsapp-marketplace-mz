@@ -50,7 +50,7 @@ if [ "$DB_READY" = true ]; then
 fi
 
 echo "==> [7/8] A iniciar scheduler em background..."
-(while true; do php artisan schedule:run --force 2>&1; sleep 60; done) &
+(while true; do php artisan schedule:run 2>&1; sleep 60; done) &
 
 echo "==> [8/8] A iniciar servidor na porta ${PORT:-10000}..."
 exec php artisan serve --host=0.0.0.0 --port="${PORT:-10000}"
