@@ -49,6 +49,7 @@ class WhatsAppController extends Controller
         $instancia = $tenant->instancias()->first();
 
         if ($instancia) {
+            $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
             $this->wahaService->ligar($tenant->id, $instancia->waha_url);
 
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
@@ -64,6 +65,7 @@ class WhatsAppController extends Controller
                 'estado' => 'aguarda_qr',
             ]);
 
+            $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
             $this->wahaService->ligar($tenant->id, $instancia->waha_url);
 
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
@@ -100,6 +102,7 @@ class WhatsAppController extends Controller
             $estado = $this->wahaService->obterEstado($tenant->id, $instancia->waha_url);
 
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
+                $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
                 $this->wahaService->ligar($tenant->id, $instancia->waha_url);
 
                 return response()->json([
@@ -116,7 +119,7 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            if ($estado !== 'STARTING' && $estado !== 'SCAN_QR_CODE') {
+            if ($estado === 'STOPPED' || ($estado !== 'STARTING' && $estado !== 'SCAN_QR_CODE')) {
                 $this->wahaService->ligar($tenant->id, $instancia->waha_url);
 
                 return response()->json([
