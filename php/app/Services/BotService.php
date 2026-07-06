@@ -9,14 +9,16 @@ use App\Models\Produto;
 use App\Models\SessaoBot;
 use App\Models\Tenant;
 use App\Models\Vendedor;
-use App\Services\TypebotService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BotService
 {
     private NotificacaoService $notificacaoService;
+
     private TypebotService $typebotService;
+
     private WahaService $wahaService;
 
     public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService, WahaService $wahaService)
@@ -26,10 +28,10 @@ class BotService
         $this->wahaService = $wahaService;
     }
 
-    /** @return array<int, mixed>|string */
+    /** @return array<string, mixed>|string */
     public function responder(Tenant $tenant, string $numero, string $mensagem, string $nome = ''): array|string
     {
-        if (!$tenant->activo) {
+        if (! $tenant->activo) {
             return 'Serviço temporariamente indisponível. Contacta o suporte.';
         }
 
@@ -46,6 +48,7 @@ class BotService
 
         if (in_array($msg, ['0', 'menu', 'voltar', 'inicio'])) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, $nome);
         }
 
@@ -72,11 +75,12 @@ class BotService
     {
         $typebotData = $sessao->dados['typebot'] ?? null;
 
-        if (!$typebotData || !isset($typebotData['session_id'])) {
+        if (! $typebotData || ! isset($typebotData['session_id'])) {
             $resultado = $this->typebotService->iniciarSessao($tenant, $numero, $mensagemOriginal, $nome);
 
-            if (!$resultado || empty($resultado['session_id'])) {
+            if (! $resultado || empty($resultado['session_id'])) {
                 $sessao->atualizarEstado('inicio');
+
                 return $this->menuPrincipal($tenant, $nome);
             }
 
@@ -98,8 +102,9 @@ class BotService
             $mensagemOriginal
         );
 
-        if (!$resultado) {
+        if (! $resultado) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, $nome);
         }
 
@@ -110,7 +115,7 @@ class BotService
     }
 
     /**
-     * @param array<int, array{tipo: string, conteudo: string, botoes?: array<int, string>}> $mensagens
+     * @param  array<int, array{tipo: string, conteudo: string, botoes?: array<int, string>}>  $mensagens
      */
     private function formatarMensagensTypebot(array $mensagens): string
     {
@@ -118,12 +123,12 @@ class BotService
 
         foreach ($mensagens as $msg) {
             if ($msg['tipo'] === 'texto') {
-                $texto .= ($texto ? "\n\n" : '') . $msg['conteudo'];
+                $texto .= ($texto ? "\n\n" : '').$msg['conteudo'];
             }
 
             if ($msg['tipo'] === 'botoes') {
-                $texto .= ($texto ? "\n\n" : '') . $msg['conteudo'];
-                foreach ($msg['botoes'] as $i => $botao) {
+                $texto .= ($texto ? "\n\n" : '').$msg['conteudo'];
+                foreach ($msg['botoes'] ?? [] as $i => $botao) {
                     $num = $i + 1;
                     $texto .= "\n{$num}️⃣ {$botao}";
                 }
@@ -146,13 +151,13 @@ class BotService
         $menu = "{$saudacao} 👋 Bem-vindo(a) à *{$tenant->nome_loja}*!\n\n";
 
         if ($banners) {
-            $menu .= $banners . "\n";
+            $menu .= $banners."\n";
         }
 
         $menu .= "1️⃣ Ver produtos por categoria\n"
-              . "2️⃣ Pesquisar produto\n"
-              . "3️⃣ As minhas encomendas\n"
-              . "4️⃣ Falar com vendedor";
+              ."2️⃣ Pesquisar produto\n"
+              ."3️⃣ As minhas encomendas\n"
+              .'4️⃣ Falar com vendedor';
 
         return $menu;
     }
@@ -187,10 +192,12 @@ class BotService
         $saudacoes = ['oi', 'olá', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'hello', 'hi', 'hey'];
         if (in_array($msg, $saudacoes) || $msg === '1' || $msg === 'menu') {
             $sessao->atualizarEstado('menu');
+
             return $this->menuPrincipal($tenant, $nome);
         }
 
         $sessao->atualizarEstado('menu');
+
         return $this->menuPrincipal($tenant, $nome);
     }
 
@@ -216,13 +223,13 @@ class BotService
         $msg = "Não entendi 😅 Escreve o número da opção ou *menu* para recomeçar.\n\n";
 
         if ($banners) {
-            $msg .= $banners . "\n";
+            $msg .= $banners."\n";
         }
 
         $msg .= "1️⃣ Ver produtos por categoria\n"
-             . "2️⃣ Pesquisar produto\n"
-             . "3️⃣ As minhas encomendas\n"
-             . "4️⃣ Falar com vendedor";
+             ."2️⃣ Pesquisar produto\n"
+             ."3️⃣ As minhas encomendas\n"
+             .'4️⃣ Falar com vendedor';
 
         return $msg;
     }
@@ -232,12 +239,13 @@ class BotService
         $categorias = $tenant->categorias()
             ->where('ativo', true)
             ->orderBy('ordem')
-            ->withCount(['produtos' => fn($q) => $q->where('disponivel', true)])
+            ->withCount(['produtos' => fn ($q) => $q->where('disponivel', true)])
             ->get();
 
         if ($categorias->isEmpty()) {
             $sessao->atualizarEstado('inicio');
-            return $tenant->mensagem_categoria_vazia ?: "Ainda não há categorias disponíveis. Volta mais tarde! 🙂";
+
+            return $tenant->mensagem_categoria_vazia ?: 'Ainda não há categorias disponíveis. Volta mais tarde! 🙂';
         }
 
         $sessao->atualizarEstado('categorias');
@@ -259,7 +267,7 @@ class BotService
         $categorias = $tenant->categorias()
             ->where('ativo', true)
             ->orderBy('ordem')
-            ->withCount(['produtos' => fn($q) => $q->where('disponivel', true)])
+            ->withCount(['produtos' => fn ($q) => $q->where('disponivel', true)])
             ->get();
 
         $index = (int) $msg - 1;
@@ -294,7 +302,8 @@ class BotService
 
         if ($produtos->isEmpty() && $pagina === 1) {
             $sessao->atualizarEstado('inicio');
-            return $tenant->mensagem_categoria_vazia ?: "Nenhum produto disponível nesta categoria. 🙁";
+
+            return $tenant->mensagem_categoria_vazia ?: 'Nenhum produto disponível nesta categoria. 🙁';
         }
 
         $temMais = $produtos->count() > $porPagina;
@@ -324,8 +333,9 @@ class BotService
         $categoriaNome = $dados['categoria_nome'] ?? 'Produtos';
         $pagina = $dados['pagina'] ?? 1;
 
-        if (!$categoriaId) {
+        if (! $categoriaId) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, '');
         }
 
@@ -333,6 +343,7 @@ class BotService
             $novaPagina = $pagina + 1;
             /** @var array<string, mixed> $dados */
             $sessao->atualizarEstado('produtos_categoria', array_merge($dados, ['pagina' => $novaPagina]));
+
             return $this->listarProdutos($tenant, $sessao, $categoriaId, $novaPagina, $categoriaNome);
         }
 
@@ -348,7 +359,7 @@ class BotService
         $index = (int) $msg - 1;
 
         if ($index < 0 || $index >= $produtos->count()) {
-            return "Opção inválida. Escolhe um número ou *0* para voltar.";
+            return 'Opção inválida. Escolhe um número ou *0* para voltar.';
         }
 
         /** @var Produto $produto */
@@ -360,18 +371,18 @@ class BotService
         $stock = $produto->stock > 0 ? "📦 Stock: {$produto->stock}" : '⚠️ Sem stock';
 
         $texto = "🏷️ *{$produto->nome}*\n"
-             . ($produto->descricao ? "{$produto->descricao}\n" : '')
-             . "💰 {$produto->preco} MZN\n"
-             . "{$stock}{$vendedor}\n\n"
-             . "1️⃣ Encomendar\n"
-             . "0️⃣ Voltar";
+             .($produto->descricao ? "{$produto->descricao}\n" : '')
+             ."💰 {$produto->preco} MZN\n"
+             ."{$stock}{$vendedor}\n\n"
+             ."1️⃣ Encomendar\n"
+             .'0️⃣ Voltar';
 
         $imagens = array_filter([
             $produto->imagem_url,
             $produto->imagem2_url ?? null,
         ]);
 
-        if (!empty($imagens)) {
+        if (! empty($imagens)) {
             return ['texto' => $texto, 'imagens' => array_values($imagens)];
         }
 
@@ -383,30 +394,34 @@ class BotService
         $dados = $sessao->dados;
         $produtoId = $dados['produto_id'] ?? null;
 
-        if (!$produtoId || $msg !== '1') {
+        if (! $produtoId || $msg !== '1') {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, $nome);
         }
 
         /** @var Produto|null $produto */
         $produto = $tenant->produtos()->find($produtoId);
 
-        if (!$produto || !$produto->disponivel) {
+        if (! $produto || ! $produto->disponivel) {
             $sessao->atualizarEstado('inicio');
-            return "Produto não encontrado ou indisponível. 🙁\n\n" . $this->menuPrincipal($tenant, $nome);
+
+            return "Produto não encontrado ou indisponível. 🙁\n\n".$this->menuPrincipal($tenant, $nome);
         }
 
         if ($produto->temStock() === false) {
-            return "⚠️ Este produto está sem stock no momento. Tenta novamente mais tarde.";
+            return '⚠️ Este produto está sem stock no momento. Tenta novamente mais tarde.';
         }
 
         if ($produto->temCores()) {
             $sessao->atualizarEstado('escolher_cor', ['produto_id' => $produto->id]);
+
             return $this->montarMensagemCores($produto);
         }
 
         if ($produto->temTamanhos()) {
             $sessao->atualizarEstado('escolher_tamanho', ['produto_id' => $produto->id]);
+
             return $this->montarMensagemTamanhos($produto);
         }
 
@@ -423,6 +438,7 @@ class BotService
             $texto .= "{$emoji} {$cor}\n";
         }
         $texto .= "\n0️⃣ Voltar";
+
         return $texto;
     }
 
@@ -436,6 +452,7 @@ class BotService
             $texto .= "{$emoji} {$tamanho}\n";
         }
         $texto .= "\n0️⃣ Voltar";
+
         return $texto;
     }
 
@@ -444,24 +461,26 @@ class BotService
         $dados = $sessao->dados;
         $produtoId = $dados['produto_id'] ?? null;
 
-        if (!$produtoId) {
+        if (! $produtoId) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, '');
         }
 
         /** @var Produto $produto */
         $produto = $tenant->produtos()->find($produtoId);
 
-        if (!$produto) {
+        if (! $produto) {
             $sessao->atualizarEstado('inicio');
-            return "Produto não encontrado.\n\n" . $this->menuPrincipal($tenant, '');
+
+            return "Produto não encontrado.\n\n".$this->menuPrincipal($tenant, '');
         }
 
         $cores = $produto->obterCoresDisponiveis();
         $index = (int) $msg - 1;
 
         if ($index < 0 || $index >= count($cores)) {
-            return "Opção inválida. Escolhe um número de 1 a " . count($cores) . " ou *0* para voltar.";
+            return 'Opção inválida. Escolhe um número de 1 a '.count($cores).' ou *0* para voltar.';
         }
 
         /** @var array<string, mixed> $dados */
@@ -469,6 +488,7 @@ class BotService
 
         if ($produto->temTamanhos()) {
             $sessao->atualizarEstado('escolher_tamanho', $novaDados);
+
             return $this->montarMensagemTamanhos($produto);
         }
 
@@ -480,24 +500,26 @@ class BotService
         $dados = $sessao->dados;
         $produtoId = $dados['produto_id'] ?? null;
 
-        if (!$produtoId) {
+        if (! $produtoId) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, '');
         }
 
         /** @var Produto $produto */
         $produto = $tenant->produtos()->find($produtoId);
 
-        if (!$produto) {
+        if (! $produto) {
             $sessao->atualizarEstado('inicio');
-            return "Produto não encontrado.\n\n" . $this->menuPrincipal($tenant, '');
+
+            return "Produto não encontrado.\n\n".$this->menuPrincipal($tenant, '');
         }
 
         $tamanhos = $produto->obterTamanhosDisponiveis();
         $index = (int) $msg - 1;
 
         if ($index < 0 || $index >= count($tamanhos)) {
-            return "Opção inválida. Escolhe um número de 1 a " . count($tamanhos) . " ou *0* para voltar.";
+            return 'Opção inválida. Escolhe um número de 1 a '.count($tamanhos).' ou *0* para voltar.';
         }
 
         /** @var array<string, mixed> $dados */
@@ -507,7 +529,7 @@ class BotService
     }
 
     /**
-     * @param array<string, mixed> $dadosSessao
+     * @param  array<string, mixed>  $dadosSessao
      */
     private function criarEncomenda(Tenant $tenant, SessaoBot $sessao, Produto $produto, string $numero, string $nome, array $dadosSessao = []): string
     {
@@ -521,7 +543,7 @@ class BotService
         $resultado = DB::transaction(function () use ($tenant, $produto, $numero, $nome, $cor, $tamanho) {
             $produtoAtualizado = Produto::lockForUpdate()->find($produto->id);
 
-            if (!$produtoAtualizado) {
+            if (! $produtoAtualizado) {
                 return null;
             }
 
@@ -532,7 +554,7 @@ class BotService
             if ($produtoAtualizado->temVariantesNovas()) {
                 $variante = $produtoAtualizado->obterVariante($cor, $tamanho);
 
-                if (!$variante || !$variante->temStock()) {
+                if (! $variante || ! $variante->temStock()) {
                     return null;
                 }
 
@@ -566,8 +588,9 @@ class BotService
 
         if ($resultado === null) {
             $sessao->atualizarEstado('inicio');
+
             return "⚠️ Desculpa, o produto esgotou enquanto fazias a encomenda.\n\n"
-                 . $this->menuPrincipal($tenant, $nome);
+                 .$this->menuPrincipal($tenant, $nome);
         }
 
         $encomenda = $resultado;
@@ -583,8 +606,8 @@ class BotService
         $vendedorInfo = $encomenda->vendedor ? "\n📱 O vendedor *{$encomenda->vendedor->nome}* irá contactar-te." : '';
 
         $mensagemSucesso = $tenant->mensagem_pedido_sucesso ?: "✅ Encomenda feita com sucesso!\n\n"
-             . "📋 *{$produto->nome}{$linhaVariante}* — {$encomenda->preco_total} MZN{$vendedorInfo}\n\n"
-             . "Obrigado pela preferência! 🙏";
+             ."📋 *{$produto->nome}{$linhaVariante}* — {$encomenda->preco_total} MZN{$vendedorInfo}\n\n"
+             .'Obrigado pela preferência! 🙏';
 
         return $mensagemSucesso;
     }
@@ -592,26 +615,28 @@ class BotService
     private function formatarVariante(?string $cor, ?string $tamanho): string
     {
         $parts = array_filter([$cor, $tamanho]);
+
         return implode(' · ', $parts);
     }
 
     private function iniciarPesquisa(SessaoBot $sessao): string
     {
         $sessao->atualizarEstado('pesquisa');
-        return "🔍 Escreve o que procuras:";
+
+        return '🔍 Escreve o que procuras:';
     }
 
     private function processarPesquisa(Tenant $tenant, SessaoBot $sessao, string $msg): string
     {
         if (strlen($msg) < 2) {
-            return "Escreve pelo menos 2 caracteres para pesquisar.";
+            return 'Escreve pelo menos 2 caracteres para pesquisar.';
         }
 
         $produtos = $tenant->produtos()
             ->where('disponivel', true)
             ->where(function ($q) use ($msg) {
                 $q->where('nome', 'ILIKE', "%{$msg}%")
-                  ->orWhere('descricao', 'ILIKE', "%{$msg}%");
+                    ->orWhere('descricao', 'ILIKE', "%{$msg}%");
             })
             ->limit(5)
             ->get();
@@ -644,21 +669,23 @@ class BotService
 
         if (empty($produtoIds)) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, $nome);
         }
 
         $index = (int) $msg - 1;
 
         if ($index < 0 || $index >= count($produtoIds)) {
-            return "Opção inválida. Escolhe um número de 1 a " . count($produtoIds) . " ou *0* para voltar.";
+            return 'Opção inválida. Escolhe um número de 1 a '.count($produtoIds).' ou *0* para voltar.';
         }
 
         /** @var Produto|null $produto */
         $produto = $tenant->produtos()->find($produtoIds[$index]);
 
-        if (!$produto) {
+        if (! $produto) {
             $sessao->atualizarEstado('inicio');
-            return "Produto não encontrado. Escreve *menu* para recomeçar.";
+
+            return 'Produto não encontrado. Escreve *menu* para recomeçar.';
         }
 
         $sessao->atualizarEstado('produto_detalhe', ['produto_id' => $produto->id]);
@@ -667,18 +694,18 @@ class BotService
         $stock = $produto->stock > 0 ? "📦 Stock: {$produto->stock}" : '⚠️ Sem stock';
 
         $texto = "🏷️ *{$produto->nome}*\n"
-             . ($produto->descricao ? "{$produto->descricao}\n" : '')
-             . "💰 {$produto->preco} MZN\n"
-             . "{$stock}{$vendedor}\n\n"
-             . "1️⃣ Encomendar\n"
-             . "0️⃣ Voltar";
+             .($produto->descricao ? "{$produto->descricao}\n" : '')
+             ."💰 {$produto->preco} MZN\n"
+             ."{$stock}{$vendedor}\n\n"
+             ."1️⃣ Encomendar\n"
+             .'0️⃣ Voltar';
 
         $imagens = array_filter([
             $produto->imagem_url,
             $produto->imagem2_url ?? null,
         ]);
 
-        if (!empty($imagens)) {
+        if (! empty($imagens)) {
             return ['texto' => $texto, 'imagens' => array_values($imagens)];
         }
 
@@ -705,7 +732,7 @@ class BotService
             $num = $i + 1;
             $estado = $e->estado === 'pendente' ? '🟡 Pendente' : '🔵 Confirmada';
             /** @var string $data */
-            $data = $e->created_at instanceof \Carbon\Carbon ? $e->created_at->format('d/m/Y') : $e->created_at;
+            $data = $e->created_at instanceof Carbon ? $e->created_at->format('d/m/Y') : $e->created_at;
             $variante = $this->formatarVariante($e->cor_escolhida, $e->tamanho_escolhido);
             $linhaVar = $variante ? " — {$variante}" : '';
             $texto .= "{$num}️⃣ {$e->produto->nome}{$linhaVar} — {$e->preco_total} MZN\n  {$estado} ({$data})\n\n";
@@ -741,17 +768,17 @@ class BotService
 
         $estado = $encomenda->estado === 'pendente' ? '🟡 Pendente' : '🔵 Confirmada';
         /** @var string $data */
-        $data = $encomenda->created_at instanceof \Carbon\Carbon ? $encomenda->created_at->format('d/m/Y H:i') : $encomenda->created_at;
+        $data = $encomenda->created_at instanceof Carbon ? $encomenda->created_at->format('d/m/Y H:i') : $encomenda->created_at;
         $variante = $this->formatarVariante($encomenda->cor_escolhida, $encomenda->tamanho_escolhido);
         $linhaVar = $variante ? "🎨 {$variante}\n" : '';
 
         return "📋 *Encomenda #{$encomenda->id}*\n\n"
-             . "🏷️ Produto: {$encomenda->produto->nome}\n"
-             . $linhaVar
-             . "💰 Total: {$encomenda->preco_total} MZN\n"
-             . "📊 Estado: {$estado}\n"
-             . "📅 Data: {$data}\n\n"
-             . ($encomenda->estado === 'pendente'
+             ."🏷️ Produto: {$encomenda->produto->nome}\n"
+             .$linhaVar
+             ."💰 Total: {$encomenda->preco_total} MZN\n"
+             ."📊 Estado: {$estado}\n"
+             ."📅 Data: {$data}\n\n"
+             .($encomenda->estado === 'pendente'
                  ? "1️⃣ Cancelar encomenda\n0️⃣ Voltar"
                  : "Esta encomenda já não pode ser cancelada.\n0️⃣ Voltar");
     }
@@ -761,8 +788,9 @@ class BotService
         $dados = $sessao->dados;
         $encomendaId = $dados['encomenda_id'] ?? null;
 
-        if (!$encomendaId) {
+        if (! $encomendaId) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, '');
         }
 
@@ -771,9 +799,10 @@ class BotService
             ->with('produto', 'vendedor')
             ->find($encomendaId);
 
-        if (!$encomenda) {
+        if (! $encomenda) {
             $sessao->atualizarEstado('inicio');
-            return "Encomenda não encontrada.\n\n" . $this->menuPrincipal($tenant, '');
+
+            return "Encomenda não encontrada.\n\n".$this->menuPrincipal($tenant, '');
         }
 
         if ($msg === '1' && $encomenda->estado === 'pendente') {
@@ -783,11 +812,12 @@ class BotService
             $linhaVar = $variante ? " — {$variante}" : '';
 
             return "⚠️ Tem a certeza que deseja cancelar esta encomenda?\n\n"
-                 . "📋 {$encomenda->produto->nome}{$linhaVar} — {$encomenda->preco_total} MZN\n\n"
-                 . "1️⃣ Sim, cancelar\n2️⃣ Não, manter";
+                 ."📋 {$encomenda->produto->nome}{$linhaVar} — {$encomenda->preco_total} MZN\n\n"
+                 ."1️⃣ Sim, cancelar\n2️⃣ Não, manter";
         }
 
         $sessao->atualizarEstado('inicio');
+
         return $this->menuPrincipal($tenant, '');
     }
 
@@ -796,8 +826,9 @@ class BotService
         $dados = $sessao->dados;
         $encomendaId = $dados['encomenda_id'] ?? null;
 
-        if (!$encomendaId) {
+        if (! $encomendaId) {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, '');
         }
 
@@ -810,7 +841,7 @@ class BotService
                     ->lockForUpdate()
                     ->find($encomendaId);
 
-                if (!$encomenda || $encomenda->estado !== 'pendente') {
+                if (! $encomenda || $encomenda->estado !== 'pendente') {
                     return null;
                 }
 
@@ -822,14 +853,15 @@ class BotService
 
             if ($resultado === null) {
                 $sessao->atualizarEstado('inicio');
-                return "Esta encomenda já não pode ser cancelada.\n\n" . $this->menuPrincipal($tenant, '');
+
+                return "Esta encomenda já não pode ser cancelada.\n\n".$this->menuPrincipal($tenant, '');
             }
 
             $encomenda = $resultado;
 
             $this->notificarDonoCancelamento($tenant, $encomenda);
 
-            Log::info("Encomenda cancelada pelo cliente via bot", [
+            Log::info('Encomenda cancelada pelo cliente via bot', [
                 'encomenda_id' => $encomenda->id,
                 'tenant_id' => $tenant->id,
                 'numero_cliente' => $numero,
@@ -838,25 +870,26 @@ class BotService
             $sessao->atualizarEstado('inicio');
 
             $mensagemCancelamento = $tenant->mensagem_pedido_cancelado ?: "✅ Encomenda #{$encomenda->id} cancelada com sucesso.\n\n"
-                 . "O stock foi reposto. Se precisares de algo, estamos cá!\n\n"
-                 . $this->menuPrincipal($tenant, '');
+                 ."O stock foi reposto. Se precisares de algo, estamos cá!\n\n"
+                 .$this->menuPrincipal($tenant, '');
 
             return $mensagemCancelamento;
         }
 
         if ($msg === '2') {
             $sessao->atualizarEstado('inicio');
-            return "Encomenda mantida! ✅\n\n" . $this->menuPrincipal($tenant, '');
+
+            return "Encomenda mantida! ✅\n\n".$this->menuPrincipal($tenant, '');
         }
 
-        return "Escolhe *1* para cancelar ou *2* para manter.";
+        return 'Escolhe *1* para cancelar ou *2* para manter.';
     }
 
     private function notificarDonoCancelamento(Tenant $tenant, Encomenda $encomenda): void
     {
         $dono = $tenant->users()->first();
 
-        if (!$dono) {
+        if (! $dono) {
             return;
         }
 
@@ -864,34 +897,34 @@ class BotService
             ->where('estado', 'conectada')
             ->first();
 
-        if (!$instancia) {
+        if (! $instancia) {
             return;
         }
 
         $mensagem = "❌ *Encomenda Cancelada*\n"
-                  . "👤 Cliente: {$encomenda->nome_cliente}\n"
-                  . "📱 Número: {$encomenda->numero_cliente}\n"
-                  . "🏷️ Produto: {$encomenda->produto->nome}";
+                  ."👤 Cliente: {$encomenda->nome_cliente}\n"
+                  ."📱 Número: {$encomenda->numero_cliente}\n"
+                  ."🏷️ Produto: {$encomenda->produto->nome}";
 
         $variantePartes = array_filter([
             $encomenda->cor_escolhida ? "Cor: {$encomenda->cor_escolhida}" : null,
             $encomenda->tamanho_escolhido ? "Tamanho: {$encomenda->tamanho_escolhido}" : null,
         ]);
 
-        if (!empty($variantePartes)) {
-            $mensagem .= "\n🎨 " . implode(' · ', $variantePartes);
+        if (! empty($variantePartes)) {
+            $mensagem .= "\n🎨 ".implode(' · ', $variantePartes);
         }
 
         $mensagem .= "\n💰 Total: {$encomenda->preco_total} MZN\n"
-                   . "🕐 " . now()->format('d/m/Y H:i');
+                   .'🕐 '.now()->format('d/m/Y H:i');
 
         $numeroDestino = $dono->telefone ?? $encomenda->vendedor?->numero_whatsapp;
 
         if ($numeroDestino) {
             try {
-                $this->wahaService->enviarMensagem($tenant->id, $numeroDestino, $mensagem);
+                $this->wahaService->enviarMensagem($tenant->id, $numeroDestino, $mensagem, $instancia->waha_url);
             } catch (\Exception $e) {
-                Log::error("Erro ao notificar dono sobre cancelamento: " . $e->getMessage());
+                Log::error('Erro ao notificar dono sobre cancelamento: '.$e->getMessage());
             }
         }
     }
@@ -940,8 +973,8 @@ class BotService
         ]);
 
         $mensagemTransferencia = $tenant->mensagem_transferencia ?: "✅ A sua conversa foi encaminhada para *{$vendedor->nome}*.\n\n"
-             . "📱 Ele irá contactar-te no número *{$numero}* em breve.\n\n"
-             . "Escreve *menu* para voltar ao menu principal.";
+             ."📱 Ele irá contactar-te no número *{$numero}* em breve.\n\n"
+             .'Escreve *menu* para voltar ao menu principal.';
 
         return $mensagemTransferencia;
     }
@@ -949,14 +982,18 @@ class BotService
     private function notificarVendedor(Tenant $tenant, Vendedor $vendedor, string $numeroCliente, string $nomeCliente): void
     {
         $mensagem = "📞 *Novo pedido de atendimento*\n\n"
-                  . "👤 Cliente: " . ($nomeCliente ?: 'Não informado') . "\n"
-                  . "📱 Número: {$numeroCliente}\n\n"
-                  . "Por favor, entre em contacto com o cliente.";
+                  .'👤 Cliente: '.($nomeCliente ?: 'Não informado')."\n"
+                  ."📱 Número: {$numeroCliente}\n\n"
+                  .'Por favor, entre em contacto com o cliente.';
+
+        $instancia = $tenant->instancias()
+            ->where('estado', 'conectada')
+            ->first();
 
         try {
-            $this->wahaService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem);
+            $this->wahaService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia?->waha_url);
         } catch (\Exception $e) {
-            Log::error("Erro ao notificar vendedor: " . $e->getMessage());
+            Log::error('Erro ao notificar vendedor: '.$e->getMessage());
         }
     }
 
@@ -964,13 +1001,14 @@ class BotService
     {
         if ($msg === 'menu' || $msg === '0' || $msg === 'voltar') {
             $sessao->atualizarEstado('inicio');
+
             return $this->menuPrincipal($tenant, $nome);
         }
 
         $vendedorNome = $sessao->dados['vendedor_nome'] ?? 'o vendedor';
-        
+
         $mensagemTransferencia = $tenant->mensagem_transferencia ?: "⏳ A sua conversa está encaminhada para *{$vendedorNome}*.\n\n"
-             . "Ele irá responder-te em breve. Escreve *menu* para voltar ao menu principal.";
+             .'Ele irá responder-te em breve. Escreve *menu* para voltar ao menu principal.';
 
         return $mensagemTransferencia;
     }

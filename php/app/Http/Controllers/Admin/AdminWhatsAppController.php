@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Services\WahaService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AdminWhatsAppController extends Controller
@@ -25,7 +25,7 @@ class AdminWhatsAppController extends Controller
             ->orderByDesc('updated_at')
             ->get()
             ->map(function ($inst) {
-                $estado = $this->wahaService->obterEstado($inst->tenant_id);
+                $estado = $this->wahaService->obterEstado($inst->tenant_id, $inst->waha_url);
 
                 return [
                     'id' => $inst->id,
@@ -36,8 +36,8 @@ class AdminWhatsAppController extends Controller
                     'estado_db' => $inst->estado,
                     'estado_waha' => $estado,
                     'numero_whatsapp' => $inst->numero_whatsapp,
-                    'conectada_em' => $inst->conectada_em instanceof \Carbon\Carbon ? $inst->conectada_em->toDateTimeString() : $inst->conectada_em,
-                    'actualizado_em' => $inst->updated_at instanceof \Carbon\Carbon ? $inst->updated_at->toDateTimeString() : $inst->updated_at,
+                    'conectada_em' => $inst->conectada_em instanceof Carbon ? $inst->conectada_em->toDateTimeString() : $inst->conectada_em,
+                    'actualizado_em' => $inst->updated_at instanceof Carbon ? $inst->updated_at->toDateTimeString() : $inst->updated_at,
                 ];
             });
 
@@ -51,7 +51,7 @@ class AdminWhatsAppController extends Controller
     {
         $tenant = Tenant::find($tenantId);
 
-        if (!$tenant) {
+        if (! $tenant) {
             return response()->json([
                 'sucesso' => false,
                 'erro' => 'Loja nao encontrada.',
@@ -60,7 +60,7 @@ class AdminWhatsAppController extends Controller
 
         $instancia = $tenant->instancias()->first();
 
-        if (!$instancia) {
+        if (! $instancia) {
             $instancia = InstanciaWhatsApp::create([
                 'tenant_id' => $tenant->id,
                 'nome_instancia' => "loja_{$tenant->id}",
@@ -76,16 +76,16 @@ class AdminWhatsAppController extends Controller
         }
 
         try {
-            $resultado = $this->wahaService->criarInstancia($tenant->id);
+            $resultado = $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
 
-            if (!$resultado['sucesso']) {
+            if (! $resultado['sucesso']) {
                 return response()->json([
                     'sucesso' => false,
-                    'erro' => "Falha ao criar instancia WAHA: {$resultado['erro']}",
+                    'erro' => 'Falha ao criar instancia WAHA: '.($resultado['erro'] ?? 'desconhecido'),
                 ], 500);
             }
 
-            $this->wahaService->ligar($tenant->id);
+            $this->wahaService->ligar($tenant->id, $instancia->waha_url);
 
             return response()->json([
                 'sucesso' => true,
@@ -94,7 +94,7 @@ class AdminWhatsAppController extends Controller
                 'session' => "loja-{$tenant->id}",
             ]);
         } catch (\Exception $e) {
-            Log::error("Erro ao criar instancia WAHA via admin", [
+            Log::error('Erro ao criar instancia WAHA via admin', [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);
@@ -110,7 +110,7 @@ class AdminWhatsAppController extends Controller
     {
         $tenant = Tenant::find($tenantId);
 
-        if (!$tenant) {
+        if (! $tenant) {
             return response()->json([
                 'sucesso' => false,
                 'erro' => 'Loja nao encontrada.',
@@ -118,9 +118,10 @@ class AdminWhatsAppController extends Controller
         }
 
         try {
-            $this->wahaService->apagarInstancia($tenant->id);
+            $instancia = $tenant->instancias()->first();
+            $this->wahaService->apagarInstancia($tenant->id, $instancia?->waha_url);
         } catch (\Exception $e) {
-            Log::warning("Erro ao apagar instancia WAHA", [
+            Log::warning('Erro ao apagar instancia WAHA', [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);
@@ -138,14 +139,15 @@ class AdminWhatsAppController extends Controller
     {
         $tenant = Tenant::find($tenantId);
 
-        if (!$tenant) {
+        if (! $tenant) {
             return response()->json([
                 'sucesso' => false,
                 'erro' => 'Loja nao encontrada.',
             ], 404);
         }
 
-        $estado = $this->wahaService->obterEstado($tenant->id);
+        $instancia = $tenant->instancias()->first();
+        $estado = $this->wahaService->obterEstado($tenant->id, $instancia?->waha_url);
 
         return response()->json([
             'sucesso' => true,

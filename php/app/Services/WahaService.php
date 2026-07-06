@@ -2,34 +2,45 @@
 
 namespace App\Services;
 
+use App\Models\InstanciaWhatsApp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WahaService
 {
-    private string $baseUrl;
     private string $apiKey;
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.waha.url', ''), '/');
         $this->apiKey = config('services.waha.key', '');
     }
 
+    private function resolveUrl(int $tenantId): string
+    {
+        $instancia = InstanciaWhatsApp::where('tenant_id', $tenantId)->first();
+
+        if ($instancia?->waha_url) {
+            return rtrim($instancia->waha_url, '/');
+        }
+
+        return rtrim(config('services.waha.url', 'http://localhost:3000'), '/');
+    }
+
     /** @return array{sucesso: bool, dados?: mixed, erro?: string} */
-    public function criarInstancia(int $tenantId): array
+    public function criarInstancia(int $tenantId, ?string $wahaUrl = null): array
     {
         $nome = $this->nomeInstancia($tenantId);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(15)
-                ->post("{$this->baseUrl}/api/sessions", [
+                ->post("{$baseUrl}/api/sessions", [
                     'name' => $nome,
                     'config' => [
                         'webhooks' => [
                             [
-                                'url' => config('app.url') . "/api/waha/webhook/{$tenantId}",
+                                'url' => config('app.url')."/api/waha/webhook/{$tenantId}",
                                 'events' => ['message', 'session.status'],
                             ],
                         ],
@@ -37,11 +48,12 @@ class WahaService
                 ]);
 
             if ($response->successful()) {
-                Log::info("Instancia WAHA criada", ['tenant_id' => $tenantId, 'session' => $nome]);
+                Log::info('Instancia WAHA criada', ['tenant_id' => $tenantId, 'session' => $nome]);
+
                 return ['sucesso' => true, 'dados' => $response->json()];
             }
 
-            Log::warning("Falha ao criar instancia WAHA", [
+            Log::warning('Falha ao criar instancia WAHA', [
                 'tenant_id' => $tenantId,
                 'status' => $response->status(),
                 'body' => $response->body(),
@@ -49,7 +61,7 @@ class WahaService
 
             return ['sucesso' => false, 'erro' => "HTTP {$response->status()}"];
         } catch (\Exception $e) {
-            Log::error("Excecao ao criar instancia WAHA", [
+            Log::error('Excecao ao criar instancia WAHA', [
                 'tenant_id' => $tenantId,
                 'erro' => $e->getMessage(),
             ]);
@@ -58,28 +70,30 @@ class WahaService
         }
     }
 
-    public function apagarInstancia(int $tenantId): bool
+    public function apagarInstancia(int $tenantId, ?string $wahaUrl = null): bool
     {
         $nome = $this->nomeInstancia($tenantId);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(15)
-                ->delete("{$this->baseUrl}/api/sessions/{$nome}");
+                ->delete("{$baseUrl}/api/sessions/{$nome}");
 
             if ($response->successful() || $response->status() === 404) {
-                Log::info("Instancia WAHA apagada", ['tenant_id' => $tenantId]);
+                Log::info('Instancia WAHA apagada', ['tenant_id' => $tenantId]);
+
                 return true;
             }
 
-            Log::warning("Falha ao apagar instancia WAHA", [
+            Log::warning('Falha ao apagar instancia WAHA', [
                 'tenant_id' => $tenantId,
                 'status' => $response->status(),
             ]);
 
             return false;
         } catch (\Exception $e) {
-            Log::error("Excecao ao apagar instancia WAHA", [
+            Log::error('Excecao ao apagar instancia WAHA', [
                 'tenant_id' => $tenantId,
                 'erro' => $e->getMessage(),
             ]);
@@ -88,28 +102,30 @@ class WahaService
         }
     }
 
-    public function obterQrCode(int $tenantId): ?string
+    public function obterQrCode(int $tenantId, ?string $wahaUrl = null): ?string
     {
         $nome = $this->nomeInstancia($tenantId);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(30)
-                ->get("{$this->baseUrl}/api/{$nome}/auth/qr");
+                ->get("{$baseUrl}/api/{$nome}/auth/qr");
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['base64'] ?? $data['data'] ?? null;
             }
 
-            Log::warning("Falha ao obter QR code WAHA", [
+            Log::warning('Falha ao obter QR code WAHA', [
                 'tenant_id' => $tenantId,
                 'status' => $response->status(),
             ]);
 
             return null;
         } catch (\Exception $e) {
-            Log::error("Excecao ao obter QR code WAHA", [
+            Log::error('Excecao ao obter QR code WAHA', [
                 'tenant_id' => $tenantId,
                 'erro' => $e->getMessage(),
             ]);
@@ -118,17 +134,19 @@ class WahaService
         }
     }
 
-    public function obterEstado(int $tenantId): string
+    public function obterEstado(int $tenantId, ?string $wahaUrl = null): string
     {
         $nome = $this->nomeInstancia($tenantId);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(15)
-                ->get("{$this->baseUrl}/api/sessions/{$nome}");
+                ->get("{$baseUrl}/api/sessions/{$nome}");
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['status'] ?? 'unknown';
             }
 
@@ -138,7 +156,7 @@ class WahaService
 
             return 'ERROR';
         } catch (\Exception $e) {
-            Log::error("Excecao ao obter estado WAHA", [
+            Log::error('Excecao ao obter estado WAHA', [
                 'tenant_id' => $tenantId,
                 'erro' => $e->getMessage(),
             ]);
@@ -147,28 +165,30 @@ class WahaService
         }
     }
 
-    public function ligar(int $tenantId): bool
+    public function ligar(int $tenantId, ?string $wahaUrl = null): bool
     {
         $nome = $this->nomeInstancia($tenantId);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(30)
-                ->post("{$this->baseUrl}/api/sessions/{$nome}/start");
+                ->post("{$baseUrl}/api/sessions/{$nome}/start");
 
             if ($response->successful()) {
-                Log::info("Sessao WAHA iniciada", ['tenant_id' => $tenantId]);
+                Log::info('Sessao WAHA iniciada', ['tenant_id' => $tenantId]);
+
                 return true;
             }
 
-            Log::warning("Falha ao iniciar sessao WAHA", [
+            Log::warning('Falha ao iniciar sessao WAHA', [
                 'tenant_id' => $tenantId,
                 'status' => $response->status(),
             ]);
 
             return false;
         } catch (\Exception $e) {
-            Log::error("Excecao ao iniciar sessao WAHA", [
+            Log::error('Excecao ao iniciar sessao WAHA', [
                 'tenant_id' => $tenantId,
                 'erro' => $e->getMessage(),
             ]);
@@ -177,23 +197,25 @@ class WahaService
         }
     }
 
-    public function desligar(int $tenantId): bool
+    public function desligar(int $tenantId, ?string $wahaUrl = null): bool
     {
         $nome = $this->nomeInstancia($tenantId);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(15)
-                ->post("{$this->baseUrl}/api/sessions/{$nome}/stop");
+                ->post("{$baseUrl}/api/sessions/{$nome}/stop");
 
             if ($response->successful() || $response->status() === 404) {
-                Log::info("Sessao WAHA parada", ['tenant_id' => $tenantId]);
+                Log::info('Sessao WAHA parada', ['tenant_id' => $tenantId]);
+
                 return true;
             }
 
             return false;
         } catch (\Exception $e) {
-            Log::error("Excecao ao parar sessao WAHA", [
+            Log::error('Excecao ao parar sessao WAHA', [
                 'tenant_id' => $tenantId,
                 'erro' => $e->getMessage(),
             ]);
@@ -202,15 +224,16 @@ class WahaService
         }
     }
 
-    public function enviarMensagem(int $tenantId, string $numero, string $texto): bool
+    public function enviarMensagem(int $tenantId, string $numero, string $texto, ?string $wahaUrl = null): bool
     {
         $nome = $this->nomeInstancia($tenantId);
         $chatId = $this->normalizarNumero($numero);
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(15)
-                ->post("{$this->baseUrl}/api/sendText", [
+                ->post("{$baseUrl}/api/sendText", [
                     'session' => $nome,
                     'chatId' => $chatId,
                     'text' => $texto,
@@ -220,7 +243,7 @@ class WahaService
                 return true;
             }
 
-            Log::warning("Falha ao enviar mensagem WAHA", [
+            Log::warning('Falha ao enviar mensagem WAHA', [
                 'tenant_id' => $tenantId,
                 'numero' => $numero,
                 'status' => $response->status(),
@@ -229,7 +252,7 @@ class WahaService
 
             return false;
         } catch (\Exception $e) {
-            Log::error("Excecao ao enviar mensagem WAHA", [
+            Log::error('Excecao ao enviar mensagem WAHA', [
                 'tenant_id' => $tenantId,
                 'numero' => $numero,
                 'erro' => $e->getMessage(),
@@ -240,12 +263,14 @@ class WahaService
     }
 
     /** @return array<int, mixed> */
-    public function listarInstancias(): array
+    public function listarInstancias(?string $wahaUrl = null): array
     {
+        $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : rtrim(config('services.waha.url', 'http://localhost:3000'), '/');
+
         try {
             $response = Http::withHeaders($this->headers())
                 ->timeout(15)
-                ->get("{$this->baseUrl}/api/sessions");
+                ->get("{$baseUrl}/api/sessions");
 
             if ($response->successful()) {
                 return $response->json();
@@ -253,7 +278,7 @@ class WahaService
 
             return [];
         } catch (\Exception $e) {
-            Log::error("Excecao ao listar instancias WAHA", [
+            Log::error('Excecao ao listar instancias WAHA', [
                 'erro' => $e->getMessage(),
             ]);
 
@@ -274,12 +299,12 @@ class WahaService
 
     private function normalizarNumero(string $numero): string
     {
-        $limpo = preg_replace('/[^0-9]/', '', $numero);
+        $limpo = preg_replace('/[^0-9]/', '', $numero) ?? '';
 
         if (str_ends_with($limpo, '@c.us')) {
             return $limpo;
         }
 
-        return $limpo . '@c.us';
+        return $limpo.'@c.us';
     }
 }

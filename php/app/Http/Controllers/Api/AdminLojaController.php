@@ -97,7 +97,7 @@ class AdminLojaController extends Controller
             ]);
 
             try {
-                $resultado = $this->wahaService->criarInstancia($tenant->id);
+                $resultado = $this->wahaService->criarInstancia($tenant->id, config('services.waha.url'));
 
                 if (!$resultado['sucesso']) {
                     Log::warning("Instancia WAHA nao criada via admin", [
@@ -158,7 +158,7 @@ class AdminLojaController extends Controller
                     'email_dono'=> $l->email_dono,
                     'plano'     => $l->plano,
                     'estado'    => $l->estado,
-                    'criado_em' => $l->created_at->toDateTimeString(),
+                    'criado_em' => $l->created_at?->toDateTimeString(),
                 ];
             });
 
@@ -229,7 +229,8 @@ class AdminLojaController extends Controller
         }
 
         try {
-            $this->wahaService->apagarInstancia($tenant->id);
+            $instancia = $tenant->instancias()->first();
+            $this->wahaService->apagarInstancia($tenant->id, $instancia?->waha_url);
         } catch (\Exception $e) {
             Log::warning("Erro ao apagar instancia WAHA ao eliminar loja", [
                 'tenant_id' => $tenant->id,
@@ -255,7 +256,8 @@ class AdminLojaController extends Controller
         $eliminadas = 0;
         foreach ($tenants as $tenant) {
             try {
-                $this->wahaService->apagarInstancia($tenant->id);
+                $instancia = $tenant->instancias()->first();
+                $this->wahaService->apagarInstancia($tenant->id, $instancia?->waha_url);
             } catch (\Exception $e) {
                 Log::warning("Erro ao apagar instancia WAHA", [
                     'tenant_id' => $tenant->id,
@@ -305,12 +307,12 @@ class AdminLojaController extends Controller
         }
 
         try {
-            $resultado = $this->wahaService->criarInstancia($tenant->id);
+            $resultado = $this->wahaService->criarInstancia($tenant->id, config('services.waha.url'));
 
             if (!$resultado['sucesso']) {
                 return response()->json([
                     'sucesso' => false,
-                    'erro'    => "Falha ao criar instancia WAHA: {$resultado['erro']}",
+                    'erro'    => "Falha ao criar instancia WAHA: " . ($resultado['erro'] ?? 'desconhecido'),
                 ], 500);
             }
         } catch (\Exception $e) {

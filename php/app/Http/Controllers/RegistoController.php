@@ -78,7 +78,7 @@ class RegistoController extends Controller
 
         try {
             $wahaService = app(WahaService::class);
-            $resultado = $wahaService->criarInstancia($tenant->id);
+            $resultado = $wahaService->criarInstancia($tenant->id, config('services.waha.url'));
 
             if (!$resultado['sucesso']) {
                 Log::warning("Instancia WAHA nao criada no registo", [

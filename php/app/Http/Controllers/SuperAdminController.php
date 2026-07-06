@@ -104,7 +104,7 @@ class SuperAdminController extends Controller
         ]);
 
         try {
-            $this->wahaService->criarInstancia($tenant->id);
+            $this->wahaService->criarInstancia($tenant->id, config('services.waha.url'));
         } catch (\Exception $e) {
             Log::warning("Erro ao criar instancia WAHA no criarRapido", [
                 'tenant_id' => $tenant->id,
