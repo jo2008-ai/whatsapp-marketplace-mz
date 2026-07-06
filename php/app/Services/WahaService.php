@@ -113,6 +113,12 @@ class WahaService
                 ->get("{$baseUrl}/api/{$nome}/auth/qr");
 
             if ($response->successful()) {
+                $contentType = $response->header('Content-Type') ?? '';
+
+                if (str_contains($contentType, 'image/')) {
+                    return base64_encode($response->body());
+                }
+
                 $data = $response->json();
 
                 return $data['base64'] ?? $data['data'] ?? null;
