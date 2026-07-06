@@ -8,11 +8,8 @@ echo "==> APP_ENV=${APP_ENV:-production}"
 echo "==> APP_DEBUG=${APP_DEBUG:-false}"
 
 echo "==> [0/8] A apagar caches antigos manualmente..."
-rm -f bootstrap/cache/config.php
-rm -f bootstrap/cache/services.php
-rm -f bootstrap/cache/routes-*.php
-rm -f bootstrap/cache/events-scanned.php
-rm -f bootstrap/cache/schedule-*.php
+rm -rf bootstrap/cache/*.php
+rm -rf bootstrap/cache/*.json
 
 echo "==> [1/8] A limpar caches..."
 php artisan config:clear 2>&1 || echo "AVISO: config:clear falhou (ignorado)"

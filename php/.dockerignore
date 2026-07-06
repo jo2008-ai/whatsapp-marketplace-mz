@@ -1,6 +1,7 @@
 vendor/
 node_modules/
 public/css/
+bootstrap/cache/
 .env
 .env.*
 !.env.example

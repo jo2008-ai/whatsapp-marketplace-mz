@@ -13,6 +13,7 @@
 /storage/logs/
 /storage/media-library/
 /vendor/
+/bootstrap/cache/
 .env
 .env.backup
 .env.production
