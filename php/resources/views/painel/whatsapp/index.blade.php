@@ -68,7 +68,7 @@
 
         if (pollingInterval) clearInterval(pollingInterval);
         buscarQR();
-        pollingInterval = setInterval(buscarQR, 10000);
+        pollingInterval = setInterval(buscarQR, 5000);
     }
 
     async function buscarQR() {

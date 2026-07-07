@@ -7,6 +7,7 @@ use App\Services\WahaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class WhatsAppController extends Controller
@@ -100,21 +101,30 @@ class WhatsAppController extends Controller
 
         $wahaUrl = config('services.waha.url');
 
+        Log::info('QR: pedido recebido', [
+            'tenant_id' => $tenant->id,
+            'instancia_id' => $instancia->id,
+            'waha_url' => $wahaUrl,
+            'waha_session' => $instancia->waha_session,
+        ]);
+
         try {
             $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
 
+            Log::info('QR: estado obtido', ['estado' => $estado, 'tenant_id' => $tenant->id]);
+
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
-                $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
-                $this->wahaService->ligar($tenant->id, $wahaUrl);
+                Log::info('QR: sessao nao encontrada, a criar...', ['tenant_id' => $tenant->id]);
+                $criar = $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
+                Log::info('QR: criar resultado', ['tenant_id' => $tenant->id, 'resultado' => $criar]);
+                $ligar = $this->wahaService->ligar($tenant->id, $wahaUrl);
+                Log::info('QR: ligar resultado', ['tenant_id' => $tenant->id, 'resultado' => $ligar]);
 
-                for ($i = 0; $i < 3; $i++) {
-                    usleep(2_000_000);
-                    $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
-
-                    if ($estado === 'SCAN_QR_CODE') {
-                        break;
-                    }
-                }
+                return response()->json([
+                    'estado' => 'aguarda_qr',
+                    'qr' => null,
+                    'mensagem' => 'Sessao a iniciar...',
+                ]);
             }
 
             if ($estado === 'WORKING') {
@@ -125,20 +135,20 @@ class WhatsAppController extends Controller
             }
 
             if ($estado === 'STOPPED') {
-                $this->wahaService->ligar($tenant->id, $wahaUrl);
+                $ligar = $this->wahaService->ligar($tenant->id, $wahaUrl);
+                Log::info('QR: sessao parada, a reiniciar', ['tenant_id' => $tenant->id, 'resultado' => $ligar]);
 
-                for ($i = 0; $i < 3; $i++) {
-                    usleep(2_000_000);
-                    $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
-
-                    if ($estado === 'SCAN_QR_CODE') {
-                        break;
-                    }
-                }
+                return response()->json([
+                    'estado' => 'aguarda_qr',
+                    'qr' => null,
+                    'mensagem' => 'Sessao a reiniciar...',
+                ]);
             }
 
             if ($estado === 'SCAN_QR_CODE' || $estado === 'STARTING') {
                 $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
+
+                Log::info('QR: qr obtido', ['tenant_id' => $tenant->id, 'tem_qr' => $qrBase64 !== null]);
 
                 if ($qrBase64) {
                     return response()->json([
@@ -160,9 +170,10 @@ class WhatsAppController extends Controller
                 'mensagem' => 'Sessao a iniciar...',
             ]);
         } catch (\Exception $e) {
-            \Log::error('QR: erro ao contactar WAHA', [
+            Log::error('QR: erro ao contactar WAHA', [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
+                'waha_url' => $wahaUrl,
             ]);
 
             return response()->json([

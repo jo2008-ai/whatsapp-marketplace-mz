@@ -34,7 +34,7 @@ class WahaService
 
         try {
             $response = Http::withHeaders($this->headers())
-                ->timeout(15)
+                ->timeout(30)
                 ->post("{$baseUrl}/api/sessions", [
                     'name' => $nome,
                     'config' => [
@@ -142,7 +142,7 @@ class WahaService
 
         try {
             $response = Http::withHeaders($this->headers())
-                ->timeout(15)
+                ->timeout(30)
                 ->get("{$baseUrl}/api/sessions/{$nome}");
 
             if ($response->successful()) {
