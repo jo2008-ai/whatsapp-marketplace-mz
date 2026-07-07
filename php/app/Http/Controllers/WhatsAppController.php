@@ -98,12 +98,18 @@ class WhatsAppController extends Controller
             return response()->json(['erro' => 'Instancia nao encontrada'], 404);
         }
 
+        $wahaUrl = $instancia->waha_url ?: config('services.waha.url');
+        if ($instancia->waha_url && $instancia->waha_url !== config('services.waha.url')) {
+            $instancia->update(['waha_url' => config('services.waha.url')]);
+            $wahaUrl = config('services.waha.url');
+        }
+
         try {
-            $estado = $this->wahaService->obterEstado($tenant->id, $instancia->waha_url);
+            $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
 
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
-                $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
-                $this->wahaService->ligar($tenant->id, $instancia->waha_url);
+                $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
+                $this->wahaService->ligar($tenant->id, $wahaUrl);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -120,7 +126,7 @@ class WhatsAppController extends Controller
             }
 
             if ($estado === 'STOPPED' || ($estado !== 'STARTING' && $estado !== 'SCAN_QR_CODE')) {
-                $this->wahaService->ligar($tenant->id, $instancia->waha_url);
+                $this->wahaService->ligar($tenant->id, $wahaUrl);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -129,7 +135,7 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $instancia->waha_url);
+            $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
 
             if ($qrBase64) {
                 return response()->json([
@@ -172,8 +178,10 @@ class WhatsAppController extends Controller
             return response()->json(['estado' => 'erro', 'error' => 'Sem instancia']);
         }
 
+        $wahaUrl = $instancia->waha_url ?: config('services.waha.url');
+
         try {
-            $estado = $this->wahaService->obterEstado($tenant->id, $instancia->waha_url);
+            $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
 
             if ($estado === 'WORKING') {
                 return response()->json(['estado' => 'conectada', 'state' => $estado]);
