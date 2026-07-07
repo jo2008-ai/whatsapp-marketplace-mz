@@ -107,8 +107,14 @@ class WhatsAppController extends Controller
                 $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
                 $this->wahaService->ligar($tenant->id, $wahaUrl);
 
-                sleep(5);
-                $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+                for ($i = 0; $i < 3; $i++) {
+                    usleep(2_000_000);
+                    $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+
+                    if ($estado === 'SCAN_QR_CODE') {
+                        break;
+                    }
+                }
             }
 
             if ($estado === 'WORKING') {
@@ -121,8 +127,14 @@ class WhatsAppController extends Controller
             if ($estado === 'STOPPED') {
                 $this->wahaService->ligar($tenant->id, $wahaUrl);
 
-                sleep(5);
-                $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+                for ($i = 0; $i < 3; $i++) {
+                    usleep(2_000_000);
+                    $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+
+                    if ($estado === 'SCAN_QR_CODE') {
+                        break;
+                    }
+                }
             }
 
             if ($estado === 'SCAN_QR_CODE' || $estado === 'STARTING') {
