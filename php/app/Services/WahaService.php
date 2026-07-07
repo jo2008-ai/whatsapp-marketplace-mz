@@ -12,7 +12,7 @@ class WahaService
 
     public function __construct()
     {
-        $this->apiKey = config('services.waha.key', '');
+        $this->apiKey = trim(config('services.waha.key', ''));
     }
 
     private function resolveUrl(int $tenantId): string
