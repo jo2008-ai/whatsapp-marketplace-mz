@@ -98,18 +98,18 @@ class WhatsAppController extends Controller
             return response()->json(['erro' => 'Instancia nao encontrada'], 404);
         }
 
-        $wahaUrl = $instancia->waha_url ?: config('services.waha.url');
-        if ($instancia->waha_url && $instancia->waha_url !== config('services.waha.url')) {
-            $instancia->update(['waha_url' => config('services.waha.url')]);
-            $wahaUrl = config('services.waha.url');
-        }
+        $wahaUrl = config('services.waha.url');
 
         try {
+            \Log::info('QR: a contactar WAHA', ['wahaUrl' => $wahaUrl, 'session' => $instancia->waha_session, 'instancia_id' => $instancia->id]);
             $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+            \Log::info('QR: estado obtido', ['estado' => $estado]);
 
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
-                $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
-                $this->wahaService->ligar($tenant->id, $wahaUrl);
+                $criarResult = $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
+                \Log::info('QR: instancia criada', ['resultado' => $criarResult]);
+                $ligarResult = $this->wahaService->ligar($tenant->id, $wahaUrl);
+                \Log::info('QR: sessao iniciada', ['resultado' => $ligarResult]);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -135,7 +135,9 @@ class WhatsAppController extends Controller
                 ]);
             }
 
+            \Log::info('QR: a obter QR code', ['estado' => $estado]);
             $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
+            \Log::info('QR: qr obtido', ['has_qr' => $qrBase64 !== null, 'tipo' => get_debug_type($qrBase64)]);
 
             if ($qrBase64) {
                 return response()->json([
@@ -178,7 +180,7 @@ class WhatsAppController extends Controller
             return response()->json(['estado' => 'erro', 'error' => 'Sem instancia']);
         }
 
-        $wahaUrl = $instancia->waha_url ?: config('services.waha.url');
+        $wahaUrl = config('services.waha.url');
 
         try {
             $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
