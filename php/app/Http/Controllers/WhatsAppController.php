@@ -101,21 +101,14 @@ class WhatsAppController extends Controller
         $wahaUrl = config('services.waha.url');
 
         try {
-            \Log::info('QR: a contactar WAHA', ['wahaUrl' => $wahaUrl, 'session' => $instancia->waha_session, 'instancia_id' => $instancia->id]);
             $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
-            \Log::info('QR: estado obtido', ['estado' => $estado]);
 
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
-                $criarResult = $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
-                \Log::info('QR: instancia criada', ['resultado' => $criarResult]);
-                $ligarResult = $this->wahaService->ligar($tenant->id, $wahaUrl);
-                \Log::info('QR: sessao iniciada', ['resultado' => $ligarResult]);
+                $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
+                $this->wahaService->ligar($tenant->id, $wahaUrl);
 
-                return response()->json([
-                    'estado' => 'aguarda_qr',
-                    'qr' => null,
-                    'mensagem' => 'Sessao a iniciar...',
-                ]);
+                sleep(5);
+                $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
             }
 
             if ($estado === 'WORKING') {
@@ -125,30 +118,34 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            if ($estado === 'STOPPED' || ($estado !== 'STARTING' && $estado !== 'SCAN_QR_CODE')) {
+            if ($estado === 'STOPPED') {
                 $this->wahaService->ligar($tenant->id, $wahaUrl);
+
+                sleep(5);
+                $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+            }
+
+            if ($estado === 'SCAN_QR_CODE' || $estado === 'STARTING') {
+                $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
+
+                if ($qrBase64) {
+                    return response()->json([
+                        'estado' => 'aguarda_qr',
+                        'qr' => $qrBase64,
+                    ]);
+                }
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
                     'qr' => null,
-                    'mensagem' => 'Sessao a iniciar...',
-                ]);
-            }
-
-            \Log::info('QR: a obter QR code', ['estado' => $estado]);
-            $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
-            \Log::info('QR: qr obtido', ['has_qr' => $qrBase64 !== null, 'tipo' => get_debug_type($qrBase64)]);
-
-            if ($qrBase64) {
-                return response()->json([
-                    'estado' => 'aguarda_qr',
-                    'qr' => $qrBase64,
+                    'mensagem' => 'A aguardar QR code...',
                 ]);
             }
 
             return response()->json([
                 'estado' => 'aguarda_qr',
                 'qr' => null,
+                'mensagem' => 'Sessao a iniciar...',
             ]);
         } catch (\Exception $e) {
             \Log::error('QR: erro ao contactar WAHA', [

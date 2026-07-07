@@ -114,19 +114,15 @@ class WahaService
 
             if ($response->successful()) {
                 $contentType = $response->header('Content-Type') ?? '';
-                \Log::info('QR: status response', ['status' => $response->status(), 'content_type' => $contentType, 'body_size' => strlen($response->body())]);
 
                 if (str_contains($contentType, 'image/')) {
                     return base64_encode($response->body());
                 }
 
                 $data = $response->json();
-                \Log::info('QR: json response', ['keys' => array_keys($data ?? [])]);
 
                 return $data['base64'] ?? $data['data'] ?? null;
             }
-
-            \Log::warning('QR: status nao ok', ['status' => $response->status(), 'body' => substr($response->body(), 0, 200)]);
 
             return null;
         } catch (\Exception $e) {
