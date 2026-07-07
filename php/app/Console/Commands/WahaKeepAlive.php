@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Log;
 class WahaKeepAlive extends Command
 {
     protected $signature = 'waha:keep-alive';
-    protected $description = 'Ping WAHA, recreate missing sessions, prevent Render spin-down';
+
+    protected $description = 'Ping WAHA, recreate missing sessions, fix stale webhooks, prevent Render spin-down';
 
     private WahaService $wahaService;
 
@@ -26,13 +27,14 @@ class WahaKeepAlive extends Command
         $url = config('services.waha.url');
 
         if (! $url) {
-            $this->error("WAHA_URL nao configurada");
+            $this->error('WAHA_URL nao configurada');
 
             return self::FAILURE;
         }
 
         $key = config('services.waha.key', '');
         $headers = ['X-Api-Key' => $key];
+        $expectedWebhookBase = config('app.url').'/api/waha/webhook/';
 
         try {
             $resp = Http::withHeaders($headers)
@@ -51,13 +53,14 @@ class WahaKeepAlive extends Command
 
                 $count = count($activeNames);
                 $this->info("WAHA: {$url} -> {$count} sessao(oes) activa(s)");
-                Log::info("WAHA keep-alive", ['url' => $url, 'sessions' => $count]);
+                Log::info('WAHA keep-alive', ['url' => $url, 'sessions' => $count]);
 
                 $instancias = InstanciaWhatsApp::where('estado', 'conectada')
                     ->orWhere('estado', 'aguarda_qr')
                     ->get();
 
                 $recreated = 0;
+                $fixed = 0;
 
                 foreach ($instancias as $inst) {
                     if (! in_array($inst->waha_session, $activeNames)) {
@@ -66,20 +69,65 @@ class WahaKeepAlive extends Command
                         $this->wahaService->criarInstancia($inst->tenant_id, $url);
                         $this->wahaService->ligar($inst->tenant_id, $url);
                         $recreated++;
+
+                        continue;
+                    }
+
+                    // Check webhook URL for active sessions
+                    try {
+                        $sessionResp = Http::withHeaders($headers)
+                            ->timeout(30)
+                            ->get("{$url}/api/sessions/{$inst->waha_session}");
+
+                        if ($sessionResp->successful()) {
+                            $sessionData = $sessionResp->json();
+                            $webhooks = $sessionData['config']['webhooks'] ?? [];
+                            $currentWebhook = $webhooks[0]['url'] ?? null;
+                            $correctWebhook = $expectedWebhookBase.$inst->tenant_id;
+
+                            if ($currentWebhook && $currentWebhook !== $correctWebhook) {
+                                $this->warn("Sessao {$inst->waha_session} webhook desactualizado: {$currentWebhook}");
+                                $this->info("  Corrigindo para: {$correctWebhook}");
+
+                                $this->wahaService->desligar($inst->tenant_id, $url);
+                                $this->wahaService->apagarInstancia($inst->tenant_id, $url);
+                                $this->wahaService->criarInstancia($inst->tenant_id, $url);
+                                $this->wahaService->ligar($inst->tenant_id, $url);
+
+                                $fixed++;
+                                Log::info('WAHA keep-alive: webhook corrigido', [
+                                    'session' => $inst->waha_session,
+                                    'old' => $currentWebhook,
+                                    'new' => $correctWebhook,
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('WAHA keep-alive: falha ao verificar webhook', [
+                            'session' => $inst->waha_session,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
                 }
 
-                if ($recreated > 0) {
-                    $this->info("Recriadas {$recreated} sessao(oes) perdida(s)");
-                    Log::info("WAHA keep-alive: sessoes recriadas", ['count' => $recreated]);
+                if ($recreated > 0 || $fixed > 0) {
+                    $parts = [];
+                    if ($recreated > 0) {
+                        $parts[] = "{$recreated} recriada(s)";
+                    }
+                    if ($fixed > 0) {
+                        $parts[] = "{$fixed} webhook(s) corrigido(s)";
+                    }
+                    $this->info('Sessoes: '.implode(', ', $parts));
+                    Log::info('WAHA keep-alive: accoes', ['recreated' => $recreated, 'fixed' => $fixed]);
                 }
             } else {
                 $this->warn("WAHA: {$url} -> HTTP {$resp->status()}");
-                Log::warning("WAHA keep-alive failed", ['url' => $url, 'status' => $resp->status()]);
+                Log::warning('WAHA keep-alive failed', ['url' => $url, 'status' => $resp->status()]);
             }
         } catch (\Exception $e) {
             $this->error("WAHA: {$url} -> {$e->getMessage()}");
-            Log::error("WAHA keep-alive error", ['url' => $url, 'error' => $e->getMessage()]);
+            Log::error('WAHA keep-alive error', ['url' => $url, 'error' => $e->getMessage()]);
         }
 
         return self::SUCCESS;

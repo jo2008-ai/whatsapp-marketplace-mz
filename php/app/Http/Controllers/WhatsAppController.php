@@ -101,24 +101,12 @@ class WhatsAppController extends Controller
 
         $wahaUrl = config('services.waha.url');
 
-        Log::info('QR: pedido recebido', [
-            'tenant_id' => $tenant->id,
-            'instancia_id' => $instancia->id,
-            'waha_url' => $wahaUrl,
-            'waha_session' => $instancia->waha_session,
-        ]);
-
         try {
             $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
 
-            Log::info('QR: estado obtido', ['estado' => $estado, 'tenant_id' => $tenant->id]);
-
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
-                Log::info('QR: sessao nao encontrada, a criar...', ['tenant_id' => $tenant->id]);
-                $criar = $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
-                Log::info('QR: criar resultado', ['tenant_id' => $tenant->id, 'resultado' => $criar]);
-                $ligar = $this->wahaService->ligar($tenant->id, $wahaUrl);
-                Log::info('QR: ligar resultado', ['tenant_id' => $tenant->id, 'resultado' => $ligar]);
+                $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
+                $this->wahaService->ligar($tenant->id, $wahaUrl);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -135,8 +123,7 @@ class WhatsAppController extends Controller
             }
 
             if ($estado === 'STOPPED') {
-                $ligar = $this->wahaService->ligar($tenant->id, $wahaUrl);
-                Log::info('QR: sessao parada, a reiniciar', ['tenant_id' => $tenant->id, 'resultado' => $ligar]);
+                $this->wahaService->ligar($tenant->id, $wahaUrl);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -147,8 +134,6 @@ class WhatsAppController extends Controller
 
             if ($estado === 'SCAN_QR_CODE' || $estado === 'STARTING') {
                 $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
-
-                Log::info('QR: qr obtido', ['tenant_id' => $tenant->id, 'tem_qr' => $qrBase64 !== null]);
 
                 if ($qrBase64) {
                     return response()->json([
@@ -173,12 +158,10 @@ class WhatsAppController extends Controller
             Log::error('QR: erro ao contactar WAHA', [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
-                'waha_url' => $wahaUrl,
             ]);
 
             return response()->json([
                 'erro' => 'Servico indisponivel',
-                'detalhe' => $e->getMessage(),
             ], 503);
         }
     }

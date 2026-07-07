@@ -33,24 +33,41 @@ class WahaService
         $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
 
         try {
-            $response = Http::withHeaders($this->headers())
-                ->timeout(30)
-                ->post("{$baseUrl}/api/sessions", [
-                    'name' => $nome,
-                    'config' => [
-                        'webhooks' => [
-                            [
-                                'url' => config('app.url')."/api/waha/webhook/{$tenantId}",
-                                'events' => ['message', 'session.status'],
-                            ],
+            $payload = [
+                'name' => $nome,
+                'config' => [
+                    'webhooks' => [
+                        [
+                            'url' => config('app.url')."/api/waha/webhook/{$tenantId}",
+                            'events' => ['message', 'session.status'],
                         ],
                     ],
-                ]);
+                ],
+            ];
+
+            $response = Http::withHeaders($this->headers())
+                ->timeout(30)
+                ->post("{$baseUrl}/api/sessions", $payload);
 
             if ($response->successful()) {
                 Log::info('Instancia WAHA criada', ['tenant_id' => $tenantId, 'session' => $nome]);
 
                 return ['sucesso' => true, 'dados' => $response->json()];
+            }
+
+            if ($response->status() === 422) {
+                Log::info('Sessao ja existe, deletando e recriando', ['tenant_id' => $tenantId, 'session' => $nome]);
+                $this->apagarInstancia($tenantId, $wahaUrl);
+
+                $response = Http::withHeaders($this->headers())
+                    ->timeout(30)
+                    ->post("{$baseUrl}/api/sessions", $payload);
+
+                if ($response->successful()) {
+                    Log::info('Instancia WAHA recriada', ['tenant_id' => $tenantId, 'session' => $nome]);
+
+                    return ['sucesso' => true, 'dados' => $response->json()];
+                }
             }
 
             Log::warning('Falha ao criar instancia WAHA', [
