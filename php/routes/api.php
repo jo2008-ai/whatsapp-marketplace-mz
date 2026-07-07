@@ -119,6 +119,21 @@ Route::middleware('admin.key')->prefix('admin')->group(function () {
     Route::post('/whatsapp/instancias/{tenantId}', [AdminWhatsAppController::class, 'criar']);
     Route::delete('/whatsapp/instancias/{tenantId}', [AdminWhatsAppController::class, 'apagar']);
     Route::get('/whatsapp/instancias/{tenantId}/estado', [AdminWhatsAppController::class, 'estado']);
+
+    Route::get('/whatsapp/fix-webhooks', function () {
+        Artisan::call('waha:fix-webhooks');
+        return response()->json(['output' => Artisan::output()]);
+    });
+});
+
+Route::get('/waha/fix-webhooks', function (\Illuminate\Http\Request $request) {
+    $token = $request->query('token');
+    $expected = config('services.admin.key', env('ADMIN_API_KEY', ''));
+    if (!$token || !$expected || !hash_equals($expected, $token)) {
+        return response()->json(['erro' => 'Token invalido'], 403);
+    }
+    Artisan::call('waha:fix-webhooks');
+    return response()->json(['output' => Artisan::output()]);
 });
 
 // Rotas do painel Python (acesso interno)
