@@ -73,7 +73,9 @@
 
     async function buscarQR() {
         try {
-            const resp = await fetch(`/painel/whatsapp/qr?instancia=${instanciaAtual}&_t=${Date.now()}`);
+            const resp = await fetch(`/painel/whatsapp/qr?instancia=${instanciaAtual}&_t=${Date.now()}`, {
+                headers: { 'Accept': 'application/json' }
+            });
 
             if (resp.status === 503) {
                 document.getElementById('qr-loading').innerHTML =
