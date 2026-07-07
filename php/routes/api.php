@@ -33,9 +33,9 @@ Route::middleware(['auth:sanctum', 'tenant.context'])->prefix('typebot')->group(
 
 // Webhook WAHA (eventos de estado de conexão)
 Route::post('/waha/webhook/{tenantId}', [WahaWebhookController::class, 'processar'])
-    ->middleware(['webhook.verify', 'webhook.rate']);
+    ->middleware(['webhook.rate']);
 Route::post('/waha/webhook', [WahaWebhookController::class, 'processar'])
-    ->middleware(['webhook.verify', 'webhook.rate']);
+    ->middleware(['webhook.rate']);
 
 // Auth API
 Route::post('/auth/login', [ApiAuthController::class, 'login']);
