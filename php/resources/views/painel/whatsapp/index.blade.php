@@ -84,9 +84,7 @@
             }
 
             if (resp.status === 401) {
-                document.getElementById('qr-loading').innerHTML =
-                    '<p class="text-red-600">Chave de API invalida. Contacta o administrador.</p>';
-                clearInterval(pollingInterval);
+                window.location.href = '/login';
                 return;
             }
 
