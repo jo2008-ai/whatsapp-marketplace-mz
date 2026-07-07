@@ -57,6 +57,27 @@ Route::prefix('painel')->middleware(['auth', 'tenant.context', 'tenant.activo'])
     Route::post('/definicoes', [DefinicoesController::class, 'guardar'])->name('definicoes.guardar');
 });
 
+Route::get('/test-waha', function () {
+    $url = config('services.waha.url');
+    $key = config('services.waha.key');
+
+    $result = ['config_url' => $url, 'config_key' => $key ? substr($key, 0, 6).'...' : 'EMPTY'];
+
+    try {
+        $resp = \Illuminate\Support\Facades\Http::withHeaders([
+            'X-Api-Key' => $key,
+        ])->timeout(30)->get("{$url}/api/sessions");
+
+        $result['http_status'] = $resp->status();
+        $result['response'] = $resp->json() ?? $resp->body();
+    } catch (\Exception $e) {
+        $result['error'] = $e->getMessage();
+        $result['error_class'] = get_class($e);
+    }
+
+    return response()->json($result);
+});
+
 Route::prefix('super')->middleware(['auth', 'super.admin'])->group(function () {
     Route::get('/', [SuperAdminController::class, 'dashboard'])->name('super.dashboard');
     Route::get('/lojas', [SuperAdminController::class, 'lojas'])->name('super.lojas');
