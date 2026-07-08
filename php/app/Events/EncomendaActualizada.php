@@ -38,7 +38,7 @@ class EncomendaActualizada implements ShouldBroadcast
             'cliente' => $this->encomenda->nome_cliente ?? $this->encomenda->numero_cliente,
             'produto' => $this->encomenda->produto?->nome,
             'total' => (float) $this->encomenda->preco_total,
-            'data' => $this->encomenda->updated_at->format('d/m/Y H:i'),
+            'data' => $this->encomenda->updated_at?->format('d/m/Y H:i'),
         ];
     }
 }

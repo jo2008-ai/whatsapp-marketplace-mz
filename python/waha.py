@@ -6,16 +6,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 WAHA_API_KEY = os.getenv('WAHA_API_KEY', '')
+WAHA_URL = os.getenv('WAHA_URL', '').rstrip('/')
 WAHA_SESSION = os.getenv('WAHA_SESSION', 'default')
 
 logger = logging.getLogger(__name__)
-
-
-def _url_for(tenant_id: int) -> str:
-    url = os.getenv(f'WAHA_URL_{tenant_id}', '')
-    if not url:
-        raise ValueError(f"WAHA_URL_{tenant_id} not configured")
-    return url.rstrip('/')
 
 
 def _headers() -> dict:
@@ -25,13 +19,17 @@ def _headers() -> dict:
     }
 
 
+def _session_name(tenant_id: int) -> str:
+    return f"loja-{tenant_id}"
+
+
 def enviar_texto(tenant_id: int, numero: str, texto: str) -> dict:
     try:
-        url = f"{_url_for(tenant_id)}/api/sendText"
+        url = f"{WAHA_URL}/api/sendText"
         response = requests.post(
             url,
             json={
-                'session': WAHA_SESSION,
+                'session': _session_name(tenant_id),
                 'chatId': f"{numero}@c.us",
                 'text': texto,
             },
@@ -48,11 +46,11 @@ def enviar_texto(tenant_id: int, numero: str, texto: str) -> dict:
 
 def enviar_imagem(tenant_id: int, numero: str, url_imagem: str, caption: str = '') -> dict:
     try:
-        url = f"{_url_for(tenant_id)}/api/sendImage"
+        url = f"{WAHA_URL}/api/sendImage"
         response = requests.post(
             url,
             json={
-                'session': WAHA_SESSION,
+                'session': _session_name(tenant_id),
                 'chatId': f"{numero}@c.us",
                 'file': {'url': url_imagem},
                 'caption': caption,
@@ -70,17 +68,17 @@ def enviar_imagem(tenant_id: int, numero: str, url_imagem: str, caption: str = '
 
 def obter_estado(tenant_id: int) -> dict:
     try:
-        url = f"{_url_for(tenant_id)}/api/sessions"
+        session_name = _session_name(tenant_id)
+        url = f"{WAHA_URL}/api/sessions/{session_name}"
         response = requests.get(url, headers=_headers(), timeout=10)
         if response.ok:
-            sessions = response.json()
-            for session in sessions:
-                if session.get('name') == WAHA_SESSION:
-                    state = session.get('status', 'unknown')
-                    return {
-                        'estado': 'conectada' if state == 'WORKING' else 'desconectada',
-                        'state': state,
-                    }
+            data = response.json()
+            state = data.get('status', 'unknown')
+            return {
+                'estado': 'conectada' if state == 'WORKING' else 'desconectada',
+                'state': state,
+            }
+        if response.status_code == 404:
             return {'estado': 'desconectada', 'state': 'not_found'}
         return {'estado': 'erro', 'error': response.text}
     except requests.RequestException as e:
@@ -93,7 +91,8 @@ def obter_qr_code(tenant_id: int) -> dict:
         if estado.get('estado') == 'conectada':
             return {'estado': 'conectada', 'qr': None}
 
-        url = f"{_url_for(tenant_id)}/api/default/auth/qr"
+        session_name = _session_name(tenant_id)
+        url = f"{WAHA_URL}/api/{session_name}/auth/qr"
         qr_resp = requests.get(url, headers=_headers(), timeout=10)
         if qr_resp.ok:
             qr_data = qr_resp.json()

@@ -15,7 +15,14 @@ class ApiEncomendaController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $query = Encomenda::where('tenant_id', $tenant->id)
             ->with(['produto:id,nome,preco,imagem_url', 'vendedor:id,nome']);
@@ -34,7 +41,14 @@ class ApiEncomendaController extends Controller
      */
     public function atualizarEstado(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $encomenda = Encomenda::where('tenant_id', $tenant->id)->find($id);
 

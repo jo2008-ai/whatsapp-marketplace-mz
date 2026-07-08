@@ -58,7 +58,7 @@ class AtributoService
             return false;
         }
 
-        return $atributo->delete();
+        return (bool) $atributo->delete();
     }
 
     /**
@@ -99,6 +99,6 @@ class AtributoService
             return false;
         }
 
-        return $valor->delete();
+        return (bool) $valor->delete();
     }
 }

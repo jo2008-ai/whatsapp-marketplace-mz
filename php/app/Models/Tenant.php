@@ -11,26 +11,26 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 #[ObservedBy(TenantObserver::class)]
-    /**
-     * @property string $trial_termina_em
-     * @property string|null $banner_promo_expira_em
-     * @property bool $activo
-     * @property bool $banner_promo_activo
-     * @property string|null $banner_promo_titulo
-     * @property bool $banner_global_activo
-     * @property string|null $banner_global_titulo
-     * @property string $nome_loja
-     * @property string $estado
-     * @property string|null $mensagem_boas_vindas
-     * @property string|null $mensagem_erro_menu
-     * @property string|null $mensagem_categoria_vazia
-     * @property string|null $mensagem_pesquisa_vazia
-     * @property string|null $mensagem_pedido_sucesso
-     * @property string|null $mensagem_pedido_cancelado
-     * @property string|null $mensagem_vendedores_indisponivel
-     * @property string|null $mensagem_transferencia
-     */
-    class Tenant extends Model
+/**
+ * @property string $trial_termina_em
+ * @property string|null $banner_promo_expira_em
+ * @property bool $activo
+ * @property bool $banner_promo_activo
+ * @property string|null $banner_promo_titulo
+ * @property bool $banner_global_activo
+ * @property string|null $banner_global_titulo
+ * @property string $nome_loja
+ * @property string $estado
+ * @property string|null $mensagem_boas_vindas
+ * @property string|null $mensagem_erro_menu
+ * @property string|null $mensagem_categoria_vazia
+ * @property string|null $mensagem_pesquisa_vazia
+ * @property string|null $mensagem_pedido_sucesso
+ * @property string|null $mensagem_pedido_cancelado
+ * @property string|null $mensagem_vendedores_indisponivel
+ * @property string|null $mensagem_transferencia
+ */
+class Tenant extends Model
     {
         protected $fillable = [
             'nome_loja', 'email_dono', 'telefone_dono',

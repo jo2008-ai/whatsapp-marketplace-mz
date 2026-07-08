@@ -22,7 +22,7 @@ class NovaEncomendaMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nova Encomenda — ' . $this->encomenda->tenant->nome_loja,
+            subject: 'Nova Encomenda — ' . $this->encomenda->tenant?->nome_loja,
         );
     }
 

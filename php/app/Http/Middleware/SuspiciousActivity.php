@@ -41,7 +41,8 @@ class SuspiciousActivity
             $request->route() ? $request->route()->parameters() : [],
         );
 
-        $inputString = json_encode($allInput);
+        $encoded = json_encode($allInput);
+        $inputString = $encoded === false ? '' : $encoded;
 
         foreach (self::SUSPICIOUS_PATTERNS as $type => $pattern) {
             if (preg_match($pattern, $inputString)) {

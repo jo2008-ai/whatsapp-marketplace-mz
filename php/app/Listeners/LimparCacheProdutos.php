@@ -18,9 +18,9 @@ class LimparCacheProdutos implements ShouldQueue
     public function handle(object $event): void
     {
         $tenantId = match (true) {
-            $event instanceof ProdutoCriado => $event->tenant->id,
-            $event instanceof ProdutoActualizado => $event->tenant->id,
-            $event instanceof ProdutoRemovido => $event->tenant->id,
+            $event instanceof ProdutoCriado => $event->tenant?->id,
+            $event instanceof ProdutoActualizado => $event->tenant?->id,
+            $event instanceof ProdutoRemovido => $event->tenant?->id,
             default => null,
         };
 

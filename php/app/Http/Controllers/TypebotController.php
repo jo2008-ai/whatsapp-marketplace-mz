@@ -120,7 +120,14 @@ class TypebotController extends Controller
 
     public function config(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         return response()->json([
             'usar_typebot' => $tenant->usar_typebot,
@@ -131,7 +138,14 @@ class TypebotController extends Controller
 
     public function guardarConfig(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'usar_typebot' => 'boolean',
@@ -150,7 +164,14 @@ class TypebotController extends Controller
 
     public function listarBots(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $bots = $this->typebotService->listarBots($tenant);
 
@@ -171,7 +192,7 @@ class TypebotController extends Controller
 
             if ($msg['tipo'] === 'botoes') {
                 $texto .= ($texto ? "\n\n" : '') . $msg['conteudo'];
-                foreach ($msg['botoes'] as $i => $botao) {
+                foreach ($msg['botoes'] ?? [] as $i => $botao) {
                     $num = $i + 1;
                     $texto .= "\n{$num}️⃣ {$botao}";
                 }

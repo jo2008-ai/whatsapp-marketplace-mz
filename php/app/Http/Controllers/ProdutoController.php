@@ -15,7 +15,14 @@ class ProdutoController extends Controller
     /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produtos = $this->produtoService->listar($tenant, $request);
         $categorias = $tenant->categorias()->where('ativo', true)->orderBy('nome')->get();
 
@@ -25,7 +32,14 @@ class ProdutoController extends Controller
     /** @return \Illuminate\View\View */
     public function create(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $categorias = $tenant->categorias()->where('ativo', true)->orderBy('nome')->get();
         $vendedores = $tenant->vendedores()->where('ativo', true)->orderBy('nome')->get();
 
@@ -35,7 +49,14 @@ class ProdutoController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function store(WebProdutoRequest $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $validated = $request->validated();
 
         $validated['disponivel'] = $request->boolean('disponivel', true);
@@ -57,7 +78,14 @@ class ProdutoController extends Controller
     /** @return \Illuminate\View\View */
     public function edit(Request $request, int $id)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produto = $this->produtoService->obterPorId($tenant, $id);
 
         if (!$produto) {
@@ -73,7 +101,14 @@ class ProdutoController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function update(WebProdutoRequest $request, int $id)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $validated = $request->validated();
 
         $validated['disponivel'] = $request->boolean('disponivel', true);
@@ -100,7 +135,14 @@ class ProdutoController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function destroy(Request $request, int $id)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $this->produtoService->eliminar($tenant, $id);
 
         return redirect('/painel/produtos')->with('success', 'Produto removido.');

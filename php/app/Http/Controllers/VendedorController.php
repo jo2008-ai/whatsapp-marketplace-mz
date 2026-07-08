@@ -10,7 +10,14 @@ class VendedorController extends Controller
     /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $vendedores = $tenant->vendedores()->withCount('produtos')->orderBy('nome')->get();
 
         return view('painel.vendedores.index', compact('vendedores', 'tenant'));
@@ -19,11 +26,18 @@ class VendedorController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function store(Request $request)
     {
-        if (!$request->user()->isAdmin()) {
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        if (!$user->isAdmin()) {
             abort(403);
         }
 
-        $tenant = $request->user()->tenant;
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -41,11 +55,15 @@ class VendedorController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function update(Request $request, Vendedor $vendedor)
     {
-        if (!$request->user()->isAdmin()) {
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        if (!$user->isAdmin()) {
             abort(403);
         }
 
-        if ($vendedor->tenant_id !== $request->user()->tenant_id) {
+        if ($vendedor->tenant_id !== $user->tenant_id) {
             abort(403);
         }
 
@@ -66,11 +84,15 @@ class VendedorController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function destroy(Request $request, Vendedor $vendedor)
     {
-        if (!$request->user()->isAdmin()) {
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        if (!$user->isAdmin()) {
             abort(403);
         }
 
-        if ($vendedor->tenant_id !== $request->user()->tenant_id) {
+        if ($vendedor->tenant_id !== $user->tenant_id) {
             abort(403);
         }
 

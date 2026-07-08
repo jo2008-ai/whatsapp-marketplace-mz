@@ -18,6 +18,10 @@ class NotificarAdminNovoProduto implements ShouldQueue
         $produto = $event->produto;
         $tenant = $event->tenant;
 
+        if (!$tenant) {
+            return;
+        }
+
         try {
             $adminUrl = config('app.admin_url');
 

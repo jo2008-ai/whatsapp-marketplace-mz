@@ -1,5 +1,8 @@
 import os
 import time
+import hmac
+import hashlib
+import json
 import logging
 import threading
 from collections import defaultdict
@@ -21,6 +24,7 @@ PHP_API_URL = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender
 APP_URL = os.getenv('APP_URL', 'http://localhost:8000')
 TENANT_ID_DEFAULT = int(os.getenv('TENANT_ID_DEFAULT', '1'))
 TYPEBOT_WEBHOOK_URL = os.getenv('TYPEBOT_WEBHOOK_URL', 'http://php:8000/api/typebot/webhook')
+WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET', '')
 
 
 class RateLimiter:
@@ -60,6 +64,24 @@ class RateLimiter:
 
 webhook_limiter = RateLimiter(max_requests=30, window_seconds=60)
 api_limiter = RateLimiter(max_requests=100, window_seconds=60)
+
+
+def _compute_signature(body: bytes) -> str:
+    """Computa HMAC SHA-256 da requisicao para o PHP."""
+    if not WEBHOOK_SECRET:
+        return ''
+    return 'sha256=' + hmac.new(
+        WEBHOOK_SECRET.encode(), body, hashlib.sha256
+    ).hexdigest()
+
+
+def _php_headers(body: bytes) -> dict:
+    """Headers com assinatura HMAC para chamar o PHP."""
+    headers = {'Content-Type': 'application/json'}
+    sig = _compute_signature(body)
+    if sig:
+        headers['X-Hub-Signature-256'] = sig
+    return headers
 
 
 @app.route('/health', methods=['GET'])
@@ -122,17 +144,20 @@ def webhook(tenant_id: int):
             f"Tenant {tenant_id} | Mensagem de {sender} ({push_name}): {corpo}"
         )
 
+        php_payload = {
+            'tenant_id': tenant_id,
+            'instance_name': 'default',
+            'numero': sender,
+            'mensagem': corpo,
+            'nome': push_name,
+            'is_grupo': is_grupo,
+            'grupo_id': grupo_id,
+        }
+        php_body = json.dumps(php_payload).encode()
         php_response = requests.post(
             PHP_API_URL,
-            json={
-                'tenant_id': tenant_id,
-                'instance_name': 'default',
-                'numero': sender,
-                'mensagem': corpo,
-                'nome': push_name,
-                'is_grupo': is_grupo,
-                'grupo_id': grupo_id,
-            },
+            data=php_body,
+            headers=_php_headers(php_body),
             timeout=15,
         )
 
@@ -284,7 +309,6 @@ def criar_loja():
     nome_loja = request.form.get('nome_loja', '').strip()
     nome_dono = request.form.get('nome_dono', '').strip()
     telefone = request.form.get('telefone', '').strip()
-    waha_server = request.form.get('waha_server', '1').strip()
 
     if not all([nome_loja, nome_dono, telefone]):
         flash('Preencha todos os campos.', 'erro')
@@ -296,7 +320,6 @@ def criar_loja():
             'nome_loja': nome_loja,
             'email': telefone + '@loja.local',
             'telefone': telefone,
-            'waha_server': int(waha_server),
         }, timeout=15, headers={
             'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
         })
@@ -356,12 +379,11 @@ def eliminar_todas():
 @app.route('/painel/instancia/<int:tenant_id>', methods=['POST'])
 def criar_instancia(tenant_id: int):
     """Cria instancia WAHA para uma loja."""
-    waha_server = request.form.get('waha_server', '1')
     try:
         php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.post(f"{php_api}/api/admin/lojas/{tenant_id}/instancia", timeout=15, headers={
             'X-Admin-Key': os.getenv('ADMIN_API_KEY', ''),
-        }, json={'waha_server': int(waha_server)})
+        })
 
         if resp.ok:
             msg = resp.json().get('mensagem', 'Feito.')

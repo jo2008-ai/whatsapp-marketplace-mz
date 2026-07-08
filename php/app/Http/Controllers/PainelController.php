@@ -11,7 +11,14 @@ class PainelController extends Controller
     /** @return \Illuminate\View\View */
     public function dashboard(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $totalProdutos = $tenant->produtos()->count();
         $encomendasHoje = $tenant->encomendas()->whereDate('created_at', today())->count();

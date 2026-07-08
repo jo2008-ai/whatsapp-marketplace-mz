@@ -15,8 +15,11 @@ class ApiLojaController extends Controller
 
     public function dashboard(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
-
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
         if (!$tenant) {
             return $this->error('Sem loja associada.', 403);
         }

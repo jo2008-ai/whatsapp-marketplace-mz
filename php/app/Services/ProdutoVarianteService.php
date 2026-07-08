@@ -31,6 +31,7 @@ class ProdutoVarianteService
 
             $atributosProcessados = [];
             foreach ($atributos as $atributoData) {
+                /** @var Atributo|null $atributo */
                 $atributo = Atributo::find($atributoData['atributo_id']);
 
                 if (!$atributo) {
@@ -73,6 +74,7 @@ class ProdutoVarianteService
             if (isset($validated['atributos'])) {
                 $atributosProcessados = [];
                 foreach ($validated['atributos'] as $atributoData) {
+                    /** @var Atributo|null $atributo */
                     $atributo = Atributo::find($atributoData['atributo_id']);
 
                     if (!$atributo) {
@@ -104,7 +106,7 @@ class ProdutoVarianteService
 
     public function eliminarVariante(?Tenant $tenant = null, ProdutoVariante $variante): bool
     {
-        return $variante->delete();
+        return (bool) $variante->delete();
     }
 
     public function toggleDisponivel(?Tenant $tenant = null, ProdutoVariante $variante): ProdutoVariante

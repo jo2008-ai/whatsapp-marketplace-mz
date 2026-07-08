@@ -82,7 +82,7 @@ class MigrateProdutosImagens extends Command
             return;
         }
 
-        $extensao = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+        $extensao = pathinfo((string) parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
         $tempPath = tempnam(sys_get_temp_dir(), 'migrate_img_') . '.' . $extensao;
         file_put_contents($tempPath, $conteudo);
 
@@ -100,14 +100,18 @@ class MigrateProdutosImagens extends Command
             $context = stream_context_create([
                 'http' => ['timeout' => 10],
             ]);
-            return @file_get_contents($url, false, $context);
+            /** @var string|false $content */
+            $content = @file_get_contents($url, false, $context);
+            return $content === false ? null : $content;
         }
 
         $path = str_replace(url('storage') . '/', '', $url);
         $fullPath = storage_path('app/public/' . $path);
 
         if (file_exists($fullPath)) {
-            return file_get_contents($fullPath);
+            /** @var string|false $content */
+            $content = file_get_contents($fullPath);
+            return $content === false ? null : $content;
         }
 
         return null;

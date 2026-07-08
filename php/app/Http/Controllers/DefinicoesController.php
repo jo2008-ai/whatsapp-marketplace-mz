@@ -9,14 +9,28 @@ class DefinicoesController extends Controller
     /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         return view('painel.definicoes.index', compact('tenant'));
     }
 
     /** @return \Illuminate\Http\RedirectResponse */
     public function guardar(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'nome_loja' => 'required|string|max:255',

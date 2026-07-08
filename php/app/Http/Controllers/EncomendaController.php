@@ -10,7 +10,14 @@ class EncomendaController extends Controller
     /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $query = $tenant->encomendas()->with(['produto', 'vendedor']);
 
         if ($request->filled('estado')) {
@@ -25,7 +32,11 @@ class EncomendaController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function atualizarEstado(Request $request, Encomenda $encomenda)
     {
-        if ($encomenda->tenant_id !== $request->user()->tenant_id) {
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        if ($encomenda->tenant_id !== $user->tenant_id) {
             abort(403);
         }
 

@@ -13,7 +13,14 @@ class PlanoController extends Controller
     /** @return \Illuminate\View\View */
     public function index()
     {
-        $tenant = auth()->user()->tenant;
+        $user = auth()->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $subscricao = $tenant->subscricaoAtiva();
 
         $planos = [
@@ -46,7 +53,14 @@ class PlanoController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function upgrade(Request $request)
     {
-        $tenant = auth()->user()->tenant;
+        $user = auth()->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'plano' => 'required|in:basic,pro,enterprise',

@@ -13,6 +13,6 @@ class VendedorRegistado
 
     public function __construct(
         public Vendedor $vendedor,
-        public Tenant $tenant,
+        public ?Tenant $tenant,
     ) {}
 }

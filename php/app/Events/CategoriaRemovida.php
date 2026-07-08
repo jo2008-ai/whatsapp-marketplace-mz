@@ -13,6 +13,6 @@ class CategoriaRemovida
     public function __construct(
         public int $categoriaId,
         public string $categoriaNome,
-        public Tenant $tenant,
+        public ?Tenant $tenant,
     ) {}
 }

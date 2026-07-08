@@ -13,6 +13,6 @@ class CategoriaActualizada
 
     public function __construct(
         public Categoria $categoria,
-        public Tenant $tenant,
+        public ?Tenant $tenant,
     ) {}
 }

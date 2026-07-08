@@ -32,7 +32,7 @@ class VariantMatrix extends Page implements HasForms
     /** @var array<int, string> */
     public array $tamanhos = [];
 
-    /** @var array<string, array{cor: string, tamanho: string, stock: int, preco_override: string|int, sku: string, disponivel: bool, variante_id: int|null}> */
+    /** @var array<string, array{cor: string, tamanho: string, stock: int, preco_override: float|int|string, sku: string, disponivel: bool, variante_id: int|null}> */
     public array $matriz = [];
 
     public function mount(int|string $record): void
@@ -43,6 +43,7 @@ class VariantMatrix extends Page implements HasForms
 
     public function carregarDados(): void
     {
+        assert($this->record instanceof Produto);
         $this->cores = $this->record->obterCoresDisponiveis();
         $this->tamanhos = $this->record->obterTamanhosDisponiveis();
 
@@ -85,6 +86,7 @@ class VariantMatrix extends Page implements HasForms
 
     private function obterVarianteExistente(?string $cor, ?string $tamanho): ?ProdutoVariante
     {
+        assert($this->record instanceof Produto);
         $query = $this->record->variantes();
 
         if ($cor) {
@@ -107,8 +109,9 @@ class VariantMatrix extends Page implements HasForms
 
     public function gerarSku(?string $cor, ?string $tamanho): string
     {
-        $base = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $this->record->nome), 0, 6));
-        $corCode = $cor ? strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $cor), 0, 3)) : 'XX';
+        assert($this->record instanceof Produto);
+        $base = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $this->record->nome ?? '') ?: '', 0, 6));
+        $corCode = $cor ? strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $cor) ?: '', 0, 3)) : 'XX';
         $tamanhoCode = $tamanho ? strtoupper($tamanho) : 'UN';
 
         return "{$base}-{$corCode}-{$tamanhoCode}";
@@ -157,17 +160,19 @@ class VariantMatrix extends Page implements HasForms
     /**
      * @param string $chave
      * @param string $campo
-     * @param mixed $valor
+     * @param float|int|string|null $valor
      */
     public function actualizarCelula(string $chave, string $campo, $valor): void
     {
         if (isset($this->matriz[$chave])) {
+            /** @phpstan-ignore-next-line */
             $this->matriz[$chave][$campo] = $valor;
         }
     }
 
     public function guardar(): void
     {
+        assert($this->record instanceof Produto);
         foreach ($this->matriz as $chave => $celula) {
             if (empty($celula['cor']) && empty($celula['tamanho'])) {
                 continue;

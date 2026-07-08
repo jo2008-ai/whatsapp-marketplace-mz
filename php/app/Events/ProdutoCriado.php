@@ -15,13 +15,13 @@ class ProdutoCriado implements ShouldBroadcast
 
     public function __construct(
         public Produto $produto,
-        public Tenant $tenant,
+        public ?Tenant $tenant,
     ) {}
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('tenant.' . $this->tenant->id),
+            new PrivateChannel('tenant.' . $this->tenant?->id),
         ];
     }
 
@@ -39,7 +39,7 @@ class ProdutoCriado implements ShouldBroadcast
             'preco' => (float) $this->produto->preco,
             'stock' => $this->produto->stock,
             'categoria' => $this->produto->categoria?->nome,
-            'data' => $this->produto->created_at->format('d/m/Y H:i'),
+            'data' => $this->produto->created_at?->format('d/m/Y H:i'),
         ];
     }
 }

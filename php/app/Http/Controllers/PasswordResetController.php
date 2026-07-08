@@ -57,6 +57,7 @@ class PasswordResetController extends Controller
             return redirect('/esqueci-password')->with('error', 'Link inválido.');
         }
 
+        /** @var object{token: string, created_at: string} $record */
         $record = DB::table('password_reset_tokens')
             ->where('email', $email)
             ->first();
@@ -82,6 +83,7 @@ class PasswordResetController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed', new \App\Rules\StrongPassword],
         ]);
 
+        /** @var object{token: string, created_at: string} $record */
         $record = DB::table('password_reset_tokens')
             ->where('email', $request->email)
             ->first();

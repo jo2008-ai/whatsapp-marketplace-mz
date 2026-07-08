@@ -13,6 +13,6 @@ class VendedorRemovido
     public function __construct(
         public int $vendedorId,
         public string $vendedorNome,
-        public Tenant $tenant,
+        public ?Tenant $tenant,
     ) {}
 }

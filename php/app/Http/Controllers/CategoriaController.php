@@ -14,7 +14,14 @@ class CategoriaController extends Controller
     /** @return \Illuminate\View\View */
     public function index(Request $request)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $categorias = $this->categoriaService->listar($tenant);
 
         return view('painel.categorias.index', compact('categorias', 'tenant'));
@@ -23,11 +30,18 @@ class CategoriaController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function store(Request $request)
     {
-        if (!$request->user()->isAdmin()) {
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        if (!$user->isAdmin()) {
             abort(403);
         }
 
-        $tenant = $request->user()->tenant;
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -44,7 +58,14 @@ class CategoriaController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function update(Request $request, int $id)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -68,7 +89,14 @@ class CategoriaController extends Controller
     /** @return \Illuminate\Http\RedirectResponse */
     public function destroy(Request $request, int $id)
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $resultado = $this->categoriaService->eliminar($tenant, $id);
 
         if (!$resultado['success']) {

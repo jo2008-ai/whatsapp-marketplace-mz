@@ -21,7 +21,14 @@ class ApiCategoriaController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $categorias = $this->categoriaService->listar($tenant);
 
         return $this->success($categorias);
@@ -32,7 +39,14 @@ class ApiCategoriaController extends Controller
      */
     public function show(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $categoria = $this->categoriaService->obterPorId($tenant, $id);
 
         if (!$categoria) {
@@ -48,7 +62,14 @@ class ApiCategoriaController extends Controller
     {
         Gate::authorize('create', Categoria::class);
 
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $validated = $request->validated();
         $validated['ativo'] = $request->boolean('ativo', true);
 
@@ -62,7 +83,14 @@ class ApiCategoriaController extends Controller
      */
     public function update(CategoriaRequest $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $categoria = $this->categoriaService->obterPorId($tenant, $id);
 
         if (!$categoria) {
@@ -84,7 +112,14 @@ class ApiCategoriaController extends Controller
      */
     public function destroy(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $categoria = $this->categoriaService->obterPorId($tenant, $id);
 
         if (!$categoria) {

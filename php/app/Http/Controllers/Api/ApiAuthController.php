@@ -30,6 +30,9 @@ class ApiAuthController extends Controller
         }
 
         $user = Auth::user();
+        if (!$user) {
+            abort(401);
+        }
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         return $this->success([
@@ -74,7 +77,11 @@ class ApiAuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->tokens()->delete();
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $user->tokens()->delete();
         return $this->success(null, 'Sessão encerrada.');
     }
 
@@ -152,6 +159,9 @@ class ApiAuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
         return $this->success([
             'id' => $user->id,
             'name' => $user->name,

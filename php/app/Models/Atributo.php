@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $tenant_id
+ * @property string $codigo
+ * @property string $nome
+ * @property string $tipo
+ * @property bool $is_filterable
+ * @property bool $is_configurable
+ * @property string|null $swatch_type
+ * @property int $ordem
+ */
 class Atributo extends Model
 {
     protected static function booted(): void

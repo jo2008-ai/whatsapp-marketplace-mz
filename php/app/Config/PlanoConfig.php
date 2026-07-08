@@ -35,13 +35,13 @@ class PlanoConfig
         ],
     ];
 
-    /** @return array<string, string|int> */
+    /** @return array<string, int|string> */
     public static function obter(string $plano): array
     {
         return self::PLANOS[$plano] ?? self::PLANOS['gratuito'];
     }
 
-    /** @return array<string, array<string, string|int>> */
+    /** @return array<string, array<string, int|string>> */
     public static function todos(): array
     {
         return self::PLANOS;
@@ -49,22 +49,22 @@ class PlanoConfig
 
     public static function obterLimiteProdutos(string $plano): int
     {
-        return self::obter($plano)['max_produtos'];
+        return (int) self::obter($plano)['max_produtos'];
     }
 
     public static function obterLimiteNumeros(string $plano): int
     {
-        return self::obter($plano)['max_numeros'];
+        return (int) self::obter($plano)['max_numeros'];
     }
 
     public static function obterPreco(string $plano): float
     {
-        return self::obter($plano)['preco_mensal'];
+        return (float) self::obter($plano)['preco_mensal'];
     }
 
     public static function obterTrialDias(string $plano): int
     {
-        return self::obter($plano)['trial_dias'];
+        return (int) self::obter($plano)['trial_dias'];
     }
 
     public static function planoValido(string $plano): bool

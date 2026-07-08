@@ -16,7 +16,14 @@ class ApiVendedorController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $vendedores = Vendedor::where('tenant_id', $tenant->id)
             ->orderByDesc('created_at')
@@ -30,7 +37,14 @@ class ApiVendedorController extends Controller
      */
     public function show(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $vendedor = Vendedor::where('tenant_id', $tenant->id)->find($id);
 
@@ -47,7 +61,14 @@ class ApiVendedorController extends Controller
     {
         Gate::authorize('create', Vendedor::class);
 
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validated();
         $validated['tenant_id'] = $tenant->id;
@@ -63,7 +84,14 @@ class ApiVendedorController extends Controller
      */
     public function update(VendedorRequest $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $vendedor = Vendedor::where('tenant_id', $tenant->id)->find($id);
 
@@ -86,7 +114,14 @@ class ApiVendedorController extends Controller
      */
     public function destroy(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $vendedor = Vendedor::where('tenant_id', $tenant->id)->find($id);
 
@@ -106,7 +141,14 @@ class ApiVendedorController extends Controller
      */
     public function toggleAtivo(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $vendedor = Vendedor::where('tenant_id', $tenant->id)->find($id);
 

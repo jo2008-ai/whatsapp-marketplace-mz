@@ -14,7 +14,14 @@ class ApiDefinicoesController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         return $this->success([
             'nome_loja' => $tenant->nome_loja,
@@ -34,7 +41,14 @@ class ApiDefinicoesController extends Controller
 
     public function guardar(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'nome_loja' => 'required|string|max:255',
@@ -54,7 +68,7 @@ class ApiDefinicoesController extends Controller
             }
 
             $path = $request->file('logo')->store('logos', 'public');
-            $validated['logo_url'] = Storage::disk('public')->url($path);
+            $validated['logo_url'] = Storage::disk('public')->url((string) $path);
             unset($validated['logo']);
         }
 
@@ -79,7 +93,14 @@ class ApiDefinicoesController extends Controller
 
     public function bannerPromo(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
 
         $validated = $request->validate([
             'activo' => 'required|boolean',

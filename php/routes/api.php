@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/mensagem', [BotController::class, 'processar'])
     ->middleware(['webhook.verify', 'webhook.rate']);
 
+// Endpoint de teste do bot (sem autenticacao, apenas para debug)
+Route::post('/bot/testar', [BotController::class, 'testar']);
+
 // Webhook Typebot (respostas do Typebot para clientes)
 Route::post('/typebot/webhook/{tenantId}', [TypebotController::class, 'webhook'])
     ->middleware(['webhook.verify', 'webhook.rate']);

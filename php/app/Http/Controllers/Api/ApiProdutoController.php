@@ -21,7 +21,14 @@ class ApiProdutoController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produtos = $this->produtoService->listar($tenant, $request);
 
         return $this->success($produtos);
@@ -32,7 +39,14 @@ class ApiProdutoController extends Controller
      */
     public function show(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produto = $this->produtoService->obterPorId($tenant, $id);
 
         if (!$produto) {
@@ -48,7 +62,14 @@ class ApiProdutoController extends Controller
     {
         Gate::authorize('create', Produto::class);
 
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $validated = $request->validated();
 
         $validated['disponivel'] = $request->boolean('disponivel', true);
@@ -69,7 +90,14 @@ class ApiProdutoController extends Controller
      */
     public function update(ProdutoRequest $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produto = $this->produtoService->obterPorId($tenant, $id);
 
         if (!$produto) {
@@ -99,7 +127,14 @@ class ApiProdutoController extends Controller
      */
     public function destroy(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produto = $this->produtoService->obterPorId($tenant, $id);
 
         if (!$produto) {
@@ -118,7 +153,14 @@ class ApiProdutoController extends Controller
      */
     public function toggleDisponivel(Request $request, $id): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $user = $request->user();
+        if (!$user) {
+            abort(401);
+        }
+        $tenant = $user->tenant;
+        if (!$tenant) {
+            abort(401);
+        }
         $produto = $this->produtoService->obterPorId($tenant, $id);
 
         if (!$produto) {
@@ -129,6 +171,6 @@ class ApiProdutoController extends Controller
 
         $resultado = $this->produtoService->toggleDisponivel($tenant, $id);
 
-        return $this->success($resultado, $resultado['disponivel'] ? 'Produto activado.' : 'Produto desactivado.');
+        return $this->success($resultado, ($resultado['disponivel'] ?? false) ? 'Produto activado.' : 'Produto desactivado.');
     }
 }

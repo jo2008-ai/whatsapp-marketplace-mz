@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Mail\WhatsAppOfflineMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,6 +30,7 @@ class WhatsAppDesconectadoNotification extends Notification implements ShouldQue
 
     public function toMail(object $notifiable): MailMessage
     {
+        /** @var User $notifiable */
         return (new MailMessage)
             ->subject("⚠️ WhatsApp da loja {$this->tenant->nome_loja} desconectado")
             ->greeting("Olá {$notifiable->name}!")
