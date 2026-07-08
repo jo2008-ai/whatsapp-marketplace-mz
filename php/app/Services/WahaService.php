@@ -31,7 +31,7 @@ class WahaService
     {
         $nome = $this->nomeInstancia($tenantId);
         $baseUrl = $wahaUrl ? rtrim($wahaUrl, '/') : $this->resolveUrl($tenantId);
-        $appUrl = config('services.waha.webhook_base_url', 'http://localhost');
+        $pythonUrl = config('services.python.url', 'http://localhost:5000');
 
         try {
             $payload = [
@@ -39,7 +39,7 @@ class WahaService
                 'config' => [
                     'webhooks' => [
                         [
-                            'url' => rtrim($appUrl, '/')."/api/waha/webhook/{$tenantId}",
+                            'url' => rtrim($pythonUrl, '/')."/webhook/{$tenantId}",
                             'events' => ['message', 'session.status'],
                         ],
                     ],
