@@ -49,7 +49,7 @@ services:
       WAHA_URL_4: http://waha:3000
       PHP_API_URL: http://php:8000/api/mensagem
       TENANT_ID_DEFAULT: "1"
-      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-webhook:8b883a8caf48a698f678bd498b822e51}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-8b883a8caf48a698f678bd498b822e51}
     depends_on:
       - waha
 
@@ -74,7 +74,7 @@ services:
       WAHA_URL_3: http://waha:3000
       WAHA_URL_4: http://waha:3000
       WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
-      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-webhook:8b883a8caf48a698f678bd498b822e51}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-8b883a8caf48a698f678bd498b822e51}
       TYPEBOT_API_URL: http://typebot-viewer:3000
       TYPEBOT_API_KEY: ${TYPEBOT_API_KEY:-typebot_secret_2026}
       APP_KEY: ${APP_KEY}

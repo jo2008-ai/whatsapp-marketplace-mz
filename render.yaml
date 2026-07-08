@@ -35,7 +35,7 @@ services:
       - key: WAHA_API_KEY
         value: marketplace_secret_key_2026
       - key: WEBHOOK_SECRET
-        value: webhook:8b883a8caf48a698f678bd498b822e51
+        value: 8b883a8caf48a698f678bd498b822e51
       - key: ADMIN_API_KEY
         value: 0871@py
       - key: SUPER_ADMIN_EMAIL
