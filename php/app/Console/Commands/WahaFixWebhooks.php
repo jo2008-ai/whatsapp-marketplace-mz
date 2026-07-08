@@ -25,7 +25,7 @@ class WahaFixWebhooks extends Command
     public function handle(): int
     {
         $url = config('services.waha.url');
-        $expectedWebhook = config('app.url').'/api/waha/webhook/';
+        $expectedWebhook = config('services.waha.webhook_base_url', 'http://localhost').'/api/waha/webhook/';
 
         $this->info("Expected webhook base: {$expectedWebhook}");
         $this->info("WAHA URL: {$url}");

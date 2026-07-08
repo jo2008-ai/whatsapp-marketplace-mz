@@ -34,7 +34,7 @@ class WahaKeepAlive extends Command
 
         $key = config('services.waha.key', '');
         $headers = ['X-Api-Key' => $key];
-        $expectedWebhookBase = config('app.url').'/api/waha/webhook/';
+        $expectedWebhookBase = config('services.waha.webhook_base_url', 'http://localhost').'/api/waha/webhook/';
 
         try {
             $resp = Http::withHeaders($headers)
