@@ -146,6 +146,36 @@
         </div>
     </section>
 
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h3 class="text-3xl font-bold text-gray-800 mb-4">Gere a loja pelo telemovel</h3>
+            <p class="text-gray-500 mb-10 max-w-xl mx-auto">Descarrega a app, escaneia o QR code e comeca a gerir a tua loja a qualquer hora e lugar.</p>
+            <div class="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📲</span>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">Passo 1</h4>
+                    <p class="text-gray-600 text-sm mb-4">Instala o <strong>Expo Go</strong> no Play Store (Android) ou App Store (iOS).</p>
+                    <a href="https://play.google.com/store/apps/details?id=host.exp.exponent" target="_blank" class="inline-block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">
+                        Abrir Play Store
+                    </a>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📷</span>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">Passo 2</h4>
+                    <p class="text-gray-600 text-sm mb-4">Abre o Expo Go e escaneia o QR code que recebes ao criar a tua loja.</p>
+                    <span class="inline-block bg-gray-100 text-gray-500 px-4 py-2 rounded-lg text-sm font-medium">
+                        QR code no painel
+                    </span>
+                </div>
+            </div>
+            <p class="text-gray-400 text-sm mt-6">Sem necessidade de instalar APK. Tudo direto pelo Expo Go.</p>
+        </div>
+    </section>
+
     <section id="contactos" class="py-20">
         <div class="max-w-6xl mx-auto px-4">
             <h3 class="text-3xl font-bold text-center text-gray-800 mb-12">Fala connosco</h3>
