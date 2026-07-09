@@ -178,7 +178,7 @@
                     <div>
                         <h4 class="font-bold text-gray-800 text-lg mb-4">Outros canais</h4>
                         <div class="space-y-4">
-                            <a href="https://wa.me/258841234567" target="_blank" class="flex items-center gap-4 p-4 bg-green-50 rounded-xl hover:bg-green-100 transition">
+                            <a href="https://wa.me/258858463339" target="_blank" class="flex items-center gap-4 p-4 bg-green-50 rounded-xl hover:bg-green-100 transition">
                                 <span class="text-2xl">💬</span>
                                 <div>
                                     <p class="font-bold text-gray-800">WhatsApp</p>
