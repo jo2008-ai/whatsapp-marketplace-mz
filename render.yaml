@@ -31,7 +31,7 @@ services:
       - key: PYTHON_URL
         value: https://marketplace-python.onrender.com
       - key: EVOLUTION_URL
-        value: https://marketplace-evolution.onrender.com
+        value: https://marketplace-evolution-0b8u.onrender.com
       - key: EVOLUTION_API_KEY
         value: marketplace_secret_key_2026
       - key: EVOLUTION_WEBHOOK_SECRET
@@ -59,7 +59,7 @@ services:
       - key: APP_URL
         value: https://whatsapp-marketplace-mz.onrender.com
       - key: EVOLUTION_URL
-        value: https://marketplace-evolution.onrender.com
+        value: https://marketplace-evolution-0b8u.onrender.com
       - key: EVOLUTION_API_KEY
         value: marketplace_secret_key_2026
       - key: ADMIN_API_KEY
@@ -87,7 +87,7 @@ services:
     healthCheckPath: /manager/health
     envVars:
       - key: SERVER_URL
-        value: https://marketplace-evolution.onrender.com
+        value: https://marketplace-evolution-0b8u.onrender.com
       - key: AUTHENTICATION_API_KEY
         value: marketplace_secret_key_2026
       - key: AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES
