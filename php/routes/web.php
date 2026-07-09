@@ -13,9 +13,11 @@ use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
-        ? (auth()->user()->isSuperAdmin() ? redirect('/super') : redirect('/painel'))
-        : redirect('/login');
+    if (auth()->check()) {
+        return auth()->user()->isSuperAdmin() ? redirect('/super') : redirect('/painel');
+    }
+
+    return view('publico.landing');
 });
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
