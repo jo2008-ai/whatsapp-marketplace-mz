@@ -79,7 +79,7 @@ services:
     region: frankfurt
     plan: free
     image:
-      url: atendai/evolution-api:v2.2.3
+      url: evoapicloud/evolution-api:latest
     disk:
       name: evolution-data
       mountPath: /evolution/instances
