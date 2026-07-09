@@ -19,13 +19,13 @@ class BotService
 
     private TypebotService $typebotService;
 
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
-    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService, WahaService $wahaService)
+    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService, EvolutionService $evolutionService)
     {
         $this->notificacaoService = $notificacaoService;
         $this->typebotService = $typebotService;
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     /** @return array<string, mixed>|string */
@@ -922,7 +922,7 @@ class BotService
 
         if ($numeroDestino) {
             try {
-                $this->wahaService->enviarMensagem($tenant->id, $numeroDestino, $mensagem, $instancia->waha_url);
+                $this->evolutionService->enviarMensagem($tenant->id, $numeroDestino, $mensagem, $instancia->waha_url);
             } catch (\Exception $e) {
                 Log::error('Erro ao notificar dono sobre cancelamento: '.$e->getMessage());
             }
@@ -991,7 +991,7 @@ class BotService
             ->first();
 
         try {
-            $this->wahaService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia?->waha_url);
+            $this->evolutionService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia?->waha_url);
         } catch (\Exception $e) {
             Log::error('Erro ao notificar vendedor: '.$e->getMessage());
         }

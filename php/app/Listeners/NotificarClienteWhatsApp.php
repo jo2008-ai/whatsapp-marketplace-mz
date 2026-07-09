@@ -4,7 +4,7 @@ namespace App\Listeners;
 
 use App\Events\EncomendaActualizada;
 use App\Models\Encomenda;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
@@ -14,7 +14,7 @@ class NotificarClienteWhatsApp implements ShouldQueue
 
     public int $backoff = 30;
 
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
     private const MENSAGENS = [
         'confirmada' => '✅ A tua encomenda foi confirmada! O vendedor %s irá contactar-te.',
@@ -23,9 +23,9 @@ class NotificarClienteWhatsApp implements ShouldQueue
         'cancelada' => '❌ A tua encomenda foi cancelada. Contacta-nos para saber mais.',
     ];
 
-    public function __construct(WahaService $wahaService)
+    public function __construct(EvolutionService $evolutionService)
     {
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     public function handle(EncomendaActualizada $event): void
@@ -57,7 +57,7 @@ class NotificarClienteWhatsApp implements ShouldQueue
         $mensagem = $this->buildMensagem($encomenda);
 
         try {
-            $this->wahaService->enviarMensagem($tenant->id, $encomenda->numero_cliente, $mensagem, $instancia->waha_url);
+            $this->evolutionService->enviarMensagem($tenant->id, $encomenda->numero_cliente, $mensagem, $instancia->waha_url);
         } catch (\Exception $e) {
             Log::error('Erro ao notificar cliente WhatsApp: '.$e->getMessage(), [
                 'encomenda_id' => $encomenda->id,

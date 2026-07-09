@@ -30,10 +30,12 @@ services:
         value: database
       - key: PYTHON_URL
         value: https://marketplace-python.onrender.com
-      - key: WAHA_URL
-        value: https://marketplace-waha-1.onrender.com
-      - key: WAHA_API_KEY
+      - key: EVOLUTION_URL
+        value: https://marketplace-evolution.onrender.com
+      - key: EVOLUTION_API_KEY
         value: marketplace_secret_key_2026
+      - key: EVOLUTION_WEBHOOK_SECRET
+        value: 8b883a8caf48a698f678bd498b822e51
       - key: WEBHOOK_SECRET
         value: 8b883a8caf48a698f678bd498b822e51
       - key: ADMIN_API_KEY
@@ -56,14 +58,12 @@ services:
         value: https://whatsapp-marketplace-mz.onrender.com/api/mensagem
       - key: APP_URL
         value: https://whatsapp-marketplace-mz.onrender.com
-      - key: WAHA_URL
-        value: https://marketplace-waha-1.onrender.com
-      - key: WAHA_API_KEY
+      - key: EVOLUTION_URL
+        value: https://marketplace-evolution.onrender.com
+      - key: EVOLUTION_API_KEY
         value: marketplace_secret_key_2026
       - key: ADMIN_API_KEY
         value: 0871@py
-      - key: WAHA_SESSION
-        value: default
       - key: TENANT_ID_DEFAULT
         value: "1"
       - key: WEBHOOK_SECRET
@@ -74,29 +74,55 @@ services:
         value: "false"
 
   - type: web
-    name: marketplace-waha-1
+    name: marketplace-evolution
     env: docker
     region: frankfurt
     plan: free
     image:
-      url: devlikeapro/waha:latest
+      url: atendai/evolution-api:v2.2.3
     disk:
-      name: waha-data-1
-      mountPath: /app/.media
+      name: evolution-data
+      mountPath: /evolution/instances
       sizeGB: 1
-    healthCheckPath: /health
+    healthCheckPath: /manager/health
     envVars:
-      - key: WAHA_CORE_LOG_LEVEL
-        value: info
-      - key: WAHA_LISTENING_HOST
-        value: "0.0.0.0"
-      - key: WAHA_ENGINE
-        value: WEBJS
-      - key: WAHA_PORT
-        value: "3000"
-      - key: WAHA_SECRET
+      - key: SERVER_URL
+        value: https://marketplace-evolution.onrender.com
+      - key: AUTHENTICATION_API_KEY
         value: marketplace_secret_key_2026
-      - key: WAHA_STORE_MECHANISM
-        value: file
-      - key: WAHA_PERSISTENT_DATA
+      - key: AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES
         value: "true"
+      - key: DATABASE_ENABLED
+        value: "true"
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: DATABASE_CONNECTION_URI
+        value: postgresql://neondb_owner:npg_4Hx3VcwatsRY@ep-delicate-flower-as0ryf6z.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require
+      - key: DATABASE_SAVE_DATA_INSTANCE
+        value: "true"
+      - key: DATABASE_SAVE_DATA_NEW_MESSAGE
+        value: "false"
+      - key: DATABASE_SAVE_DATA_CONTACTS
+        value: "false"
+      - key: DATABASE_SAVE_DATA_CHATS
+        value: "false"
+      - key: LOG_LEVEL
+        value: WARN
+      - key: DEL_INSTANCE
+        value: "false"
+      - key: LANGUAGE
+        value: pt-BR
+      - key: CACHE_LOCAL_ENABLED
+        value: "true"
+      - key: CACHE_REDIS_ENABLED
+        value: "false"
+      - key: WEBHOOK_GLOBAL_ENABLED
+        value: "false"
+      - key: WEBHOOK_GLOBAL_WEBHOOK_BY_EVENTS
+        value: "true"
+      - key: CONFIG_SESSION_PHONE_CLIENT
+        value: MarketPlaceMZ
+      - key: CONFIG_SESSION_PHONE_NAME
+        value: Chrome
+      - key: CONFIG_SESSION_PHONE_VERSION
+        value: "2.24.12.55"

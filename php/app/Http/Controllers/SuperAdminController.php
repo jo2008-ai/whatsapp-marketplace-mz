@@ -6,7 +6,7 @@ use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Subscricao;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -14,11 +14,11 @@ use Illuminate\Support\Str;
 
 class SuperAdminController extends Controller
 {
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
-    public function __construct(WahaService $wahaService)
+    public function __construct(EvolutionService $evolutionService)
     {
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     /** @return \Illuminate\View\View */
@@ -99,14 +99,14 @@ class SuperAdminController extends Controller
             'tenant_id'     => $tenant->id,
             'nome_instancia'=> "loja_{$tenant->id}",
             'waha_session'  => "loja-{$tenant->id}",
-            'waha_url'      => config('services.waha.url'),
+            'waha_url'      => config('services.evolution.url'),
             'estado'        => 'aguarda_qr',
         ]);
 
         try {
-            $this->wahaService->criarInstancia($tenant->id, config('services.waha.url'));
+            $this->evolutionService->criarInstancia($tenant->id, config('services.evolution.url'));
         } catch (\Exception $e) {
-            Log::warning("Erro ao criar instancia WAHA no criarRapido", [
+            Log::warning("Erro ao criar instancia Evolution no criarRapido", [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);

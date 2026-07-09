@@ -3,32 +3,29 @@
 namespace App\Console\Commands;
 
 use App\Models\InstanciaWhatsApp;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WahaFixWebhooks extends Command
 {
     protected $signature = 'waha:fix-webhooks {--tenant=}';
 
-    protected $description = 'Delete and recreate WAHA sessions to fix stale webhook URLs';
+    protected $description = 'Delete and recreate Evolution API sessions to fix stale webhook URLs';
 
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
-    public function __construct(WahaService $wahaService)
+    public function __construct(EvolutionService $evolutionService)
     {
         parent::__construct();
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     public function handle(): int
     {
-        $url = config('services.waha.url');
-        $expectedWebhook = config('services.python.url', 'http://localhost:5000').'/webhook/';
+        $url = config('services.evolution.url');
 
-        $this->info("Expected webhook base: {$expectedWebhook}");
-        $this->info("WAHA URL: {$url}");
+        $this->info("Evolution API URL: {$url}");
 
         $query = InstanciaWhatsApp::query();
 
@@ -52,57 +49,20 @@ class WahaFixWebhooks extends Command
             $this->info("Processing {$session} (tenant {$inst->tenant_id})...");
 
             try {
-                // Get current session config from WAHA
-                $resp = Http::withHeaders(['X-Api-Key' => config('services.waha.key')])
-                    ->timeout(30)
-                    ->get("{$url}/api/sessions/{$session}");
+                $estado = $this->evolutionService->obterEstado($inst->tenant_id, $url);
 
-                if ($resp->status() === 404) {
-                    $this->warn('  Session not found on WAHA, recreating...');
-                    $this->wahaService->criarInstancia($inst->tenant_id, $url);
-                    $this->wahaService->ligar($inst->tenant_id, $url);
+                if ($estado === 'NOT_FOUND') {
+                    $this->warn('  Session not found on Evolution API, recreating...');
+                    $this->evolutionService->criarInstancia($inst->tenant_id, $url);
                     $fixed++;
 
                     continue;
                 }
 
-                if (! $resp->successful()) {
-                    $this->error("  Failed to get session: HTTP {$resp->status()}");
-
-                    continue;
-                }
-
-                $sessionData = $resp->json();
-                $webhooks = $sessionData['config']['webhooks'] ?? [];
-                $currentWebhook = $webhooks[0]['url'] ?? null;
-                $correctWebhook = $expectedWebhook.$inst->tenant_id;
-
-                if ($currentWebhook === $correctWebhook) {
-                    $this->info("  Webhook OK: {$currentWebhook}");
-
-                    continue;
-                }
-
-                $this->warn("  Stale webhook: {$currentWebhook}");
-                $this->info("  Expected:      {$correctWebhook}");
-                $this->info('  Deleting and recreating...');
-
-                // Stop, delete, recreate
-                $this->wahaService->desligar($inst->tenant_id, $url);
-                $this->wahaService->apagarInstancia($inst->tenant_id, $url);
-                $this->wahaService->criarInstancia($inst->tenant_id, $url);
-                $this->wahaService->ligar($inst->tenant_id, $url);
-
-                $fixed++;
-                $this->info('  Fixed!');
-                Log::info('waha:fix-webhooks: fixed session', [
-                    'session' => $session,
-                    'old_webhook' => $currentWebhook,
-                    'new_webhook' => $correctWebhook,
-                ]);
+                $this->info("  Session state: {$estado}");
             } catch (\Exception $e) {
                 $this->error("  Error: {$e->getMessage()}");
-                Log::error('waha:fix-webhooks: error', [
+                Log::error('evolution:fix-webhooks: error', [
                     'session' => $session,
                     'error' => $e->getMessage(),
                 ]);

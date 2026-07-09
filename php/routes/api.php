@@ -34,7 +34,13 @@ Route::middleware(['auth:sanctum', 'tenant.context'])->prefix('typebot')->group(
     Route::get('/bots', [TypebotController::class, 'listarBots']);
 });
 
-// Webhook WAHA (eventos de estado de conexão)
+// Webhook Evolution API (eventos de estado de conexão)
+Route::post('/evolution/webhook/{tenantId}', [WahaWebhookController::class, 'processar'])
+    ->middleware(['webhook.rate']);
+Route::post('/evolution/webhook', [WahaWebhookController::class, 'processar'])
+    ->middleware(['webhook.rate']);
+
+// Webhook WAHA (eventos de estado de conexão) - kept for backward compatibility
 Route::post('/waha/webhook/{tenantId}', [WahaWebhookController::class, 'processar'])
     ->middleware(['webhook.rate']);
 Route::post('/waha/webhook', [WahaWebhookController::class, 'processar'])

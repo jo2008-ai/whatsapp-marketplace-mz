@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Log;
 
 class NotificacaoService
 {
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
-    public function __construct(WahaService $wahaService)
+    public function __construct(EvolutionService $evolutionService)
     {
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     public function notificarVendedor(Encomenda $encomenda): void
@@ -51,7 +51,7 @@ class NotificacaoService
                    .'🕐 '.now()->format('d/m/Y H:i');
 
         try {
-            $this->wahaService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia->waha_url);
+            $this->evolutionService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia->waha_url);
         } catch (\Exception $e) {
             Log::error('Erro ao notificar vendedor: '.$e->getMessage());
         }

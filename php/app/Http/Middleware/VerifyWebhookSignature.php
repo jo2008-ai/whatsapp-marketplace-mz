@@ -11,7 +11,7 @@ class VerifyWebhookSignature
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = config('services.waha.webhook_secret');
+        $secret = config('services.evolution.webhook_secret', config('services.waha.webhook_secret'));
 
         if (empty($secret)) {
             Log::error('Webhook secret não configurado — pedidos rejeitados');

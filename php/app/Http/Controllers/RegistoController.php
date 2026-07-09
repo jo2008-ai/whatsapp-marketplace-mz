@@ -8,7 +8,7 @@ use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Subscricao;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -72,22 +72,22 @@ class RegistoController extends Controller
             'tenant_id' => $tenant->id,
             'nome_instancia' => 'default',
             'waha_session' => "loja-{$tenant->id}",
-            'waha_url' => config('services.waha.url'),
+            'waha_url' => config('services.evolution.url'),
             'estado' => 'aguarda_qr',
         ]);
 
         try {
-            $wahaService = app(WahaService::class);
-            $resultado = $wahaService->criarInstancia($tenant->id, config('services.waha.url'));
+            $evolutionService = app(EvolutionService::class);
+            $resultado = $evolutionService->criarInstancia($tenant->id, config('services.evolution.url'));
 
             if (!$resultado['sucesso']) {
-                Log::warning("Instancia WAHA nao criada no registo", [
+                Log::warning("Instancia Evolution nao criada no registo", [
                     'tenant_id' => $tenant->id,
                     'erro' => $resultado['erro'] ?? 'desconhecido',
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error("Erro ao criar instancia WAHA no registo", [
+            Log::error("Erro ao criar instancia Evolution no registo", [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);

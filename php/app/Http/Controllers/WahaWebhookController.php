@@ -15,27 +15,27 @@ class WahaWebhookController extends Controller
     {
         $data = $request->all();
         $event = $data['event'] ?? null;
-        $session = $data['session'] ?? 'default';
+        $instance = $data['instance'] ?? $data['session'] ?? 'default';
 
         if (!$event) {
             return response()->json(['status' => 'ignored']);
         }
 
-        Log::info("WAHA webhook recebido", [
+        Log::info("Evolution API webhook recebido", [
             'event' => $event,
-            'session' => $session,
+            'instance' => $instance,
         ]);
 
-        $instancia = InstanciaWhatsApp::where('waha_session', $session)->first();
+        $instancia = InstanciaWhatsApp::where('waha_session', $instance)->first();
 
         if (!$instancia) {
-            Log::warning("Sessao WAHA nao encontrada", ['session' => $session]);
+            Log::warning("Sessao nao encontrada", ['instance' => $instance]);
             return response()->json(['status' => 'session_not_found']);
         }
 
         match ($event) {
-            'session.status' => $this->processarSessionStatus($instancia, $data),
-            'session.qr' => $this->processarSessionQr($instancia, $data),
+            'connection.update' => $this->processarConnectionUpdate($instancia, $data),
+            'messages.upsert' => null,
             default => null,
         };
 
@@ -45,19 +45,19 @@ class WahaWebhookController extends Controller
     /**
      * @param array<string, mixed> $data
      */
-    private function processarSessionStatus(
+    private function processarConnectionUpdate(
         InstanciaWhatsApp $instancia,
         array $data
     ): void {
-        $payload = $data['payload'] ?? $data['data'] ?? [];
-        $status = $payload['status'] ?? null;
-        if (!$status) return;
+        $payload = $data['data'] ?? [];
+        $state = $payload['state'] ?? null;
+        if (!$state) return;
 
         $estadoAnterior = $instancia->estado;
-        $novoEstado = match ($status) {
-            'WORKING' => 'conectada',
-            'FAILED', 'STOPPED', 'DISCONNECTED' => 'desconectada',
-            'STARTING', 'SCAN_QR_CODE' => 'aguarda_qr',
+        $novoEstado = match ($state) {
+            'open' => 'conectada',
+            'close' => 'desconectada',
+            'connecting' => 'aguarda_qr',
             default => $instancia->estado,
         };
 
@@ -71,7 +71,7 @@ class WahaWebhookController extends Controller
                 : $instancia->numero_whatsapp,
         ]);
 
-        Log::info("Estado WhatsApp actualizado via WAHA", [
+        Log::info("Estado WhatsApp actualizado via Evolution API", [
             'instancia' => $instancia->waha_session,
             'de' => $estadoAnterior,
             'para' => $novoEstado,
@@ -79,18 +79,6 @@ class WahaWebhookController extends Controller
 
         if ($novoEstado === 'desconectada' && $estadoAnterior === 'conectada') {
             $this->notificarDesconectado($instancia);
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    private function processarSessionQr(
-        InstanciaWhatsApp $instancia,
-        array $data
-    ): void {
-        if ($instancia->estado !== 'aguarda_qr') {
-            $instancia->update(['estado' => 'aguarda_qr']);
         }
     }
 

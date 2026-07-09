@@ -28,30 +28,47 @@ services:
       timeout: 5s
       retries: 5
 
-  waha:
-    image: ghcr.io/devlikeapro/waha-core:latest
+  evolution:
+    image: atendai/evolution-api:v2.2.3
     ports:
-      - "3000:3000"
+      - "8080:8080"
     environment:
-      WAHA_CORE_LOG_LEVEL: info
+      SERVER_URL: http://localhost:8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-marketplace_secret_key_2026}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "true"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://marketplace:${DB_PASSWORD}@postgres:5432/marketplace_saas
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      LOG_LEVEL: WARN
+      DEL_INSTANCE: "false"
+      LANGUAGE: pt-BR
+      CACHE_LOCAL_ENABLED: "true"
+      CACHE_REDIS_ENABLED: "false"
+      CONFIG_SESSION_PHONE_CLIENT: MarketPlaceMZ
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      CONFIG_SESSION_PHONE_VERSION: "2.24.12.55"
     volumes:
-      - waha_data:/app/.media
+      - evolution_data:/evolution/instances
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   python:
     build: ./python
     ports:
       - "5000:5000"
     environment:
-      WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
-      WAHA_URL_1: http://waha:3000
-      WAHA_URL_2: http://waha:3000
-      WAHA_URL_3: http://waha:3000
-      WAHA_URL_4: http://waha:3000
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-marketplace_secret_key_2026}
+      EVOLUTION_URL: http://evolution:8080
       PHP_API_URL: http://php:8000/api/mensagem
       TENANT_ID_DEFAULT: "1"
       WEBHOOK_SECRET: ${WEBHOOK_SECRET:-8b883a8caf48a698f678bd498b822e51}
     depends_on:
-      - waha
+      - evolution
 
   php:
     build: ./php
@@ -69,11 +86,8 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secret_change_me}
       PYTHON_SERVICE_URL: http://python:5000
-      WAHA_URL_1: http://waha:3000
-      WAHA_URL_2: http://waha:3000
-      WAHA_URL_3: http://waha:3000
-      WAHA_URL_4: http://waha:3000
-      WAHA_API_KEY: ${WAHA_API_KEY:-marketplace_secret_key_2026}
+      EVOLUTION_URL: http://evolution:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-marketplace_secret_key_2026}
       WEBHOOK_SECRET: ${WEBHOOK_SECRET:-8b883a8caf48a698f678bd498b822e51}
       TYPEBOT_API_URL: http://typebot-viewer:3000
       TYPEBOT_API_KEY: ${TYPEBOT_API_KEY:-typebot_secret_2026}
@@ -133,5 +147,5 @@ services:
 
 volumes:
   pgdata:
-  waha_data:
+  evolution_data:
   typebot_db_data:

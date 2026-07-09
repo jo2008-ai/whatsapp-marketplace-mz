@@ -91,33 +91,34 @@ def health():
 
 @app.route('/webhook/<int:tenant_id>', methods=['POST'])
 def webhook(tenant_id: int):
-    """Recebe eventos WAHA com routing por tenant_id."""
+    """Recebe eventos da Evolution API com routing por tenant_id."""
     try:
         data = request.json
         if not data:
             return jsonify({'error': 'no data'}), 400
 
-        event = data.get('event')
-        session = data.get('session', 'default')
+        event = data.get('event', '')
+        instance = data.get('instance', '')
 
-        logger.info(f"Tenant {tenant_id} | Evento: {event} | Session: {session}")
+        logger.info(f"Tenant {tenant_id} | Evento: {event} | Instance: {instance}")
 
-        if event == 'session.status':
-            session_data = data.get('payload', {})
-            state = session_data.get('status', 'unknown')
-            logger.info(f"Tenant {tenant_id} | Sessao {session}: {state}")
+        if event == 'connection.update':
+            conn_data = data.get('data', {})
+            state = conn_data.get('state', 'unknown')
+            logger.info(f"Tenant {tenant_id} | Conexao: {state}")
             return jsonify({'status': 'ignored', 'event': event})
 
-        if event != 'message':
+        if event != 'messages.upsert':
             return jsonify({'status': 'ignored', 'event': event})
 
-        payload = data.get('payload', {})
+        msg_data = data.get('data', {})
+        key = msg_data.get('key', {})
 
-        if payload.get('fromMe', False):
+        if key.get('fromMe', False):
             return jsonify({'status': 'ignored', 'reason': 'fromMe'})
 
-        sender_full = payload.get('from', '')
-        sender = sender_full.replace('@c.us', '').replace('@lid', '')
+        sender_full = key.get('remoteJid', '')
+        sender = sender_full.replace('@s.whatsapp.net', '').replace('@c.us', '').replace('@lid', '')
 
         rate_key = f"webhook:{tenant_id}:{sender}"
         if not webhook_limiter.is_allowed(rate_key):
@@ -131,8 +132,9 @@ def webhook(tenant_id: int):
                 'retry_after': webhook_limiter.retry_after(rate_key),
             }), 429
 
-        push_name = payload.get('_data', {}).get('notifyName', '')
-        corpo = payload.get('body', '')
+        push_name = msg_data.get('pushName', '')
+        message = msg_data.get('message', {})
+        corpo = message.get('conversation', '') or message.get('extendedTextMessage', {}).get('text', '')
 
         if not corpo:
             return jsonify({'status': 'ignored', 'reason': 'empty_body'})
@@ -146,7 +148,7 @@ def webhook(tenant_id: int):
 
         php_payload = {
             'tenant_id': tenant_id,
-            'instance_name': 'default',
+            'instance_name': instance,
             'numero': sender,
             'mensagem': corpo,
             'nome': push_name,
@@ -239,14 +241,14 @@ def enviar():
 
 @app.route('/qr/<int:tenant_id>', methods=['GET'])
 def qr(tenant_id: int):
-    """Retorna o QR code da sessao WAHA para um tenant."""
+    """Retorna o QR code da sessao Evolution API para um tenant."""
     resultado = obter_qr_code(tenant_id)
     return jsonify(resultado)
 
 
 @app.route('/typebot/webhook/<int:tenant_id>', methods=['POST'])
 def typebot_webhook(tenant_id: int):
-    """Recebe respostas do Typebot e envia ao cliente via WAHA."""
+    """Recebe respostas do Typebot e envia ao cliente via Evolution API."""
     try:
         data = request.json
         if not data:
@@ -280,7 +282,7 @@ def typebot_webhook(tenant_id: int):
 
 @app.route('/estado/<int:tenant_id>', methods=['GET'])
 def estado(tenant_id: int):
-    """Retorna o estado da sessao WAHA para um tenant."""
+    """Retorna o estado da sessao Evolution API para um tenant."""
     resultado = obter_estado(tenant_id)
     return jsonify(resultado)
 
@@ -378,7 +380,7 @@ def eliminar_todas():
 
 @app.route('/painel/instancia/<int:tenant_id>', methods=['POST'])
 def criar_instancia(tenant_id: int):
-    """Cria instancia WAHA para uma loja."""
+    """Cria instancia Evolution API para uma loja."""
     try:
         php_api = os.getenv('PHP_API_URL', 'https://whatsapp-marketplace-mz.onrender.com/api/mensagem').replace('/api/mensagem', '')
         resp = requests.post(f"{php_api}/api/admin/lojas/{tenant_id}/instancia", timeout=15, headers={

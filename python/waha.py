@@ -5,16 +5,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-WAHA_API_KEY = os.getenv('WAHA_API_KEY', '')
-WAHA_URL = os.getenv('WAHA_URL', '').rstrip('/')
-WAHA_SESSION = os.getenv('WAHA_SESSION', 'default')
+EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '')
+EVOLUTION_URL = os.getenv('EVOLUTION_URL', '').rstrip('/')
 
 logger = logging.getLogger(__name__)
 
 
 def _headers() -> dict:
     return {
-        'X-Api-Key': WAHA_API_KEY,
+        'apikey': EVOLUTION_API_KEY,
         'Content-Type': 'application/json',
     }
 
@@ -25,12 +24,13 @@ def _session_name(tenant_id: int) -> str:
 
 def enviar_texto(tenant_id: int, numero: str, texto: str) -> dict:
     try:
-        url = f"{WAHA_URL}/api/sendText"
+        session_name = _session_name(tenant_id)
+        numero_limpo = numero.replace('@c.us', '').replace('@lid', '').replace('@s.whatsapp.net', '')
+        url = f"{EVOLUTION_URL}/message/sendText/{session_name}"
         response = requests.post(
             url,
             json={
-                'session': _session_name(tenant_id),
-                'chatId': f"{numero}@c.us",
+                'number': numero_limpo,
                 'text': texto,
             },
             headers=_headers(),
@@ -46,13 +46,15 @@ def enviar_texto(tenant_id: int, numero: str, texto: str) -> dict:
 
 def enviar_imagem(tenant_id: int, numero: str, url_imagem: str, caption: str = '') -> dict:
     try:
-        url = f"{WAHA_URL}/api/sendImage"
+        session_name = _session_name(tenant_id)
+        numero_limpo = numero.replace('@c.us', '').replace('@lid', '').replace('@s.whatsapp.net', '')
+        url = f"{EVOLUTION_URL}/message/sendImage/{session_name}"
         response = requests.post(
             url,
             json={
-                'session': _session_name(tenant_id),
-                'chatId': f"{numero}@c.us",
-                'file': {'url': url_imagem},
+                'number': numero_limpo,
+                'mediatype': 'image',
+                'media': url_imagem,
                 'caption': caption,
             },
             headers=_headers(),
@@ -69,13 +71,13 @@ def enviar_imagem(tenant_id: int, numero: str, url_imagem: str, caption: str = '
 def obter_estado(tenant_id: int) -> dict:
     try:
         session_name = _session_name(tenant_id)
-        url = f"{WAHA_URL}/api/sessions/{session_name}"
+        url = f"{EVOLUTION_URL}/instance/connectionState/{session_name}"
         response = requests.get(url, headers=_headers(), timeout=10)
         if response.ok:
             data = response.json()
-            state = data.get('status', 'unknown')
+            state = data.get('instance', {}).get('state', 'unknown')
             return {
-                'estado': 'conectada' if state == 'WORKING' else 'desconectada',
+                'estado': 'conectada' if state == 'open' else 'desconectada',
                 'state': state,
             }
         if response.status_code == 404:
@@ -92,11 +94,11 @@ def obter_qr_code(tenant_id: int) -> dict:
             return {'estado': 'conectada', 'qr': None}
 
         session_name = _session_name(tenant_id)
-        url = f"{WAHA_URL}/api/{session_name}/auth/qr"
+        url = f"{EVOLUTION_URL}/instance/connect/{session_name}"
         qr_resp = requests.get(url, headers=_headers(), timeout=10)
         if qr_resp.ok:
             qr_data = qr_resp.json()
-            base64_qr = qr_data.get('base64', '')
+            base64_qr = qr_data.get('base64', '') or qr_data.get('qrcode', {}).get('base64', '')
             if base64_qr:
                 return {'estado': 'aguarda_qr', 'qr': base64_qr}
         return {'estado': 'aguarda_qr', 'qr': None}

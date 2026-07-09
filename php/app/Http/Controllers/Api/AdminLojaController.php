@@ -7,7 +7,7 @@ use App\Models\InstanciaWhatsApp;
 use App\Models\Subscricao;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,11 +18,11 @@ use Illuminate\Validation\ValidationException;
 
 class AdminLojaController extends Controller
 {
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
-    public function __construct(WahaService $wahaService)
+    public function __construct(EvolutionService $evolutionService)
     {
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     public function criar(Request $request): JsonResponse
@@ -92,21 +92,21 @@ class AdminLojaController extends Controller
                 'tenant_id'     => $tenant->id,
                 'nome_instancia'=> "loja_{$tenant->id}",
                 'waha_session'  => "loja-{$tenant->id}",
-                'waha_url'      => config('services.waha.url'),
+                'waha_url'      => config('services.evolution.url'),
                 'estado'        => 'aguarda_qr',
             ]);
 
             try {
-                $resultado = $this->wahaService->criarInstancia($tenant->id, config('services.waha.url'));
+                $resultado = $this->evolutionService->criarInstancia($tenant->id, config('services.evolution.url'));
 
                 if (!$resultado['sucesso']) {
-                    Log::warning("Instancia WAHA nao criada via admin", [
+                    Log::warning("Instancia Evolution nao criada via admin", [
                         'tenant_id' => $tenant->id,
                         'erro' => $resultado['erro'] ?? 'desconhecido',
                     ]);
                 }
             } catch (\Exception $e) {
-                Log::error("Erro ao criar instancia WAHA via admin", [
+                Log::error("Erro ao criar instancia Evolution via admin", [
                     'tenant_id' => $tenant->id,
                     'erro' => $e->getMessage(),
                 ]);
@@ -127,7 +127,7 @@ class AdminLojaController extends Controller
                 'whatsapp' => [
                     'tenant_id' => $tenant->id,
                     'session'   => "loja-{$tenant->id}",
-                    'nota'      => "Instancia WAHA criada automaticamente",
+                    'nota'      => "Instancia Evolution criada automaticamente",
                 ],
             ]);
 
@@ -230,9 +230,9 @@ class AdminLojaController extends Controller
 
         try {
             $instancia = $tenant->instancias()->first();
-            $this->wahaService->apagarInstancia($tenant->id, $instancia?->waha_url);
+            $this->evolutionService->apagarInstancia($tenant->id, $instancia?->waha_url);
         } catch (\Exception $e) {
-            Log::warning("Erro ao apagar instancia WAHA ao eliminar loja", [
+            Log::warning("Erro ao apagar instancia Evolution ao eliminar loja", [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);
@@ -257,9 +257,9 @@ class AdminLojaController extends Controller
         foreach ($tenants as $tenant) {
             try {
                 $instancia = $tenant->instancias()->first();
-                $this->wahaService->apagarInstancia($tenant->id, $instancia?->waha_url);
+                $this->evolutionService->apagarInstancia($tenant->id, $instancia?->waha_url);
             } catch (\Exception $e) {
-                Log::warning("Erro ao apagar instancia WAHA", [
+                Log::warning("Erro ao apagar instancia Evolution", [
                     'tenant_id' => $tenant->id,
                     'erro' => $e->getMessage(),
                 ]);
@@ -293,7 +293,7 @@ class AdminLojaController extends Controller
 
         if ($instancia) {
             $instancia->update([
-                'waha_url' => config('services.waha.url'),
+                'waha_url' => config('services.evolution.url'),
                 'waha_session' => "loja-{$tenant->id}",
             ]);
         } else {
@@ -301,35 +301,35 @@ class AdminLojaController extends Controller
                 'tenant_id'     => $tenant->id,
                 'nome_instancia'=> "loja_{$tenant->id}",
                 'waha_session'  => "loja-{$tenant->id}",
-                'waha_url'      => config('services.waha.url'),
+                'waha_url'      => config('services.evolution.url'),
                 'estado'        => 'aguarda_qr',
             ]);
         }
 
         try {
-            $resultado = $this->wahaService->criarInstancia($tenant->id, config('services.waha.url'));
+            $resultado = $this->evolutionService->criarInstancia($tenant->id, config('services.evolution.url'));
 
             if (!$resultado['sucesso']) {
                 return response()->json([
                     'sucesso' => false,
-                    'erro'    => "Falha ao criar instancia WAHA: " . ($resultado['erro'] ?? 'desconhecido'),
+                    'erro'    => "Falha ao criar instancia Evolution: " . ($resultado['erro'] ?? 'desconhecido'),
                 ], 500);
             }
         } catch (\Exception $e) {
-            Log::error("Erro ao criar instancia WAHA", [
+            Log::error("Erro ao criar instancia Evolution", [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'sucesso' => false,
-                'erro'    => 'Erro ao comunicar com WAHA.',
+                'erro'    => 'Erro ao comunicar com Evolution API.',
             ], 500);
         }
 
         return response()->json([
             'sucesso'     => true,
-            'mensagem'    => 'Instancia WAHA criada.',
+            'mensagem'    => 'Instancia Evolution criada.',
             'instancia_id'=> $instancia?->id,
             'session'     => "loja-{$tenant->id}",
         ]);

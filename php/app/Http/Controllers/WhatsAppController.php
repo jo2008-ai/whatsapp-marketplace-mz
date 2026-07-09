@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InstanciaWhatsApp;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,11 +12,11 @@ use Illuminate\View\View;
 
 class WhatsAppController extends Controller
 {
-    private WahaService $wahaService;
+    private EvolutionService $evolutionService;
 
-    public function __construct(WahaService $wahaService)
+    public function __construct(EvolutionService $evolutionService)
     {
-        $this->wahaService = $wahaService;
+        $this->evolutionService = $evolutionService;
     }
 
     /** @return View */
@@ -50,8 +50,7 @@ class WhatsAppController extends Controller
         $instancia = $tenant->instancias()->first();
 
         if ($instancia) {
-            $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
-            $this->wahaService->ligar($tenant->id, $instancia->waha_url);
+            $this->evolutionService->criarInstancia($tenant->id, $instancia->waha_url);
 
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
                 ->with('success', 'Sessao WhatsApp ja existe.');
@@ -61,13 +60,12 @@ class WhatsAppController extends Controller
             $instancia = InstanciaWhatsApp::create([
                 'tenant_id' => $tenant->id,
                 'nome_instancia' => 'default',
-                'waha_session' => $this->wahaService->nomeInstancia($tenant->id),
-                'waha_url' => config('services.waha.url'),
+                'waha_session' => $this->evolutionService->nomeInstancia($tenant->id),
+                'waha_url' => config('services.evolution.url'),
                 'estado' => 'aguarda_qr',
             ]);
 
-            $this->wahaService->criarInstancia($tenant->id, $instancia->waha_url);
-            $this->wahaService->ligar($tenant->id, $instancia->waha_url);
+            $this->evolutionService->criarInstancia($tenant->id, $instancia->waha_url);
 
             return redirect("/painel/whatsapp?instancia={$instancia->id}")
                 ->with('success', 'Sessao criada! Escaneia o QR code.');
@@ -99,14 +97,13 @@ class WhatsAppController extends Controller
             return response()->json(['erro' => 'Instancia nao encontrada'], 404);
         }
 
-        $wahaUrl = config('services.waha.url');
+        $evolutionUrl = config('services.evolution.url');
 
         try {
-            $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+            $estado = $this->evolutionService->obterEstado($tenant->id, $evolutionUrl);
 
             if ($estado === 'NOT_FOUND' || $estado === 'ERROR') {
-                $this->wahaService->criarInstancia($tenant->id, $wahaUrl);
-                $this->wahaService->ligar($tenant->id, $wahaUrl);
+                $this->evolutionService->criarInstancia($tenant->id, $evolutionUrl);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -115,15 +112,15 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            if ($estado === 'WORKING') {
+            if ($estado === 'open') {
                 return response()->json([
                     'estado' => 'conectada',
                     'qr' => null,
                 ]);
             }
 
-            if ($estado === 'STOPPED') {
-                $this->wahaService->ligar($tenant->id, $wahaUrl);
+            if ($estado === 'close') {
+                $this->evolutionService->criarInstancia($tenant->id, $evolutionUrl);
 
                 return response()->json([
                     'estado' => 'aguarda_qr',
@@ -132,30 +129,22 @@ class WhatsAppController extends Controller
                 ]);
             }
 
-            if ($estado === 'SCAN_QR_CODE' || $estado === 'STARTING') {
-                $qrBase64 = $this->wahaService->obterQrCode($tenant->id, $wahaUrl);
+            $qrBase64 = $this->evolutionService->obterQrCode($tenant->id, $evolutionUrl);
 
-                if ($qrBase64) {
-                    return response()->json([
-                        'estado' => 'aguarda_qr',
-                        'qr' => $qrBase64,
-                    ]);
-                }
-
+            if ($qrBase64) {
                 return response()->json([
                     'estado' => 'aguarda_qr',
-                    'qr' => null,
-                    'mensagem' => 'A aguardar QR code...',
+                    'qr' => $qrBase64,
                 ]);
             }
 
             return response()->json([
                 'estado' => 'aguarda_qr',
                 'qr' => null,
-                'mensagem' => 'Sessao a iniciar...',
+                'mensagem' => 'A aguardar QR code...',
             ]);
         } catch (\Exception $e) {
-            Log::error('QR: erro ao contactar WAHA', [
+            Log::error('QR: erro ao contactar Evolution API', [
                 'tenant_id' => $tenant->id,
                 'erro' => $e->getMessage(),
             ]);
@@ -183,17 +172,17 @@ class WhatsAppController extends Controller
             return response()->json(['estado' => 'erro', 'error' => 'Sem instancia']);
         }
 
-        $wahaUrl = config('services.waha.url');
+        $evolutionUrl = config('services.evolution.url');
 
         try {
-            $estado = $this->wahaService->obterEstado($tenant->id, $wahaUrl);
+            $estado = $this->evolutionService->obterEstado($tenant->id, $evolutionUrl);
 
-            if ($estado === 'WORKING') {
+            if ($estado === 'open') {
                 return response()->json(['estado' => 'conectada', 'state' => $estado]);
             }
 
             if ($estado === 'NOT_FOUND') {
-                return response()->json(['estado' => 'erro', 'error' => 'Sessao nao encontrada no WAHA']);
+                return response()->json(['estado' => 'erro', 'error' => 'Sessao nao encontrada na Evolution API']);
             }
 
             return response()->json(['estado' => 'desconectada', 'state' => $estado]);

@@ -7,6 +7,12 @@ return [
     'admin' => [
         'key' => env('ADMIN_API_KEY', ''),
     ],
+    'evolution' => [
+        'url' => env('EVOLUTION_URL', ''),
+        'key' => trim(env('EVOLUTION_API_KEY', '')),
+        'webhook_secret' => env('EVOLUTION_WEBHOOK_SECRET', env('WEBHOOK_SECRET', '')),
+        'webhook_base_url' => env('APP_URL', env('EVOLUTION_WEBHOOK_BASE_URL', 'http://localhost')),
+    ],
     'waha' => [
         'webhook_secret' => env('WAHA_WEBHOOK_SECRET', env('WEBHOOK_SECRET', '')),
         'url' => env('WAHA_URL', env('WAHA_URL_1', 'http://localhost:3000')),
