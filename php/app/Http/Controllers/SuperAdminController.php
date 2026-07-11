@@ -55,21 +55,30 @@ class SuperAdminController extends Controller
             'nome_loja' => 'required|string|max:255',
             'nome_dono' => 'required|string|max:255',
             'telefone' => 'required|string|max:20',
+            'plano' => 'required|in:basic,pro,enterprise',
         ]);
 
         $telefone = preg_replace('/[^0-9]/', '', $validated['telefone']);
         $email = $telefone . '@loja.local';
+
+        $planos = [
+            'basic' => ['preco' => 500, 'max_produtos' => 50, 'max_numeros' => 1],
+            'pro' => ['preco' => 1500, 'max_produtos' => 500, 'max_numeros' => 3],
+            'enterprise' => ['preco' => 5000, 'max_produtos' => 99999, 'max_numeros' => 99999],
+        ];
+
+        $plano = $planos[$validated['plano']];
 
         $tenant = Tenant::create([
             'uuid' => (string) Str::uuid(),
             'nome_loja' => $validated['nome_loja'],
             'email_dono' => $email,
             'telefone_dono' => $validated['telefone'],
-            'plano' => 'basic',
+            'plano' => $validated['plano'],
             'estado' => 'trial',
             'trial_termina_em' => now()->addDays(7),
-            'max_produtos' => 50,
-            'max_numeros' => 1,
+            'max_produtos' => $plano['max_produtos'],
+            'max_numeros' => $plano['max_numeros'],
             'activo' => true,
         ]);
 
@@ -87,8 +96,8 @@ class SuperAdminController extends Controller
 
         Subscricao::create([
             'tenant_id' => $tenant->id,
-            'plano' => 'basic',
-            'preco_mensal' => 500,
+            'plano' => $validated['plano'],
+            'preco_mensal' => $plano['preco'],
             'data_inicio' => now(),
             'data_fim' => now()->addDays(7),
             'estado' => 'activa',

@@ -13,8 +13,7 @@
         <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-xl font-bold text-blue-600">WhatsApp Marketplace</h1>
             <div class="flex gap-3">
-                <a href="/login" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-medium">Entrar</a>
-                <a href="/registar" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Criar Conta</a>
+                <a href="/login" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Entrar</a>
             </div>
         </div>
     </nav>
@@ -26,8 +25,8 @@
                 Um assistente digital que trabalha 24 horas por dia, sem cansar, sem esquecer, sem reclamar. Mostra o teu catalogo, responde aos clientes, toma encomendas - tudo automaticamente.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/registar" class="inline-block bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-blue-50 shadow-lg">
-                    Comecar Gratis
+                <a href="/login" class="inline-block bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-blue-50 shadow-lg">
+                    Entrar na Plataforma
                 </a>
                 <a href="#como-funciona" class="inline-block border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-white/10">
                     Como Funciona
@@ -139,9 +138,9 @@
     <section class="py-20 bg-blue-600 text-white text-center">
         <div class="max-w-3xl mx-auto px-4">
             <h3 class="text-3xl font-bold mb-4">Comeca a vender hoje</h3>
-            <p class="text-blue-100 text-lg mb-8">7 dias gratis. Sem cartao de credito. Configuracao em 5 minutos.</p>
-            <a href="/registar" class="inline-block bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-blue-50">
-                Criar Conta Gratis
+            <p class="text-blue-100 text-lg mb-8">Contacta-nos para criar a tua conta.</p>
+            <a href="/login" class="inline-block bg-white text-blue-600 px-8 py-4 rounded-xl text-lg font-bold hover:bg-blue-50">
+                Entrar
             </a>
         </div>
     </section>
