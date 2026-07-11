@@ -49,7 +49,7 @@ class WahaWebhookController extends Controller
         InstanciaWhatsApp $instancia,
         array $data
     ): void {
-        $payload = $data['data'] ?? [];
+        $payload = $data['data'] ?? $data['payload'] ?? [];
         $state = $payload['state'] ?? null;
         if (!$state) return;
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Encomenda;
+use App\Models\Produto;
 use Illuminate\Support\Facades\Log;
 
 class NotificacaoService
@@ -54,6 +55,42 @@ class NotificacaoService
             $this->evolutionService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia->waha_url);
         } catch (\Exception $e) {
             Log::error('Erro ao notificar vendedor: '.$e->getMessage());
+        }
+    }
+
+    public function notificarStockBaixo(Produto $produto): void
+    {
+        $tenant = $produto->tenant;
+        if (! $tenant) {
+            return;
+        }
+
+        $vendedor = $produto->vendedor;
+        if (! $vendedor || ! $vendedor->ativo) {
+            return;
+        }
+
+        $instancia = $tenant->instancias()
+            ->where('estado', 'conectada')
+            ->first();
+
+        if (! $instancia) {
+            Log::warning("Tenant {$tenant->id} sem instância WhatsApp conectada para alerta stock baixo");
+
+            return;
+        }
+
+        $mensagem = "⚠️ *ALERTA DE STOCK BAIXO*\n\n"
+                  ."📦 Produto: {$produto->nome}\n"
+                  ."📊 Stock actual: {$produto->stock} {$produto->unidade}\n"
+                  ."📉 Stock mínimo: {$produto->stock_minimo} {$produto->unidade}\n\n"
+                  ."Repõe o stock no painel:\n"
+                  .config('app.url').'/painel/stock';
+
+        try {
+            $this->evolutionService->enviarMensagem($tenant->id, $vendedor->numero_whatsapp, $mensagem, $instancia->waha_url);
+        } catch (\Exception $e) {
+            Log::error('Erro ao notificar vendedor sobre stock baixo: '.$e->getMessage());
         }
     }
 }

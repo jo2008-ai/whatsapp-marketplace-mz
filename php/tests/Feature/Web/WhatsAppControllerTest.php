@@ -5,7 +5,7 @@ namespace Tests\Feature\Web;
 use App\Models\InstanciaWhatsApp;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\WahaService;
+use App\Services\EvolutionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Mockery;
@@ -44,13 +44,13 @@ class WhatsAppControllerTest extends TestCase
             'tenant_id' => $this->tenant->id,
             'nome_instancia' => 'default',
             'waha_session' => "loja-{$this->tenant->id}",
-            'waha_url' => 'https://waha.test.com',
+            'waha_url' => config('services.evolution.url', 'https://evo.test.com'),
             'estado' => 'aguarda_qr',
         ]);
 
-        config(['services.waha.key' => 'test-api-key']);
-        config(['services.waha.url' => 'https://waha.test.com']);
-        config(['services.waha.webhook_secret' => 'test-webhook-secret']);
+        config(['services.evolution.key' => 'test-api-key']);
+        config(['services.evolution.url' => 'https://evo.test.com']);
+        config(['services.evolution.webhook_secret' => 'test-webhook-secret']);
     }
 
     protected function tearDown(): void
@@ -64,10 +64,10 @@ class WhatsAppControllerTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    private function mockWahaService(): WahaService
+    private function mockEvolutionService(): EvolutionService
     {
-        $mock = Mockery::mock(WahaService::class);
-        $this->app->instance(WahaService::class, $mock);
+        $mock = Mockery::mock(EvolutionService::class);
+        $this->app->instance(EvolutionService::class, $mock);
         return $mock;
     }
 
@@ -94,11 +94,15 @@ class WhatsAppControllerTest extends TestCase
 
         $this->instancia->delete();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('ligar')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('nomeInstancia')
             ->once()
             ->with($this->tenant->id)
-            ->andReturn(true);
+            ->andReturn("loja-{$this->tenant->id}");
+        $evoMock->shouldReceive('criarInstancia')
+            ->once()
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn(['sucesso' => true]);
 
         $response = $this->post('/painel/whatsapp/conectar');
 
@@ -113,11 +117,11 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('ligar')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('criarInstancia')
             ->once()
-            ->with($this->tenant->id)
-            ->andReturn(true);
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn(['sucesso' => true]);
 
         $response = $this->post('/painel/whatsapp/conectar');
 
@@ -139,14 +143,14 @@ class WhatsAppControllerTest extends TestCase
             ->assertJson(['erro' => 'Instancia nao encontrada']);
     }
 
-    public function test_qr_retorna_503_se_waha_indisponivel(): void
+    public function test_qr_retorna_503_se_evolution_indisponivel(): void
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
+            ->with($this->tenant->id, Mockery::type('string'))
             ->andThrow(new \Exception('Connection refused'));
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
@@ -161,14 +165,14 @@ class WhatsAppControllerTest extends TestCase
 
         $fakeQr = base64_encode('fake-qr-code');
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
-            ->andReturn('SCAN_QR_CODE');
-        $wahaMock->shouldReceive('obterQrCode')
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn('connecting');
+        $evoMock->shouldReceive('obterQrCode')
             ->once()
-            ->with($this->tenant->id)
+            ->with($this->tenant->id, Mockery::type('string'))
             ->andReturn($fakeQr);
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
@@ -184,14 +188,14 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
-            ->andReturn('STARTING');
-        $wahaMock->shouldReceive('obterQrCode')
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn('connecting');
+        $evoMock->shouldReceive('obterQrCode')
             ->once()
-            ->with($this->tenant->id)
+            ->with($this->tenant->id, Mockery::type('string'))
             ->andReturn(null);
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
@@ -207,15 +211,15 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
+            ->with($this->tenant->id, Mockery::type('string'))
             ->andReturn('NOT_FOUND');
-        $wahaMock->shouldReceive('ligar')
+        $evoMock->shouldReceive('criarInstancia')
             ->once()
-            ->with($this->tenant->id)
-            ->andReturn(true);
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn(['sucesso' => true]);
 
         $response = $this->getJson('/painel/whatsapp/qr?instancia=' . $this->instancia->id);
 
@@ -245,18 +249,18 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
-            ->andReturn('WORKING');
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn('open');
 
         $response = $this->getJson('/painel/whatsapp/estado');
 
         $response->assertStatus(200)
             ->assertJson([
                 'estado' => 'conectada',
-                'state' => 'WORKING',
+                'state' => 'open',
             ]);
     }
 
@@ -264,34 +268,34 @@ class WhatsAppControllerTest extends TestCase
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
-            ->andReturn('SCAN_QR_CODE');
+            ->with($this->tenant->id, Mockery::type('string'))
+            ->andReturn('close');
 
         $response = $this->getJson('/painel/whatsapp/estado');
 
         $response->assertStatus(200)
             ->assertJson([
                 'estado' => 'desconectada',
-                'state' => 'SCAN_QR_CODE',
+                'state' => 'close',
             ]);
     }
 
-    public function test_estado_retorna_erro_se_waha_indisponivel(): void
+    public function test_estado_retorna_erro_se_evolution_indisponivel(): void
     {
         $this->auth();
 
-        $wahaMock = $this->mockWahaService();
-        $wahaMock->shouldReceive('obterEstado')
+        $evoMock = $this->mockEvolutionService();
+        $evoMock->shouldReceive('obterEstado')
             ->once()
-            ->with($this->tenant->id)
+            ->with($this->tenant->id, Mockery::type('string'))
             ->andReturn('ERROR');
 
         $response = $this->getJson('/painel/whatsapp/estado');
 
         $response->assertStatus(200)
-            ->assertJson(['estado' => 'erro']);
+            ->assertJson(['estado' => 'desconectada', 'state' => 'ERROR']);
     }
 }

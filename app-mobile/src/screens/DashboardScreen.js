@@ -57,6 +57,10 @@ export default function DashboardScreen({ navigation }) {
         <StatCard label="Pendentes" value={data?.encomendas_pendentes || 0} color="#f59e0b" />
         <StatCard label="Receita Mês" value={`${((data?.receita_mes || 0) / 1000).toFixed(0)}k`} color="#8b5cf6" />
       </View>
+      <View style={styles.statsRow}>
+        <StatCard label="Stock Baixo" value={data?.stock_baixo || 0} color="#ef4444" />
+        <StatCard label="Sem Stock" value={data?.sem_stock || 0} color="#dc2626" />
+      </View>
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Últimas Encomendas</Text>

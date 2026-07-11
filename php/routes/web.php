@@ -57,6 +57,9 @@ Route::prefix('painel')->middleware(['auth', 'tenant.context', 'tenant.activo'])
 
     Route::get('/definicoes', [DefinicoesController::class, 'index'])->name('definicoes.index');
     Route::post('/definicoes', [DefinicoesController::class, 'guardar'])->name('definicoes.guardar');
+
+    Route::get('/stock', [PainelController::class, 'stock'])->name('painel.stock');
+    Route::post('/stock/{produtoId}/entrada', [PainelController::class, 'stockEntrada'])->name('painel.stock.entrada');
 });
 
 Route::get('/test-waha', function () {

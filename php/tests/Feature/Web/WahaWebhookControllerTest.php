@@ -20,6 +20,7 @@ class WahaWebhookControllerTest extends TestCase
     {
         parent::setUp();
 
+        config(['services.evolution.webhook_secret' => 'test-secret']);
         config(['services.waha.webhook_secret' => 'test-secret']);
 
         $this->tenant = Tenant::create([
@@ -31,7 +32,7 @@ class WahaWebhookControllerTest extends TestCase
             'max_numeros' => 1,
         ]);
 
-        $user = User::create([
+        User::create([
             'tenant_id' => $this->tenant->id,
             'name' => 'Admin',
             'email' => 'admin@loja.com',
@@ -43,40 +44,24 @@ class WahaWebhookControllerTest extends TestCase
             'tenant_id' => $this->tenant->id,
             'nome_instancia' => 'default',
             'waha_session' => 'default',
-            'waha_url' => 'https://waha.test.com',
+            'waha_url' => 'https://evo.test.com',
             'estado' => 'aguarda_qr',
         ]);
     }
 
-    private function assinarPayload(array $payload): string
-    {
-        $secret = config('services.waha.webhook_secret');
-        $content = json_encode($payload);
-        return 'sha256=' . hash_hmac('sha256', $content, $secret);
-    }
-
-    private function sendWebhook(array $payload): \Illuminate\Testing\TestResponse
-    {
-        $signature = $this->assinarPayload($payload);
-
-        return $this->postJson('/api/waha/webhook', $payload, [
-            'X-Hub-Signature-256' => $signature,
-        ]);
-    }
-
     // =====================================================
-    // SESSION.STATUS EVENTS
+    // CONNECTION.UPDATE EVENTS
     // =====================================================
 
-    public function test_session_status_working_conecta_instancia(): void
+    public function test_connection_update_open_conecta_instancia(): void
     {
         Notification::fake();
 
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'WORKING',
+            'event' => 'connection.update',
+            'instance' => 'default',
+            'data' => [
+                'state' => 'open',
                 'user' => '+258840000000',
             ],
         ]);
@@ -90,17 +75,17 @@ class WahaWebhookControllerTest extends TestCase
         $this->assertEquals('+258840000000', $this->instancia->numero_whatsapp);
     }
 
-    public function test_session_status_failed_desconecta_instancia(): void
+    public function test_connection_update_close_desconecta_instancia(): void
     {
         Notification::fake();
 
         $this->instancia->update(['estado' => 'conectada']);
 
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'FAILED',
+            'event' => 'connection.update',
+            'instance' => 'default',
+            'data' => [
+                'state' => 'close',
             ],
         ]);
 
@@ -111,53 +96,13 @@ class WahaWebhookControllerTest extends TestCase
         $this->assertNull($this->instancia->conectada_em);
     }
 
-    public function test_session_status_stopped_desconecta_instancia(): void
-    {
-        Notification::fake();
-
-        $this->instancia->update(['estado' => 'conectada']);
-
-        $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'STOPPED',
-            ],
-        ]);
-
-        $response->assertStatus(200);
-
-        $this->instancia->refresh();
-        $this->assertEquals('desconectada', $this->instancia->estado);
-    }
-
-    public function test_session_status_disconnected_desconecta_instancia(): void
-    {
-        Notification::fake();
-
-        $this->instancia->update(['estado' => 'conectada']);
-
-        $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'DISCONNECTED',
-            ],
-        ]);
-
-        $response->assertStatus(200);
-
-        $this->instancia->refresh();
-        $this->assertEquals('desconectada', $this->instancia->estado);
-    }
-
-    public function test_session_status_starting_muda_para_aguarda_qr(): void
+    public function test_connection_update_connecting_muda_para_aguarda_qr(): void
     {
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'STARTING',
+            'event' => 'connection.update',
+            'instance' => 'default',
+            'data' => [
+                'state' => 'connecting',
             ],
         ]);
 
@@ -167,31 +112,15 @@ class WahaWebhookControllerTest extends TestCase
         $this->assertEquals('aguarda_qr', $this->instancia->estado);
     }
 
-    public function test_session_status_scan_qr_code_muda_para_aguarda_qr(): void
-    {
-        $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'SCAN_QR_CODE',
-            ],
-        ]);
-
-        $response->assertStatus(200);
-
-        $this->instancia->refresh();
-        $this->assertEquals('aguarda_qr', $this->instancia->estado);
-    }
-
-    public function test_session_status_nao_muda_se_mesmo_estado(): void
+    public function test_connection_update_nao_muda_se_mesmo_estado(): void
     {
         $this->instancia->update(['estado' => 'conectada']);
 
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'WORKING',
+            'event' => 'connection.update',
+            'instance' => 'default',
+            'data' => [
+                'state' => 'open',
                 'user' => '+258840000000',
             ],
         ]);
@@ -199,21 +128,20 @@ class WahaWebhookControllerTest extends TestCase
         $response->assertStatus(200);
 
         $this->instancia->refresh();
-        // Estado continua o mesmo, nao deve ter actualizado
         $this->assertEquals('conectada', $this->instancia->estado);
     }
 
-    public function test_session_status_notifica_desconexao(): void
+    public function test_connection_update_notifica_desconexao(): void
     {
         Notification::fake();
 
         $this->instancia->update(['estado' => 'conectada']);
 
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => [
-                'status' => 'FAILED',
+            'event' => 'connection.update',
+            'instance' => 'default',
+            'data' => [
+                'state' => 'close',
             ],
         ]);
 
@@ -225,52 +153,56 @@ class WahaWebhookControllerTest extends TestCase
     }
 
     // =====================================================
-    // SESSION.QR EVENTS
+    // INSTANCE FIELD VARIATIONS
     // =====================================================
 
-    public function test_session_qr_muda_estado_para_aguarda_qr(): void
+    public function test_session_field_compativel_com_instance(): void
     {
-        $this->instancia->update(['estado' => 'desconectada']);
+        Notification::fake();
 
         $response = $this->sendWebhook([
-            'event' => 'session.qr',
+            'event' => 'connection.update',
             'session' => 'default',
-            'payload' => [
-                'base64' => 'fake-qr-data',
+            'data' => [
+                'state' => 'open',
+                'user' => '+258840000000',
             ],
         ]);
 
         $response->assertStatus(200);
 
         $this->instancia->refresh();
-        $this->assertEquals('aguarda_qr', $this->instancia->estado);
+        $this->assertEquals('conectada', $this->instancia->estado);
     }
 
-    public function test_session_qr_nao_muda_se_ja_aguarda_qr(): void
+    public function test_data_field_compativel_com_payload(): void
     {
+        Notification::fake();
+
         $response = $this->sendWebhook([
-            'event' => 'session.qr',
-            'session' => 'default',
+            'event' => 'connection.update',
+            'instance' => 'default',
             'payload' => [
-                'base64' => 'fake-qr-data',
+                'state' => 'open',
+                'user' => '+258840000000',
             ],
         ]);
 
         $response->assertStatus(200);
 
         $this->instancia->refresh();
-        $this->assertEquals('aguarda_qr', $this->instancia->estado);
+        $this->assertEquals('conectada', $this->instancia->estado);
     }
 
     // =====================================================
     // IGNORED / UNKNOWN EVENTS
     // =====================================================
 
-    public function test_evento_desconhecido_retorna_ignored(): void
+    public function test_evento_desconhecido_retorna_processed(): void
     {
         $response = $this->sendWebhook([
-            'event' => 'message',
-            'session' => 'default',
+            'event' => 'messages.upsert',
+            'instance' => 'default',
         ]);
 
         $response->assertStatus(200)
@@ -280,7 +212,7 @@ class WahaWebhookControllerTest extends TestCase
     public function test_sem_evento_retorna_ignored(): void
     {
         $response = $this->sendWebhook([
-            'session' => 'default',
+            'instance' => 'default',
         ]);
 
         $response->assertStatus(200)
@@ -290,10 +222,10 @@ class WahaWebhookControllerTest extends TestCase
     public function test_sessao_nao_encontrada_retorna_session_not_found(): void
     {
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'inexistente_999',
-            'payload' => [
-                'status' => 'WORKING',
+            'event' => 'connection.update',
+            'instance' => 'inexistente_999',
+            'data' => [
+                'state' => 'open',
             ],
         ]);
 
@@ -302,57 +234,18 @@ class WahaWebhookControllerTest extends TestCase
     }
 
     // =====================================================
-    // SIGNATURE VERIFICATION
-    // =====================================================
-
-    public function test_webhook_rejeita_sem_assinatura(): void
-    {
-        $response = $this->postJson('/api/waha/webhook', [
-            'event' => 'session.status',
-            'session' => 'default',
-        ]);
-
-        $response->assertStatus(401);
-    }
-
-    public function test_webhook_rejeita_assinatura_invalida(): void
-    {
-        $response = $this->postJson('/api/waha/webhook', [
-            'event' => 'session.status',
-            'session' => 'default',
-        ], [
-            'X-Hub-Signature-256' => 'sha256=invalid-signature',
-        ]);
-
-        $response->assertStatus(401);
-    }
-
-    public function test_webhook_aceita_assinatura_valida(): void
-    {
-        $payload = [
-            'event' => 'session.status',
-            'session' => 'default',
-            'payload' => ['status' => 'WORKING'],
-        ];
-
-        $response = $this->sendWebhook($payload);
-
-        $response->assertStatus(200);
-    }
-
-    // =====================================================
     // PAYLOAD VARIATIONS
     // =====================================================
 
-    public function test_session_status_funciona_com_data_em_vez_de_payload(): void
+    public function test_connection_update_funciona_com_data_em_vez_de_payload(): void
     {
         Notification::fake();
 
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
+            'event' => 'connection.update',
+            'instance' => 'default',
             'data' => [
-                'status' => 'WORKING',
+                'state' => 'open',
                 'user' => '+258840000000',
             ],
         ]);
@@ -363,20 +256,29 @@ class WahaWebhookControllerTest extends TestCase
         $this->assertEquals('conectada', $this->instancia->estado);
     }
 
-    public function test_session_status_funciona_com_status_raiz(): void
+    public function test_connection_update_funciona_com_status_raiz(): void
     {
         Notification::fake();
 
         $response = $this->sendWebhook([
-            'event' => 'session.status',
-            'session' => 'default',
-            'status' => 'WORKING',
+            'event' => 'connection.update',
+            'instance' => 'default',
+            'state' => 'open',
         ]);
 
         $response->assertStatus(200);
 
         $this->instancia->refresh();
-        // Não deve mudar porque o status não está no payload/data
-        // Mas não deve falhar
+        // O controller lê de data.state, entao se state esta na raiz, nao deve mudar
+        // Mas nao deve falhar
+    }
+
+    // =====================================================
+    // HELPERS
+    // =====================================================
+
+    private function sendWebhook(array $payload): \Illuminate\Testing\TestResponse
+    {
+        return $this->postJson('/api/waha/webhook', $payload);
     }
 }

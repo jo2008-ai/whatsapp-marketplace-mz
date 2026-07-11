@@ -42,6 +42,15 @@ export const encomendaApi = {
   updateEstado: (id, estado) => api.patch(`/loja/encomendas/${id}/estado`, { estado }),
 };
 
+export const stockApi = {
+  historico: (params) => api.get('/loja/stock/historico', { params }),
+  alertas: () => api.get('/loja/stock/alertas'),
+  relatorio: () => api.get('/loja/stock/relatorio'),
+  movimentos: (produtoId, params) => api.get(`/loja/stock/${produtoId}/movimentos`, { params }),
+  entrada: (produtoId, data) => api.post(`/loja/stock/${produtoId}/entrada`, data),
+  ajuste: (produtoId, data) => api.post(`/loja/stock/${produtoId}/ajuste`, data),
+};
+
 export const uploadApi = {
   imagem: (formData) =>
     api.post('/loja/upload/imagem', formData, {

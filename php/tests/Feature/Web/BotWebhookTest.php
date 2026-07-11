@@ -21,6 +21,7 @@ class BotWebhookTest extends TestCase
     {
         parent::setUp();
 
+        config(['services.evolution.webhook_secret' => 'test-webhook-secret']);
         config(['services.waha.webhook_secret' => 'test-webhook-secret']);
 
         $this->tenant = Tenant::create([

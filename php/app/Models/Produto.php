@@ -44,7 +44,9 @@ class Produto extends Model implements HasMedia
 
     protected $fillable = [
         'tenant_id', 'vendedor_id', 'categoria_id', 'nome', 'descricao',
-        'preco', 'stock', 'imagem_url', 'imagem2_url', 'disponivel', 'destaque',
+        'preco', 'stock', 'stock_minimo', 'stock_maximo', 'unidade',
+        'custo_unitario', 'alerta_stock_baixo',
+        'imagem_url', 'imagem2_url', 'disponivel', 'destaque',
         'cores', 'tamanhos',
     ];
 
@@ -52,8 +54,10 @@ class Produto extends Model implements HasMedia
     {
         return [
             'preco' => 'decimal:2',
+            'custo_unitario' => 'decimal:2',
             'disponivel' => 'boolean',
             'destaque' => 'boolean',
+            'alerta_stock_baixo' => 'boolean',
             'cores' => 'array',
             'tamanhos' => 'array',
         ];
@@ -190,5 +194,31 @@ class Produto extends Model implements HasMedia
         }
 
         return $this->stock > 0;
+    }
+
+    /** @return HasMany<MovimentoStock, $this> */
+    public function movimentos(): HasMany
+    {
+        return $this->hasMany(MovimentoStock::class);
+    }
+
+    public function temStockSuficiente(int $quantidade = 1): bool
+    {
+        return $this->stock >= $quantidade && $this->disponivel;
+    }
+
+    public function stockBaixo(): bool
+    {
+        return $this->stock <= $this->stock_minimo && $this->alerta_stock_baixo;
+    }
+
+    public function semStock(): bool
+    {
+        return $this->stock <= 0;
+    }
+
+    public function valorTotalStock(): float
+    {
+        return $this->stock * $this->custo_unitario;
     }
 }

@@ -1,0 +1,54 @@
+app = "marketplace-evolution"
+primary = "fra"
+
+[build]
+  image = "evoapicloud/evolution-api:latest"
+
+[env]
+  AUTHENTICATION_API_KEY = "marketplace_secret_key_2026"
+  AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES = "true"
+  CACHE_LOCAL_ENABLED = "true"
+  CACHE_REDIS_ENABLED = "false"
+  CONFIG_SESSION_PHONE_CLIENT = "MarketPlaceMZ"
+  CONFIG_SESSION_PHONE_NAME = "Chrome"
+  CONFIG_SESSION_PHONE_VERSION = "2.24.12.55"
+  DATABASE_CONNECTION_URI = "postgresql://neondb_owner:npg_4Hx3VcwatsRY@ep-delicate-flower-as0ryf6z.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+  DATABASE_ENABLED = "true"
+  DATABASE_PROVIDER = "postgresql"
+  DATABASE_SAVE_DATA_CHATS = "false"
+  DATABASE_SAVE_DATA_CONTACTS = "false"
+  DATABASE_SAVE_DATA_INSTANCE = "true"
+  DATABASE_SAVE_DATA_NEW_MESSAGE = "false"
+  DATABASE_URL = "postgresql://neondb_owner:npg_4Hx3VcwatsRY@ep-delicate-flower-as0ryf6z.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+  DEL_INSTANCE = "false"
+  LANGUAGE = "pt-BR"
+  LOG_LEVEL = "WARN"
+  NODE_TLS_REJECT_UNAUTHORIZED = "0"
+  SERVER_URL = "https://marketplace-evolution.fly.dev"
+
+[vm]
+  memory = "1gb"
+
+[mounts]
+  source = "evolution_data"
+  destination = "/evolution/instances"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.checks]
+    [services.checks.http]
+      interval = "10s"
+      timeout = "5s"
+      grace_period = "60s"
+      method = "GET"
+      path = "/"

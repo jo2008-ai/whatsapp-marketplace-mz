@@ -5,6 +5,7 @@ import { COLORS } from '../constants/colors';
 export default function MaisMenuScreen({ navigation }) {
   const items = [
     { label: 'Encomendas', icon: '📋', screen: 'Encomendas' },
+    { label: 'Stock', icon: '📊', screen: 'Stock' },
     { label: 'Categorias', icon: '🏷️', screen: 'Categorias' },
     { label: 'Vendedores', icon: '👥', screen: 'Vendedores' },
   ];

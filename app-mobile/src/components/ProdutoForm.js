@@ -19,6 +19,9 @@ export default function ProdutoForm({
   const [descricao, setDescricao] = useState(initialData?.descricao || '');
   const [preco, setPreco] = useState(String(initialData?.preco || ''));
   const [stock, setStock] = useState(String(initialData?.stock || ''));
+  const [stockMinimo, setStockMinimo] = useState(String(initialData?.stock_minimo || '5'));
+  const [custoUnitario, setCustoUnitario] = useState(String(initialData?.custo_unitario || ''));
+  const [unidade, setUnidade] = useState(initialData?.unidade || 'unidade');
   const [categoriaId, setCategoriaId] = useState(initialData?.categoria_id || null);
   const [vendedorId, setVendedorId] = useState(initialData?.vendedor_id || null);
   const [disponivel, setDisponivel] = useState(initialData?.disponivel ?? true);
@@ -141,6 +144,9 @@ export default function ProdutoForm({
         descricao,
         preco: Number(preco),
         stock: Number(stock),
+        stock_minimo: Number(stockMinimo) || 5,
+        custo_unitario: Number(custoUnitario) || 0,
+        unidade,
         categoria_id: categoriaId,
         vendedor_id: vendedorId,
         disponivel,
@@ -195,6 +201,44 @@ export default function ProdutoForm({
             placeholder="0"
           />
         </View>
+      </View>
+
+      <View style={sharedStyles.row}>
+        <View style={{ flex: 1 }}>
+          <Text style={sharedStyles.label}>Stock Mínimo</Text>
+          <TextInput
+            style={sharedStyles.input}
+            value={stockMinimo}
+            onChangeText={setStockMinimo}
+            keyboardType="numeric"
+            placeholder="5"
+          />
+        </View>
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <Text style={sharedStyles.label}>Custo Unitário (MZN)</Text>
+          <TextInput
+            style={sharedStyles.input}
+            value={custoUnitario}
+            onChangeText={setCustoUnitario}
+            keyboardType="numeric"
+            placeholder="0"
+          />
+        </View>
+      </View>
+
+      <Text style={sharedStyles.label}>Unidade</Text>
+      <View style={sharedStyles.chipsRow}>
+        {['unidade', 'kg', 'litro', 'caixa'].map((u) => (
+          <TouchableOpacity
+            key={u}
+            style={[sharedStyles.tamanhoToggle, unidade === u && sharedStyles.tamanhoToggleActive]}
+            onPress={() => setUnidade(u)}
+          >
+            <Text style={[sharedStyles.tamanhoText, unidade === u && sharedStyles.tamanhoTextActive]}>
+              {u === 'unidade' ? 'Unidade' : u === 'kg' ? 'Kg' : u === 'litro' ? 'Litro' : 'Caixa'}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <Text style={sharedStyles.label}>Categoria *</Text>

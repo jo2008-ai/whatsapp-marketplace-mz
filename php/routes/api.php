@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ApiEncomendaController;
 use App\Http\Controllers\Api\ApiVendedorController;
 use App\Http\Controllers\Api\ApiDefinicoesController;
 use App\Http\Controllers\Api\ApiUploadController;
+use App\Http\Controllers\Api\ApiStockController;
 use App\Http\Controllers\Admin\AdminWhatsAppController;
 use App\Http\Controllers\Api\AdminLojaController;
 use App\Http\Controllers\Api\ApiPainelController;
@@ -112,6 +113,14 @@ Route::middleware(['auth:sanctum', 'tenant.context', 'tenant.activo'])->prefix('
     Route::put('/variantes/{id}', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'update']);
     Route::delete('/variantes/{id}', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'destroy']);
     Route::patch('/variantes/{id}/toggle', [\App\Http\Controllers\Api\ApiProdutoVarianteController::class, 'toggleDisponivel']);
+
+    // Stock
+    Route::get('/stock/historico', [ApiStockController::class, 'historico']);
+    Route::get('/stock/alertas', [ApiStockController::class, 'alertas']);
+    Route::get('/stock/relatorio', [ApiStockController::class, 'relatorio']);
+    Route::get('/stock/{produtoId}/movimentos', [ApiStockController::class, 'movimentos']);
+    Route::post('/stock/{produtoId}/entrada', [ApiStockController::class, 'entrada']);
+    Route::post('/stock/{produtoId}/ajuste', [ApiStockController::class, 'ajuste']);
 });
 
 // Rotas admin — protegidas por chave secreta

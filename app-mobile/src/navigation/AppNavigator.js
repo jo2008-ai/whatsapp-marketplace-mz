@@ -14,6 +14,7 @@ import EncomendasScreen from '../screens/EncomendasScreen';
 import EncomendaDetalheScreen from '../screens/EncomendaDetalheScreen';
 import CategoriasScreen from '../screens/CategoriasScreen';
 import VendedoresScreen from '../screens/VendedoresScreen';
+import StockScreen from '../screens/StockScreen';
 import MaisMenuScreen from '../screens/MaisMenuScreen';
 import LoadingOverlay from '../components/LoadingOverlay';
 
@@ -49,6 +50,7 @@ function MaisStack() {
       <Stack.Screen name="MaisMenu" component={MaisMenuScreen} />
       <Stack.Screen name="Encomendas" component={EncomendasScreen} options={{ headerShown: true, title: 'Encomendas' }} />
       <Stack.Screen name="EncomendaDetalhe" component={EncomendaDetalheScreen} options={{ headerShown: true, title: 'Encomenda' }} />
+      <Stack.Screen name="Stock" component={StockScreen} options={{ headerShown: true, title: 'Gestão de Stock' }} />
       <Stack.Screen name="Categorias" component={CategoriasScreen} options={{ headerShown: true, title: 'Categorias' }} />
       <Stack.Screen name="Vendedores" component={VendedoresScreen} options={{ headerShown: true, title: 'Vendedores' }} />
     </Stack.Navigator>

@@ -9,7 +9,9 @@ use App\Models\SessaoBot;
 use App\Models\Tenant;
 use App\Models\Vendedor;
 use App\Services\BotService;
+use App\Services\EvolutionService;
 use App\Services\NotificacaoService;
+use App\Services\StockService;
 use App\Services\TypebotService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
@@ -32,7 +34,14 @@ class BotServiceTest extends TestCase
         $typebotMock = Mockery::mock(TypebotService::class);
         $typebotMock->shouldReceive('processar')->andReturnNull();
 
-        $this->bot = new BotService($notificacaoMock, $typebotMock);
+        $evolutionMock = Mockery::mock(EvolutionService::class);
+        $evolutionMock->shouldReceive('enviarMensagem')->andReturn(true);
+
+        $stockMock = Mockery::mock(StockService::class);
+        $stockMock->shouldReceive('registarSaida')->andReturn(new \App\Models\MovimentoStock());
+        $stockMock->shouldReceive('registarDevolucao')->andReturn(new \App\Models\MovimentoStock());
+
+        $this->bot = new BotService($notificacaoMock, $typebotMock, $evolutionMock, $stockMock);
 
         $this->tenant = Tenant::create([
             'nome_loja' => 'Teste Loja',
@@ -131,6 +140,7 @@ class BotServiceTest extends TestCase
     public function test_encomenda_cria_registo(): void
     {
         $this->bot->responder($this->tenant, '+258841111111', 'olá');
+        $this->bot->responder($this->tenant, '+258841111111', '1');
         $this->bot->responder($this->tenant, '+258841111111', '1');
         $this->bot->responder($this->tenant, '+258841111111', '1');
         $this->bot->responder($this->tenant, '+258841111111', '1');

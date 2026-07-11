@@ -9,6 +9,7 @@ use App\Models\Produto;
 use App\Models\SessaoBot;
 use App\Models\Tenant;
 use App\Models\Vendedor;
+use App\Services\StockService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,11 +22,14 @@ class BotService
 
     private EvolutionService $evolutionService;
 
-    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService, EvolutionService $evolutionService)
+    private StockService $stockService;
+
+    public function __construct(NotificacaoService $notificacaoService, TypebotService $typebotService, EvolutionService $evolutionService, StockService $stockService)
     {
         $this->notificacaoService = $notificacaoService;
         $this->typebotService = $typebotService;
         $this->evolutionService = $evolutionService;
+        $this->stockService = $stockService;
     }
 
     /** @return array<string, mixed>|string */
@@ -60,6 +64,7 @@ class BotService
             'produto_detalhe' => $this->processarProdutoDetalhe($tenant, $sessao, $msg, $numero, $nome),
             'escolher_cor' => $this->processarEscolherCor($tenant, $sessao, $msg),
             'escolher_tamanho' => $this->processarEscolherTamanho($tenant, $sessao, $msg),
+            'escolher_quantidade' => $this->processarEscolherQuantidade($tenant, $sessao, $msg, $numero, $nome),
             'pesquisa' => $this->processarPesquisa($tenant, $sessao, $msg),
             'pesquisa_resultados' => $this->processarPesquisaResultados($tenant, $sessao, $msg, $numero, $nome),
             'ver_encomendas' => $this->processarVerEncomendas($tenant, $sessao, $msg, $numero),
@@ -314,7 +319,8 @@ class BotService
         foreach ($produtos as $i => $p) {
             $num = $i + 1;
             $destaque = $p->destaque ? '⭐ ' : '';
-            $texto .= "{$num}️⃣ {$destaque}{$p->nome} — {$p->preco} MZN\n";
+            $stockInfo = $p->stock > 0 ? " ({$p->stock} disponível)" : ' ⚠️ Sem stock';
+            $texto .= "{$num}️⃣ {$destaque}{$p->nome} — {$p->preco} MZN{$stockInfo}\n";
         }
 
         if ($temMais) {
@@ -425,7 +431,7 @@ class BotService
             return $this->montarMensagemTamanhos($produto);
         }
 
-        return $this->criarEncomenda($tenant, $sessao, $produto, $numero, $nome);
+        return $this->pedirQuantidade($sessao, $produto);
     }
 
     private function montarMensagemCores(Produto $produto): string
@@ -525,7 +531,63 @@ class BotService
         /** @var array<string, mixed> $dados */
         $novaDados = array_merge($dados, ['tamanho_escolhido' => $tamanhos[$index]]);
 
-        return $this->criarEncomenda($tenant, $sessao, $produto, $sessao->numero_whatsapp, '', $novaDados);
+        return $this->pedirQuantidade($sessao, $produto, $novaDados);
+    }
+
+    private function pedirQuantidade(SessaoBot $sessao, Produto $produto, array $dadosExtras = []): string
+    {
+        $maximo = min($produto->stock, 10);
+        $dados = array_merge($sessao->dados, $dadosExtras, ['produto_id' => $produto->id]);
+        $sessao->atualizarEstado('escolher_quantidade', $dados);
+
+        return "📦 *{$produto->nome}*\n"
+             ."💰 {$produto->preco} MZN\n"
+             ."📊 Disponível: {$produto->stock} {$produto->unidade}\n\n"
+             ."Quantas unidades deseja? (máximo: {$maximo})\n"
+             .'0️⃣ Voltar';
+    }
+
+    private function processarEscolherQuantidade(Tenant $tenant, SessaoBot $sessao, string $msg, string $numero, string $nome): string
+    {
+        $dados = $sessao->dados;
+        $produtoId = $dados['produto_id'] ?? null;
+
+        if ($msg === '0' || $msg === 'voltar') {
+            $sessao->atualizarEstado('inicio');
+
+            return $this->menuPrincipal($tenant, $nome);
+        }
+
+        if (! $produtoId) {
+            $sessao->atualizarEstado('inicio');
+
+            return $this->menuPrincipal($tenant, '');
+        }
+
+        /** @var Produto|null $produto */
+        $produto = $tenant->produtos()->find($produtoId);
+
+        if (! $produto) {
+            $sessao->atualizarEstado('inicio');
+
+            return "Produto não encontrado.\n\n".$this->menuPrincipal($tenant, '');
+        }
+
+        $quantidade = (int) $msg;
+
+        if ($quantidade <= 0 || ! is_numeric($msg)) {
+            return "Por favor, escreve um número de 1 a {$produto->stock}.";
+        }
+
+        if (! $produto->temStockSuficiente($quantidade)) {
+            return "Desculpe, só temos {$produto->stock} {$produto->unidade} disponíveis.\n"
+                 ."Quantas unidades deseja? (máximo: {$produto->stock})\n"
+                 .'0️⃣ Voltar';
+        }
+
+        $dados['quantidade'] = $quantidade;
+
+        return $this->criarEncomenda($tenant, $sessao, $produto, $numero, $nome, $dados);
     }
 
     /**
@@ -539,8 +601,9 @@ class BotService
 
         $cor = $dadosSessao['cor_escolhida'] ?? null;
         $tamanho = $dadosSessao['tamanho_escolhido'] ?? null;
+        $quantidade = (int) ($dadosSessao['quantidade'] ?? 1);
 
-        $resultado = DB::transaction(function () use ($tenant, $produto, $numero, $nome, $cor, $tamanho) {
+        $resultado = DB::transaction(function () use ($tenant, $produto, $numero, $nome, $cor, $tamanho, $quantidade) {
             $produtoAtualizado = Produto::lockForUpdate()->find($produto->id);
 
             if (! $produtoAtualizado) {
@@ -549,24 +612,22 @@ class BotService
 
             $variante = null;
             $precoFinal = $produtoAtualizado->preco;
-            $stockDisponivel = $produtoAtualizado->stock;
 
             if ($produtoAtualizado->temVariantesNovas()) {
                 $variante = $produtoAtualizado->obterVariante($cor, $tamanho);
 
-                if (! $variante || ! $variante->temStock()) {
+                if (! $variante || ! $variante->temStock() || $variante->stock < $quantidade) {
                     return null;
                 }
 
-                $variante->decrement('stock');
+                $variante->decrement('stock', $quantidade);
                 $precoFinal = $variante->precoFinal();
-                $stockDisponivel = $variante->stock;
             } else {
-                if ($produtoAtualizado->stock <= 0) {
+                if (! $produtoAtualizado->temStockSuficiente($quantidade)) {
                     return null;
                 }
 
-                $produtoAtualizado->decrement('stock');
+                $produtoAtualizado->decrement('stock', $quantidade);
             }
 
             $encomenda = Encomenda::create([
@@ -578,8 +639,8 @@ class BotService
                 'cor_escolhida' => $cor,
                 'tamanho_escolhido' => $tamanho,
                 'vendedor_id' => $produtoAtualizado->vendedor_id,
-                'quantidade' => 1,
-                'preco_total' => $precoFinal,
+                'quantidade' => $quantidade,
+                'preco_total' => $precoFinal * $quantidade,
                 'estado' => 'pendente',
             ]);
 
@@ -594,6 +655,15 @@ class BotService
         }
 
         $encomenda = $resultado;
+
+        // Registar movimento de stock via StockService
+        $this->stockService->registarSaida($produto, $quantidade, $encomenda->id);
+
+        // Verificar se ficou com stock baixo
+        $produtoFresh = $produto->fresh();
+        if ($produtoFresh && $produtoFresh->stockBaixo()) {
+            $this->notificarVendedorStockBaixo($produtoFresh);
+        }
 
         if ($encomenda->vendedor) {
             NotificarVendedorJob::dispatch($encomenda->id);
@@ -846,7 +916,6 @@ class BotService
                 }
 
                 $encomenda->update(['estado' => 'cancelada']);
-                $encomenda->produto->increment('stock');
 
                 return $encomenda;
             });
@@ -858,6 +927,13 @@ class BotService
             }
 
             $encomenda = $resultado;
+
+            // Registar devolução de stock via StockService
+            $this->stockService->registarDevolucao(
+                $encomenda->produto,
+                $encomenda->quantidade ?? 1,
+                $encomenda->id,
+            );
 
             $this->notificarDonoCancelamento($tenant, $encomenda);
 
@@ -926,6 +1002,40 @@ class BotService
             } catch (\Exception $e) {
                 Log::error('Erro ao notificar dono sobre cancelamento: '.$e->getMessage());
             }
+        }
+    }
+
+    private function notificarVendedorStockBaixo(Produto $produto): void
+    {
+        $vendedor = $produto->vendedor;
+        if (! $vendedor || ! $vendedor->ativo) {
+            return;
+        }
+
+        $instancia = $produto->tenant->instancias()
+            ->where('estado', 'conectada')
+            ->first();
+
+        if (! $instancia) {
+            return;
+        }
+
+        $mensagem = "⚠️ *ALERTA DE STOCK BAIXO*\n\n"
+                  ."📦 Produto: {$produto->nome}\n"
+                  ."📊 Stock actual: {$produto->stock} {$produto->unidade}\n"
+                  ."📉 Stock mínimo: {$produto->stock_minimo} {$produto->unidade}\n\n"
+                  ."Repõe o stock no painel:\n"
+                  .config('app.url').'/painel/stock';
+
+        try {
+            $this->evolutionService->enviarMensagem(
+                $produto->tenant_id,
+                $vendedor->numero_whatsapp,
+                $mensagem,
+                $instancia->waha_url,
+            );
+        } catch (\Exception $e) {
+            Log::error('Erro ao notificar vendedor sobre stock baixo: '.$e->getMessage());
         }
     }
 

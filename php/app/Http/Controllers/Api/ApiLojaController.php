@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\Encomenda;
+use App\Services\StockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 class ApiLojaController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(
+        private StockService $stockService,
+    ) {}
 
     public function dashboard(Request $request): JsonResponse
     {
@@ -48,12 +53,17 @@ class ApiLojaController extends Controller
                 'data' => \Illuminate\Support\Carbon::parse($e->created_at)->format('d/m/Y H:i'),
             ]);
 
+        $produtosStockBaixo = $this->stockService->produtosStockBaixo($tenant->id);
+        $produtosSemStock = $this->stockService->produtosSemStock($tenant->id);
+
         return $this->success([
             'total_produtos' => $totalProdutos,
             'produtos_disponiveis' => $produtosDisponiveis,
             'encomendas_hoje' => $encomendasHoje,
             'encomendas_pendentes' => $encomendasPendentes,
             'receita_mes' => (float) $receitaMes,
+            'stock_baixo' => $produtosStockBaixo->count(),
+            'sem_stock' => $produtosSemStock->count(),
             'encomendas_recentes' => $encomendasRecentes,
         ]);
     }

@@ -36,6 +36,9 @@
                 <a href="/painel/encomendas" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('painel/encomendas*') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700' }}">
                     📋 Encomendas
                 </a>
+                <a href="/painel/stock" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('painel/stock*') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700' }}">
+                    📊 Stock
+                </a>
                 <a href="/painel/whatsapp" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 {{ request()->is('painel/whatsapp*') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700' }}">
                     💬 WhatsApp
                 </a>
