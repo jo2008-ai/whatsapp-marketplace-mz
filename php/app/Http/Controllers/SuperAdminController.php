@@ -163,4 +163,23 @@ class SuperAdminController extends Controller
 
         return back()->with('success', "Novo código gerado: {$loginCode}");
     }
+
+    /** @return \Illuminate\Http\RedirectResponse */
+    public function conectarInstancia(InstanciaWhatsApp $instancia)
+    {
+        try {
+            $this->evolutionService->criarInstancia($instancia->tenant_id, $instancia->waha_url);
+
+            $instancia->update(['estado' => 'aguarda_qr']);
+
+            return back()->with('success', "Instância \"{$instancia->waha_session}\" a reconectar. Escaneia o QR code no painel da loja.");
+        } catch (\Exception $e) {
+            Log::warning("Erro ao reconectar instância {$instancia->waha_session}", [
+                'instancia_id' => $instancia->id,
+                'erro' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Falha ao reconectar instância. Verifica se a Evolution API está disponível.');
+        }
+    }
 }

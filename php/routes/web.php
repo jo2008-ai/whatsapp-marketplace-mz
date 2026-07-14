@@ -94,4 +94,7 @@ Route::prefix('super')->middleware(['auth', 'super.admin'])->group(function () {
             ->paginate(20);
         return view('super.instancias', compact('instancias'));
     })->name('super.instancias');
+
+    Route::post('/instancias/{instancia}/conectar', [SuperAdminController::class, 'conectarInstancia'])
+        ->name('super.instancias.conectar');
 });

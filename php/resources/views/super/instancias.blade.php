@@ -12,6 +12,7 @@
                     <th class="text-left p-3 font-medium text-gray-600">Número</th>
                     <th class="text-left p-3 font-medium text-gray-600">Estado</th>
                     <th class="text-left p-3 font-medium text-gray-600 hidden md:table-cell">Actualizado</th>
+                    <th class="text-left p-3 font-medium text-gray-600">Ação</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
@@ -36,9 +37,21 @@
                         @endif
                     </td>
                     <td class="p-3 text-gray-500 text-xs hidden md:table-cell">{{ $inst->updated_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                    <td class="p-3">
+                        @if($inst->estado !== 'conectada')
+                            <form action="{{ route('super.instancias.conectar', $inst) }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition">
+                                    Conectar
+                                </button>
+                            </form>
+                        @else
+                            <span class="text-xs text-gray-400">—</span>
+                        @endif
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhuma instância.</td></tr>
+                <tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhuma instância.</td></tr>
                 @endforelse
             </tbody>
         </table>
